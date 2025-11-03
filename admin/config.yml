@@ -20,7 +20,8 @@ collections:
     label: "גלריית תמונות"
     folder: "_posts/gallery"
     create: true
+    slug: "{{slug}}"
     fields:
       - {label: "שם האלבום", name: "title", widget: "string"}
       - {label: "תמונת שער (Cover)", name: "thumbnail", widget: "image"}
-      - {label: "תמונות האלבום", name: "images", widget: "list", field: {label: "תמונה", name: "image", widget: "image"}}
+      - {label: "תמונות האלבום", name: "images", widget: "image", multiple: true, media_library: { config: { multiple: true } } }
