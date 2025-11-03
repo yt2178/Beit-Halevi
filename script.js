@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ---- הגדרות כלליות ----
-    const repoOwner = 'beit-halevi-rosh-ayin'; // <--- שנה לשם המשתמש שלך ב-GitHub
-    const repoName = 'beit-halevi-rosh-ayin.github.io'; // <--- שנה לשם המאגר שלך
+   const repoOwner = 'yt2178'; // שם המשתמש שלך
+const repoName = 'Beit-Halevi'; // שם המאגר הנכון
 
     // ---- משתנים גלובליים ----
     const gridOverlay = document.getElementById('grid-overlay');
