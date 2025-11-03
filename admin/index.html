@@ -7,17 +7,7 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
-  <!-- Include the script that builds the page and powers Decap CMS -->
+  <!-- הסקריפט הזה טוען את מערכת הניהול, אשר טוענת את ההגדרות באופן אוטומטי מקובץ config.yml -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  <script>
-    CMS.init({
-      config: {
-        backend: {
-          name: "git-gateway"
-        },
-        // Continue with the rest of your config.yml content here, if you want to define it in JS
-      }
-    });
-  </script>
 </body>
 </html>
