@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ---- הגדרות כלליות ----
-   const repoOwner = 'yt2178'; // שם המשתמש שלך
-const repoName = 'Beit-Halevi'; // שם המאגר הנכון
+    const repoOwner = 'yt2178'; // שם המשתמש שלך
+    const repoName = 'Beit-Halevi'; // שם המאגר הנכון
 
     // ---- משתנים גלובליים ----
     const gridOverlay = document.getElementById('grid-overlay');
@@ -33,7 +33,7 @@ const repoName = 'Beit-Halevi'; // שם המאגר הנכון
             if (!response.ok) throw new Error(`Network response was not ok for ${path}`);
             const data = await response.json();
             if (!Array.isArray(data)) return []; // Handle case where path is not a directory
-            const files = await Promise.all(data.filter(file => file.type === 'file').map(async file => {
+            const files = await Promise.all(data.filter(file => file.type === 'file' && file.name !== '.gitkeep').map(async file => {
                 const fileResponse = await fetch(file.download_url);
                 return await fileResponse.text();
             }));
@@ -41,10 +41,10 @@ const repoName = 'Beit-Halevi'; // שם המאגר הנכון
         } catch (error) { console.error(`Error fetching from ${path}:`, error); return []; }
     }
     
-    // [תיקון] פונקציה חכמה יותר לפירוק YAML
     function parseYaml(yamlStr) {
         const metadata = {};
         let currentList = null;
+        if (!yamlStr) return metadata;
         yamlStr.trim().split('\n').forEach(line => {
             const keyValueMatch = line.match(/^([^:]+):(.*)/);
             if (keyValueMatch) {
@@ -58,7 +58,8 @@ const repoName = 'Beit-Halevi'; // שם המאגר הנכון
                     currentList = key;
                 }
             } else if (currentList && line.trim().startsWith('- ')) {
-                metadata[currentList].push(line.replace(/^- /, '').trim());
+                const value = line.replace(/^- /, '').trim();
+                if (value) metadata[currentList].push(value);
             }
         });
         return metadata;
@@ -89,9 +90,16 @@ const repoName = 'Beit-Halevi'; // שם המאגר הנכון
         newsItems.forEach(item => {
             const date = new Date(item.date);
             const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            // [חדש] יצירת תאריך עברי
+            const hDate = new Hebcal.HDate(date);
+            const hebrewDate = hDate.toString('h');
+
             const newsElement = document.createElement('div');
             newsElement.className = 'news-item';
-            newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><p>${item.body.replace(/\n/g, '<br>')}</p>`;
+            
+            // [חדש] שימוש ב-marked.parse להמרת Markdown ל-HTML והוספת תאריך עברי
+            newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate} (${hebrewDate})</strong></p><div>${marked.parse(item.body)}</div>`;
             newsContainer.appendChild(newsElement);
         });
     }
@@ -104,65 +112,4 @@ const repoName = 'Beit-Halevi'; // שם המאגר הנכון
         const galleryFiles = await fetchContent('_posts/gallery');
         const albums = galleryFiles.map(parseMarkdown).filter(item => item.title);
 
-        albumContainer.innerHTML = '';
-        if (albums.length === 0) {
-            albumContainer.innerHTML = '<p style="text-align:center;">לא נמצאו אלבומים.</p>';
-            return;
-        }
-
-        albums.forEach(album => {
-            const albumElement = document.createElement('a');
-            albumElement.className = 'album-cover';
-            albumElement.innerHTML = `<img src="${album.thumbnail}" alt="${album.title}"><div class="album-title">${album.title}</div>`;
-            albumElement.addEventListener('click', () => openGridOverlay(album));
-            albumContainer.appendChild(albumElement);
-        });
-    }
-
-    // ---- פונקציות הגלריה (זהות לקודם) ----
-    function openGridOverlay(album) {
-        thumbnailGrid.innerHTML = '';
-        gridAlbumTitle.textContent = album.title;
-        currentAlbumImages = album.images.map(imgSrc => ({ src: imgSrc, alt: album.title }));
-        currentAlbumImages.forEach((imgData, index) => {
-            const thumb = document.createElement('img');
-            thumb.src = imgData.src; thumb.alt = imgData.alt; thumb.dataset.index = index;
-            thumb.addEventListener('click', () => {
-                currentIndex = parseInt(thumb.dataset.index); showLightboxImage();
-                gridOverlay.classList.remove('active'); lightbox.classList.add('active');
-            });
-            thumbnailGrid.appendChild(thumb);
-        });
-        gridOverlay.classList.add('active');
-    }
-    function showLightboxImage() { if (!currentAlbumImages[currentIndex]) return; lightboxImg.src = currentAlbumImages[currentIndex].src; lightboxImg.alt = currentAlbumImages[currentIndex].alt; prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none'; nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none'; }
-    function closeLightbox() { lightbox.classList.remove('active'); }
-    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
-    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
-    
-    lightboxCloseBtn.addEventListener('click', closeLightbox);
-    nextBtn.addEventListener('click', showNextImage);
-    prevBtn.addEventListener('click', showPrevImage);
-    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-    gridCloseBtn.addEventListener('click', () => { gridOverlay.classList.remove('active'); currentAlbumImages = []; });
-
-    // ---- קוד התאריך והשעה ----
-    const dateTimeDisplay = document.getElementById('date-time-display');
-    function updateDateTime() {
-        const now = new Date();
-        const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        let hebrewDate = '';
-        if (typeof Hebcal !== 'undefined') {
-            const hDate = new Hebcal.HDate(now);
-            hebrewDate = hDate.toString('h');
-        }
-        dateTimeDisplay.textContent = `${gregorianDate} | ${hebrewDate} | ${time}`;
-    }
-
-    // ---- הפעלה ----
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-    loadNews();
-    loadGallery();
-});
+        albumContainer.inn
