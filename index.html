@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ישיבת בית הלוי - ראש העין</title>
+    
+    <style>
+        /* --- [תיקון] הגדרות גלילה ותיקון תפריט דביק --- */
+        html {
+            scroll-padding-top: 60px; /* גובה משוער של תפריט הניווט */
+            scroll-behavior: smooth;   /* גלילה חלקה ואנימטיבית */
+        }
+        
+        /* --- הגדרות כלליות וגופנים --- */
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap');
+        body { font-family: 'Assistant', sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+
+        .bsd { position: absolute; top: 5px; right: 10px; font-size: 1em; color: #555; }
+        .top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
+        header { background-color: #003366; color: white; padding: 20px 0; text-align: center; }
+        header h1 { margin: 0; font-size: 2.5em; }
+        nav { background-color: #333; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        nav a { color: white; text-decoration: none; padding: 10px 15px; font-size: 1.1em; transition: background-color 0.3s; }
+        nav a:hover { background-color: #555; }
+        main { max-width: 1100px; margin: 30px auto; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
+        section { padding-top: 20px; margin-bottom: 40px; }
+        section h2 { text-align: center; font-size: 2em; color: #003366; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .news-container { display: flex; flex-direction: column; gap: 15px; }
+        .news-item { background-color: #fafafa; border: 1px solid #eee; border-right: 5px solid #003366; padding: 15px; border-radius: 5px; }
+        .news-item h3 { margin: 0 0 5px 0; color: #333; }
+        .news-item p { margin: 0; }
+        
+        .album-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .album-cover { border-radius: 8px; overflow: hidden; position: relative; display: block; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; }
+        .album-cover:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .album-cover img { width: 100%; height: 220px; object-fit: cover; display: block; }
+        .album-cover .album-title { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)); color: white; padding: 20px 10px 10px; text-align: center; font-size: 1.2em; font-weight: bold; }
+
+        .grid-overlay { display: none; position: fixed; z-index: 9998; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .grid-overlay.active { display: block; }
+        .grid-header { text-align: center; color: white; margin-bottom: 20px; }
+        .grid-header h2 { margin: 0; }
+        .grid-close { position: absolute; top: 15px; right: 25px; color: white; font-size: 3em; cursor: pointer; }
+        .thumbnail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; }
+        .thumbnail-grid img { width: 100%; height: 120px; object-fit: cover; border-radius: 5px; cursor: pointer; transition: opacity 0.3s; }
+        .thumbnail-grid img:hover { opacity: 0.8; }
+        
+        .lightbox { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; }
+        .lightbox.active { display: flex; }
+        .lightbox-content { position: relative; max-width: 90%; max-height: 80%; }
+        .lightbox-content img { width: auto; height: auto; max-width: 100%; max-height: 80vh; }
+        .lightbox-close, .lightbox-next, .lightbox-prev { position: absolute; color: white; font-size: 3em; font-weight: bold; cursor: pointer; user-select: none; }
+        .lightbox-close { top: 10px; right: 25px; }
+        .lightbox-next, .lightbox-prev { top: 50%; transform: translateY(-50%); }
+        .lightbox-next { right: 15px; }
+        .lightbox-prev { left: 15px; }
+
+        .donation-section { text-align: center; }
+        .donation-button { display: inline-block; background-color: #28a745; color: white; padding: 15px 30px; font-size: 1.2em; font-weight: bold; text-decoration: none; border-radius: 5px; transition: background-color 0.3s; }
+        .donation-button:hover { background-color: #218838; }
+
+        /* --- [חדש] עיצוב טופס צור קשר --- */
+        #contact-form { max-width: 600px; margin: 30px auto 0; display: flex; flex-direction: column; gap: 15px; }
+        .form-row { display: flex; gap: 15px; }
+        #contact-form input, #contact-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Assistant', sans-serif; font-size: 1em; box-sizing: border-box; }
+        .form-row input { flex: 1; }
+        #contact-form button { background-color: #003366; color: white; padding: 12px 20px; font-size: 1.1em; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+        #contact-form button:hover { background-color: #004488; }
+
+        footer { text-align: center; padding: 20px; background-color: #333; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="bsd">בס"ד</div>
+    <div class="top-bar"><span id="date-time-display">טוען תאריך ושעה...</span></div>
+    <header><h1>ישיבת בית הלוי - ראש העין</h1></header>
+    <nav>
+        <a href="#about">אודות</a>
+        <a href="#news">חדשות ועדכונים</a>
+        <a href="#gallery">גלריה</a>
+        <a href="#donations">תרומות</a>
+        <a href="#contact">צור קשר</a>
+    </nav>
+
+    <main>
+        <section id="about">
+            <h2>אודות הישיבה</h2>
+            <p>ישיבת "בית הלוי" בראש העין עומדת בראשותו של האדמו"ר הגאון הרב אבנר עפג'ין שליט"א. הישיבה מהווה מגדלור של תורה ויראת שמיים בלב העיר, ומונה כ-250 בחורים. הישיבה ידועה באווירת ה"שטייגען" (התעלות בלימוד) ובחיזוק הגדול, במיוחד בזמני אלול ובעתות התעוררות. אנו שמים דגש על בניית עולמם הרוחני של הבחורים, מתוך שמחה ואהבת תורה. באתר תוכלו להתרשם ממעט מהווי הישיבה, מהאירועים המיוחדים ומהקשר העמוק בין הרבנים לתלמידים.</p>
+        </section>
+
+        <section id="news">
+            <h2>חדשות ועדכונים</h2>
+            <div class="news-container">
+                <div class="news-item"><h3>25.10.2025 - שיעור כללי מיוחד</h3><p>הערב יתקיים שיעור כללי מיוחד מפי ראש הישיבה שליט"א בהיכל בית המדרש. הציבור מוזמן!</p></div>
+                <div class="news-item"><h3>23.10.2025 - מזל טוב!</h3><p>ברכת מזל טוב חמה ולבבית לתלמידנו היקר אברהם כהן לרגל אירוסיו. יהי רצון שיבנה בית נאמן בישראל!</p></div>
+            </div>
+        </section>
+
+        <section id="gallery">
+            <h2>גלריית תמונות מאירועים בישיבה</h2>
+            <div class="album-grid-container">
+                <a class="album-cover" data-album="hakafot">
+    <img src="https://i.postimg.cc/fRdXhRZr/IMG-0809.jpg" alt="הקפות שניות">
+    <div class="album-title">הקפות שניות</div>
+</a>
+                <a class="album-cover" data-album="elul"><img src="https://www.jdn.co.il/wp-content/uploads/2022/09/Yakov-cohen-4-1-768x512.jpg" alt="פתיחת זמן אלול"><div class="album-title">פתיחת זמן אלול</div></a>
+                <a class="album-cover" data-album="purim"><img src="https://www.jdn.co.il/wp-content/uploads/2022/03/WhatsApp-Image-2022-03-20-at-12.00.41.jpeg" alt="שמחת פורים"><div class="album-title">שמחת פורים</div></a>
+            </div>
+        </section>
+        
+        <section id="donations" class="donation-section">
+            <h2>היו שותפים בהחזקת התורה</h2>
+            <p>כל תרומה מסייעת לנו להמשיך להגדיל תורה ולהאדירה. בזכותכם, נוכל להמשיך ולהעמיד עוד דורות של תלמידי חכמים.</p>
+            <a href="https://www.kesherhk.info/kehilot/#!/Label/10465/moked=kehilot-site" target="_blank" class="donation-button">לתרומה מאובטחת לחץ כאן</a>
+        </section>
+
+        <section id="contact">
+            <h2>צור קשר</h2>
+            <p style="text-align: center;">ניתן ליצור קשר עם משרדי הישיבה באמצעות הטופס הבא, או ישירות דרך הפרטים המופיעים מטה.</p>
+            <!-- הוראות: יש להחליף את הכתובת ב-action בכתובת הייחודית שתקבלו מ-Formspree -->
+          <form id="contact-form" action="https://formspree.io/f/xanlzozq" method="POST">
+                <div class="form-row">
+                    <input type="text" name="name" placeholder="שם מלא" required>
+                    <input type="email" name="email" placeholder="כתובת דוא''ל" required>
+                </div>
+                <textarea name="message" placeholder="הודעה" rows="6" required></textarea>
+                <button type="submit">שלח הודעה</button>
+            </form>
+            <p style="text-align: center; margin-top: 30px;">
+                <strong>כתובת:</strong> רחוב חפץ חיים 6, ראש העין<br>
+                <strong>טלפון המשרד:</strong> 054-8500-158
+            </p>
+        </section>
+    </main>
+    
+    <footer><p>&copy; כל הזכויות שמורות לישיבת בית הלוי, ראש העין, תשפ"ה</p></footer>
+
+    <div class="grid-overlay" id="grid-overlay">
+        <span class="grid-close" id="grid-close">&times;</span>
+        <div class="grid-header"><h2 id="grid-album-title"></h2></div>
+        <div class="thumbnail-grid" id="thumbnail-grid"></div>
+    </div>
+
+    <div class="lightbox" id="lightbox"><span class="lightbox-close">&times;</span><a class="lightbox-prev">&#10094;</a><a class="lightbox-next">&#10095;</a><div class="lightbox-content"><img src="" id="lightbox-img"></div></div>
+    
+    <div id="album-data" style="display: none;">
+       <div id="hakafot">
+<img src="https://i.postimg.cc/fRdXhRZr/IMG-0809.jpg" alt="הקפות שניות תמונה 1">
+<img src="https://i.postimg.cc/xT4y2ZzW/IMG-0908.jpg" alt="הקפות שניות תמונה 2">
+<img src="https://i.postimg.cc/8P9W3687/IMG-0936.jpg" alt="הקפות שניות תמונה 3">
+<img src="https://i.postimg.cc/Dy8LBcMt/IMG-1021.jpg" alt="הקפות שניות תמונה 4">
+</div>
+        <div id="elul"><img src="https://www.jdn.co.il/wp-content/uploads/2022/09/Yakov-cohen-4-1-768x512.jpg" alt="זמן אלול 1"><img src="https://www.jdn.co.il/wp-content/uploads/2022/09/Yakov-cohen-2-1-768x512.jpg" alt="זמן אלול 2"></div>
+        <div id="purim"><img src="https://www.jdn.co.il/wp-content/uploads/2022/03/WhatsApp-Image-2022-03-20-at-12.00.41.jpeg" alt="פורים 1"><img src="https://www.jdn.co.il/wp-content/uploads/2016/03/SHUKI-LERER-PHOTOGRAPHY-768x512.jpg" alt="פורים 2"><img src="https://www.jdn.co.il/wp-content/uploads/2022/03/WhatsApp-Image-2022-03-20-at-12.00.41-1.jpeg" alt="פורים 3"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hebcal@3.3.1/hebcal.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridOverlay = document.getElementById('grid-overlay');
+            const gridCloseBtn = document.getElementById('grid-close');
+            const thumbnailGrid = document.getElementById('thumbnail-grid');
+            const gridAlbumTitle = document.getElementById('grid-album-title');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const closeBtn = lightbox.querySelector('.lightbox-close');
+            const nextBtn = lightbox.querySelector('.lightbox-next');
+            const prevBtn = lightbox.querySelector('.lightbox-prev');
+            let currentAlbumImages = [];
+            let currentIndex = 0;
+
+            document.querySelectorAll('.album-cover').forEach(cover => {
+                cover.addEventListener('click', () => {
+                    const albumId = cover.dataset.album;
+                    const albumContainer = document.getElementById(albumId);
+                    const albumTitleText = cover.querySelector('.album-title').textContent;
+                    if (albumContainer) {
+                        thumbnailGrid.innerHTML = '';
+                        gridAlbumTitle.textContent = albumTitleText;
+                        currentAlbumImages = Array.from(albumContainer.querySelectorAll('img')).map(img => ({ src: img.src, alt: img.alt }));
+                        currentAlbumImages.forEach((imgData, index) => {
+                            const thumb = document.createElement('img');
+                            thumb.src = imgData.src;
+                            thumb.alt = imgData.alt;
+                            thumb.dataset.index = index;
+                            thumb.addEventListener('click', () => {
+                                currentIndex = parseInt(thumb.dataset.index);
+                                showLightboxImage();
+                                gridOverlay.classList.remove('active');
+                                lightbox.classList.add('active');
+                            });
+                            thumbnailGrid.appendChild(thumb);
+                        });
+                        gridOverlay.classList.add('active');
+                    }
+                });
+            });
+
+            function showLightboxImage() {
+                if (currentAlbumImages.length === 0) return;
+                lightboxImg.src = currentAlbumImages[currentIndex].src;
+                lightboxImg.alt = currentAlbumImages[currentIndex].alt;
+                prevBtn.style.display = (currentIndex === 0) ? 'none' : 'block';
+                nextBtn.style.display = (currentIndex === currentAlbumImages.length - 1) ? 'none' : 'block';
+            }
+            function closeLightbox() { lightbox.classList.remove('active'); }
+            function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
+            function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
+            closeBtn.addEventListener('click', closeLightbox);
+            nextBtn.addEventListener('click', showNextImage);
+            prevBtn.addEventListener('click', showPrevImage);
+            lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+            gridCloseBtn.addEventListener('click', () => gridOverlay.classList.remove('active'));
+
+            const dateTimeDisplay = document.getElementById('date-time-display');
+            function updateDateTime() {
+                const now = new Date();
+                const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                let hebrewDate = '';
+                if (typeof Hebcal !== 'undefined') {
+                    const hDate = new Hebcal.HDate(now);
+                    hebrewDate = hDate.toString('h');
+                }
+                dateTimeDisplay.textContent = `${gregorianDate} | ${hebrewDate} | ${time}`;
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        });
+    </script>
+</body>
+</html>
