@@ -48,32 +48,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---- פונקציה לפירוק קבצי Markdown ----
-    function parseMarkdown(content) {
-        const metadata = { images: [] }; // Initialize images as an array
-        const bodyMatch = content.match(/---([\s\S]*?)---([\s\S]*)/);
-        if (bodyMatch) {
-            const metadataStr = bodyMatch[1];
-            metadataStr.trim().split('\n').forEach(line => {
-                const [key, ...valueParts] = line.split(':');
-                if (key) {
-                    const value = valueParts.join(':').trim();
-                    if (key.trim() === 'images') {
-                        // Handle multi-line image list
-                        if (value) metadata.images.push(value.replace(/^- /, ''));
-                    } else if (line.trim().startsWith('- ')) {
-                        metadata.images.push(line.replace(/^- /, '').trim());
-                    }
-                    else {
-                        metadata[key.trim()] = value;
-                    }
+  function parseMarkdown(content) {
+    const metadata = {};
+    const bodyMatch = content.match(/---([\s\S]*?)---([\s\S]*)/);
+    if (bodyMatch) {
+        const metadataStr = bodyMatch[1];
+        const body = bodyMatch[2].trim();
+
+        let currentKey = null;
+        metadataStr.trim().split('\n').forEach(line => {
+            const keyValueMatch = line.match(/^([^:]+):(.*)/);
+            if (keyValueMatch) {
+                // This is a new key-value pair
+                currentKey = keyValueMatch[1].trim();
+                const value = keyValueMatch[2].trim();
+                if (currentKey === 'images') {
+                    metadata[currentKey] = [value];
+                } else {
+                    metadata[currentKey] = value;
                 }
-            });
-            metadata.body = bodyMatch[2].trim();
-        }
-        return metadata;
+            } else if (currentKey === 'images' && line.trim().startsWith('- ')) {
+                // This is another item in the images list
+                metadata.images.push(line.replace(/^- /, '').trim());
+            }
+        });
+        metadata.body = body;
     }
-    
+    return metadata;
+}
     // ---- טעינה והצגה של "חדשות ועדכונים" ----
     async function loadNews() {
         const newsContainer = document.getElementById('news-container');
