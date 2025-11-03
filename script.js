@@ -1,7 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ---- הגדרות כלליות ----
-    const repoOwner = 'beit-halevi-rosh-ayin'; // <--- החלף בשם המשתמש שלך ב-GitHub
-    const repoName = 'beit-halevi-rosh-ayin.github.io'; // <--- החלף בשם המאגר שלך
+    // !!! חשוב: שנה את הערכים הבאים לשם המשתמש ושם המאגר שלך ב-GitHub
+    const repoOwner = 'beit-halevi-rosh-ayin'; 
+    const repoName = 'beit-halevi-rosh-ayin.github.io'; 
+
+    // ---- משתנים גלובליים עבור הגלריה ----
+    const gridOverlay = document.getElementById('grid-overlay');
+    const gridCloseBtn = document.querySelector('.grid-close');
+    const thumbnailGrid = document.getElementById('thumbnail-grid');
+    const gridAlbumTitle = document.getElementById('grid-album-title');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCloseBtn = lightbox.querySelector('.lightbox-close');
+    const nextBtn = lightbox.querySelector('.lightbox-next');
+    const prevBtn = lightbox.querySelector('.lightbox-prev');
+    let currentAlbumImages = [];
+    let currentIndex = 0;
 
     // ---- קוד כפתור "חזרה למעלה" ----
     let backToTopButton = document.getElementById("back-to-top-btn");
@@ -16,11 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
         backToTopButton.addEventListener("click", () => window.scrollTo({top: 0, behavior: 'smooth'}) );
     }
 
-    // ---- קוד טעינת נתונים דינמיים ----
+    // ---- פונקציה כללית לטעינת נתונים מ-GitHub ----
     async function fetchContent(path) {
         const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
             if (!response.ok) throw new Error(`Network response was not ok for ${path}`);
             const data = await response.json();
             const files = await Promise.all(data.map(async file => {
@@ -34,20 +48,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ---- פונקציה לפירוק קבצי Markdown ----
     function parseMarkdown(content) {
-        const metadata = {};
+        const metadata = { images: [] }; // Initialize images as an array
         const bodyMatch = content.match(/---([\s\S]*?)---([\s\S]*)/);
         if (bodyMatch) {
             const metadataStr = bodyMatch[1];
             metadataStr.trim().split('\n').forEach(line => {
                 const [key, ...valueParts] = line.split(':');
-                if (key) metadata[key.trim()] = valueParts.join(':').trim();
+                if (key) {
+                    const value = valueParts.join(':').trim();
+                    if (key.trim() === 'images') {
+                        // Handle multi-line image list
+                        if (value) metadata.images.push(value.replace(/^- /, ''));
+                    } else if (line.trim().startsWith('- ')) {
+                        metadata.images.push(line.replace(/^- /, '').trim());
+                    }
+                    else {
+                        metadata[key.trim()] = value;
+                    }
+                }
             });
             metadata.body = bodyMatch[2].trim();
         }
         return metadata;
     }
-
+    
+    // ---- טעינה והצגה של "חדשות ועדכונים" ----
     async function loadNews() {
         const newsContainer = document.getElementById('news-container');
         if (!newsContainer) return;
@@ -71,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ---- [שדרוג] טעינה והצגה של "גלריית תמונות" עם פונקציונליות מלאה ----
     async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
         if (!albumContainer) return;
@@ -88,10 +116,60 @@ document.addEventListener('DOMContentLoaded', () => {
             const albumElement = document.createElement('a');
             albumElement.className = 'album-cover';
             albumElement.innerHTML = `<img src="${album.thumbnail}" alt="${album.title}"><div class="album-title">${album.title}</div>`;
+            
+            // הוספת האירוע לפתיחת רשת התמונות
+            albumElement.addEventListener('click', () => {
+                openGridOverlay(album);
+            });
+
             albumContainer.appendChild(albumElement);
-            // כאן נוסיף בעתיד את הקוד לפתיחת הגלריה
         });
     }
+    
+    // ---- [חדש] פונקציות הגלריה האינטראקטיבית ----
+    function openGridOverlay(album) {
+        thumbnailGrid.innerHTML = '';
+        gridAlbumTitle.textContent = album.title;
+        currentAlbumImages = album.images.map(imgSrc => ({ src: imgSrc, alt: album.title }));
+        
+        currentAlbumImages.forEach((imgData, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = imgData.src;
+            thumb.alt = imgData.alt;
+            thumb.dataset.index = index;
+            
+            thumb.addEventListener('click', () => {
+                currentIndex = parseInt(thumb.dataset.index);
+                showLightboxImage();
+                gridOverlay.classList.remove('active');
+                lightbox.classList.add('active');
+            });
+            
+            thumbnailGrid.appendChild(thumb);
+        });
+
+        gridOverlay.classList.add('active');
+    }
+
+    function showLightboxImage() {
+        if (currentAlbumImages.length === 0) return;
+        lightboxImg.src = currentAlbumImages[currentIndex].src;
+        lightboxImg.alt = currentAlbumImages[currentIndex].alt;
+        prevBtn.style.display = (currentIndex === 0) ? 'none' : 'block';
+        nextBtn.style.display = (currentIndex === currentAlbumImages.length - 1) ? 'none' : 'block';
+    }
+
+    function closeLightbox() { lightbox.classList.remove('active'); }
+    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
+    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
+    
+    // חיבור אירועים לכפתורים
+    lightboxCloseBtn.addEventListener('click', closeLightbox);
+    nextBtn.addEventListener('click', showNextImage);
+    prevBtn.addEventListener('click', showPrevImage);
+    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+    gridCloseBtn.addEventListener('click', () => gridOverlay.classList.remove('active'));
+
 
     // ---- קוד התאריך והשעה ---
     const dateTimeDisplay = document.getElementById('date-time-display');
