@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ישיבת בית הלוי - ראש העין</title>
-    
+    <!-- [תיקון קריטי] הוספת הסקריפט של מערכת הניהול שמאפשר יצירת סיסמה -->
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+    <!-- [שדרוג] הוספת סמליל (Favicon) לדפדפן -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>בה</text></svg>">
     <style>
         /* --- [תיקון] הגדרות גלילה ותיקון תפריט דביק --- */
         html {
@@ -68,7 +72,30 @@
         .form-row input { flex: 1; }
         #contact-form button { background-color: #003366; color: white; padding: 12px 20px; font-size: 1.1em; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
         #contact-form button:hover { background-color: #004488; }
+/* [שדרוג] עיצוב כפתור "חזרה למעלה" */
+#back-to-top-btn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px; /* <-- הועבר לצד ימין */
+    z-index: 99;
+    border: none;
+    outline: none;
+    background-color: #003366;
+    color: white;
+    cursor: pointer;
+    width: 50px; /* <-- גודל אחיד */
+    height: 50px; /* <-- גודל אחיד */
+    border-radius: 50%;
+    display: flex; /* <-- למרכוז האייקון */
+    align-items: center; /* <-- למרכוז האייקון */
+    justify-content: center; /* <-- למרכוז האייקון */
+    transition: opacity 0.3s, visibility 0.3s;
+}
 
+#back-to-top-btn:hover {
+    background-color: #004488;
+}
         footer { text-align: center; padding: 20px; background-color: #333; color: white; }
     </style>
 </head>
@@ -156,10 +183,33 @@
         <div id="elul"><img src="https://www.jdn.co.il/wp-content/uploads/2022/09/Yakov-cohen-4-1-768x512.jpg" alt="זמן אלול 1"><img src="https://www.jdn.co.il/wp-content/uploads/2022/09/Yakov-cohen-2-1-768x512.jpg" alt="זמן אלול 2"></div>
         <div id="purim"><img src="https://www.jdn.co.il/wp-content/uploads/2022/03/WhatsApp-Image-2022-03-20-at-12.00.41.jpeg" alt="פורים 1"><img src="https://www.jdn.co.il/wp-content/uploads/2016/03/SHUKI-LERER-PHOTOGRAPHY-768x512.jpg" alt="פורים 2"><img src="https://www.jdn.co.il/wp-content/uploads/2022/03/WhatsApp-Image-2022-03-20-at-12.00.41-1.jpeg" alt="פורים 3"></div>
     </div>
-
+<!-- [שדרוג] כפתור "חזרה למעלה" -->
+   <button id="back-to-top-btn" title="חזרה למעלה"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg></button>
     <script src="https://cdn.jsdelivr.net/npm/hebcal@3.3.1/hebcal.min.js"></script>
-    <script>
+  <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- [שדרוג] קוד להפעלת כפתור "חזרה למעלה" ---
+            let backToTopButton = document.getElementById("back-to-top-btn");
+
+            window.onscroll = function() {
+                scrollFunction();
+            };
+
+            function scrollFunction() {
+                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                    backToTopButton.style.display = "block";
+                } else {
+                    backToTopButton.style.display = "none";
+                }
+            }
+
+            backToTopButton.addEventListener("click", function() {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+            // --- סוף קוד הכפתור ---
+
+
+            // --- קוד הגלריה ---
             const gridOverlay = document.getElementById('grid-overlay');
             const gridCloseBtn = document.getElementById('grid-close');
             const thumbnailGrid = document.getElementById('thumbnail-grid');
@@ -214,7 +264,10 @@
             prevBtn.addEventListener('click', showPrevImage);
             lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
             gridCloseBtn.addEventListener('click', () => gridOverlay.classList.remove('active'));
+            // --- סוף קוד הגלריה ---
 
+
+            // --- קוד התאריך והשעה ---
             const dateTimeDisplay = document.getElementById('date-time-display');
             function updateDateTime() {
                 const now = new Date();
@@ -229,7 +282,9 @@
             }
             updateDateTime();
             setInterval(updateDateTime, 1000);
+            // --- סוף קוד התאריך והשעה ---
         });
     </script>
 </body>
+
 </html>
