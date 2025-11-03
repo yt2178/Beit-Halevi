@@ -1,6 +1,7 @@
 backend:
   name: git-gateway
   branch: main
+  repo: Beit-Halevi/beit-halevi.github.io # <-- השורה החשובה שנוספה!
 
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
