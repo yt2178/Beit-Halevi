@@ -1,0 +1,26 @@
+backend:
+  name: git-gateway
+  branch: main # Or master, depending on your default branch
+
+media_folder: "assets/uploads" # Folder where media files will be stored
+public_folder: "/assets/uploads" # The src attribute for uploaded media
+
+collections:
+  - name: "news" # Used in routes, e.g., /admin/collections/news
+    label: "חדשות ועדכונים" # Used in the UI
+    folder: "_posts/news" # The path to the folder where the documents are stored
+    create: true # Allow users to create new documents in this collection
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}" # Filename template, e.g., YYYY-MM-DD-title.md
+    fields: # The fields for each document, usually in front matter
+      - {label: "כותרת", name: "title", widget: "string"}
+      - {label: "תאריך", name: "date", widget: "datetime"}
+      - {label: "תוכן העדכון", name: "body", widget: "markdown"}
+
+  - name: "gallery"
+    label: "גלריית תמונות"
+    folder: "_posts/gallery"
+    create: true
+    fields:
+      - {label: "שם האלבום", name: "title", widget: "string"}
+      - {label: "תמונת שער (Cover)", name: "thumbnail", widget: "image"}
+      - {label: "תמונות האלבום", name: "images", widget: "list", field: {label: "תמונה", name: "image", widget: "image"}}
