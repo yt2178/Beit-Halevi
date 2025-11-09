@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ---- הגדרות כלליות ----
-    const repoOwner = 'yt2178'; // שם המשתמש שלך
-    const repoName = 'Beit-Halevi'; // שם המאגר הנכון
+    const repoOwner = 'yt2178';
+    const repoName = 'Beit-Halevi';
 
     // ---- משתנים גלובליים ----
     const gridOverlay = document.getElementById('grid-overlay');
@@ -26,90 +26,157 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ---- פונקציות טעינה ועיבוד ----
-    async function fetchContent(path) {
+    async function fetchAndParse(path) {
         const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
         try {
             const response = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-            if (!response.ok) throw new Error(`Network response was not ok for ${path}`);
+            if (!response.ok) throw new Error(`Network response error for ${path}`);
             const data = await response.json();
-            if (!Array.isArray(data)) return []; // Handle case where path is not a directory
-            const files = await Promise.all(data.filter(file => file.type === 'file' && file.name !== '.gitkeep').map(async file => {
-                const fileResponse = await fetch(file.download_url);
-                return await fileResponse.text();
-            }));
-            return files;
-        } catch (error) { console.error(`Error fetching from ${path}:`, error); return []; }
-    }
-    
-    function parseYaml(yamlStr) {
-        const metadata = {};
-        let currentList = null;
-        if (!yamlStr) return metadata;
-        yamlStr.trim().split('\n').forEach(line => {
-            const keyValueMatch = line.match(/^([^:]+):(.*)/);
-            if (keyValueMatch) {
-                const key = keyValueMatch[1].trim();
-                const value = keyValueMatch[2].trim();
-                if (value) {
-                    metadata[key] = value;
-                    currentList = null;
-                } else {
-                    metadata[key] = [];
-                    currentList = key;
-                }
-            } else if (currentList && line.trim().startsWith('- ')) {
-                const value = line.replace(/^- /, '').trim();
-                if (value) metadata[currentList].push(value);
-            }
-        });
-        return metadata;
+            if (!Array.isArray(data)) return [];
+
+            const parsedItems = await Promise.all(data
+                .filter(file => file.type === 'file' && file.name.endsWith('.md'))
+                .map(async file => {
+                    try {
+                        const fileResponse = await fetch(file.download_url);
+                        if (!fileResponse.ok) return null;
+                        const content = await fileResponse.text();
+                        return matter(content);
+                    } catch { return null; }
+                })
+            );
+            return parsedItems.filter(item => item !== null);
+        } catch (error) {
+            console.error(`Error processing ${path}:`, error);
+            return null;
+        }
     }
 
-    function parseMarkdown(content) {
-        const match = content.match(/---([\s\S]*?)---([\s\S]*)/);
-        if (!match) return { body: content };
-        const metadata = parseYaml(match[1]);
-        metadata.body = match[2].trim();
-        return metadata;
-    }
-
-    // ---- טעינת חדשות ועדכונים ----
     async function loadNews() {
         const newsContainer = document.getElementById('news-container');
         if (!newsContainer) return;
-        
-        const newsFiles = await fetchContent('_posts/news');
-        const newsItems = newsFiles.map(parseMarkdown).filter(item => item.title).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const items = await fetchAndParse('_posts/news');
+        if (items === null) {
+            newsContainer.innerHTML = '<p style="text-align:center; color: red;">שגיאה בטעינת העדכונים.</p>';
+            return;
+        }
+
+        const sortedItems = items
+            .map(item => ({ ...item.data, body: item.content }))
+            .filter(item => item.title && item.date)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         newsContainer.innerHTML = '';
-        if (newsItems.length === 0) {
+        if (sortedItems.length === 0) {
             newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
             return;
         }
 
-        newsItems.forEach(item => {
+        sortedItems.forEach(item => {
             const date = new Date(item.date);
             const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-            
-            // [חדש] יצירת תאריך עברי
             const hDate = new Hebcal.HDate(date);
             const hebrewDate = hDate.toString('h');
-
             const newsElement = document.createElement('div');
             newsElement.className = 'news-item';
-            
-            // [חדש] שימוש ב-marked.parse להמרת Markdown ל-HTML והוספת תאריך עברי
-            newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate} (${hebrewDate})</strong></p><div>${marked.parse(item.body)}</div>`;
+           newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate} (${hebrewDate})</strong></p><div>${marked.marked(item.body)}</div>`;
             newsContainer.appendChild(newsElement);
         });
     }
 
-    // ---- טעינת גלריית תמונות ----
     async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
         if (!albumContainer) return;
 
-        const galleryFiles = await fetchContent('_posts/gallery');
-        const albums = galleryFiles.map(parseMarkdown).filter(item => item.title);
+        const items = await fetchAndParse('_posts/gallery');
+        if (items === null) {
+            albumContainer.innerHTML = '<p style="text-align:center; color: red;">שגיאה בטעינת האלבומים.</p>';
+            return;
+        }
+        
+        // [תיקון] שומרים את כל המידע של האלבום, כולל התוכן
+        const albums = items
+            .map(item => ({ data: item.data, content: item.content }))
+            .filter(item => item.data.title && item.data.thumbnail);
+        
+        albumContainer.innerHTML = '';
+        if (albums.length === 0) {
+            albumContainer.innerHTML = '<p style="text-align:center;">לא נמצאו אלבומים.</p>';
+            return;
+        }
 
-        albumContainer.inn
+        albums.forEach(albumWrapper => {
+             const albumData = albumWrapper.data;
+             const albumElement = document.createElement('a');
+             albumElement.className = 'album-cover';
+             albumElement.innerHTML = `<img src="${albumData.thumbnail}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+             
+             // [תיקון] מעבירים את כל המידע הדרוש לפונקציה
+             albumElement.addEventListener('click', () => {
+                 openGridOverlay(albumData);
+             });
+             albumContainer.appendChild(albumElement);
+        });
+    }
+
+    function openGridOverlay(albumData) {
+        thumbnailGrid.innerHTML = '';
+        gridAlbumTitle.textContent = albumData.title;
+        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ src: imgSrc, alt: albumData.title }));
+
+        if (currentAlbumImages.length === 0) {
+             thumbnailGrid.innerHTML = '<p style="color:white; text-align:center;">לא נמצאו תמונות באלבום זה.</p>';
+        } else {
+            currentAlbumImages.forEach((imgData, index) => {
+                const thumb = document.createElement('img');
+                thumb.src = imgData.src; thumb.alt = imgData.alt; thumb.dataset.index = index;
+                thumb.addEventListener('click', () => {
+                    currentIndex = parseInt(thumb.dataset.index); showLightboxImage();
+                    gridOverlay.classList.remove('active'); lightbox.classList.add('active');
+                });
+                thumbnailGrid.appendChild(thumb);
+            });
+        }
+        gridOverlay.classList.add('active');
+    }
+    
+    function showLightboxImage() { if (!currentAlbumImages[currentIndex]) return; lightboxImg.src = currentAlbumImages[currentIndex].src; lightboxImg.alt = currentAlbumImages[currentIndex].alt; prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none'; nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none'; }
+    function closeLightbox() { lightbox.classList.remove('active'); }
+    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
+    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
+    
+    // [תיקון] מוודאים שהאלמנטים קיימים לפני הוספת מאזינים
+    if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
+    if (nextBtn) nextBtn.addEventListener('click', showNextImage);
+    if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
+    if (lightbox) lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+    if (gridCloseBtn) gridCloseBtn.addEventListener('click', () => { gridOverlay.classList.remove('active'); currentAlbumImages = []; });
+
+    document.addEventListener('keydown', (e) => {
+        if (lightbox && lightbox.classList.contains('active')) {
+            if (e.key === 'ArrowRight') showNextImage();
+            else if (e.key === 'ArrowLeft') showPrevImage();
+            else if (e.key === 'Escape') closeLightbox();
+        }
+    });
+
+    const dateTimeDisplay = document.getElementById('date-time-display');
+    function updateDateTime() {
+        const now = new Date();
+        const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        let hebrewDate = '';
+        if (typeof Hebcal !== 'undefined' && Hebcal.HDate) {
+            const hDate = new Hebcal.HDate(now);
+            hebrewDate = hDate.toString('h');
+        }
+        dateTimeDisplay.textContent = `${gregorianDate} | ${hebrewDate} | ${time}`;
+    }
+
+    // ---- הפעלה ----
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    loadNews();
+    loadGallery();
+});
