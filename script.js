@@ -1,4 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
+    'use strict';
+    
     // ---- הגדרות כלליות ----
     const repoOwner = 'yt2178';
     const repoName = 'Beit-Halevi';
@@ -65,13 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(data)) return [];
 
             const parsedItems = await Promise.all(data
-                .filter(file => file.type === 'file' && file.name.endsWith('.md'))
+                .filter(file => file.type === 'file') // מקבל כל קובץ, לא רק עם סיומת .md
                 .map(async file => {
                     try {
                         const fileResponse = await fetch(file.download_url);
                         if (!fileResponse.ok) return null;
                         const content = await fileResponse.text();
-                        return parseFrontMatter(content);
+                        // מנסה לפרסר את הקובץ כ-MD, אם זה לא עובד מחזיר null
+                        const parsed = parseFrontMatter(content);
+                        // בודק אם יש front matter תקין
+                        if (!parsed.data || Object.keys(parsed.data).length === 0) return null;
+                        return parsed;
                     } catch { return null; }
                 })
             );
@@ -82,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function loadNews() {
+    async function loadNews(showAll = false) {
         const newsContainer = document.getElementById('news-container');
         if (!newsContainer) return;
 
@@ -97,22 +103,55 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(item => item.title && item.date)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        newsContainer.innerHTML = '';
         if (sortedItems.length === 0) {
             newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
             return;
         }
 
-        sortedItems.forEach(item => {
+        // בפעם הראשונה, מנקה את הקונטיינר
+        if (!showAll) {
+            newsContainer.innerHTML = '';
+        }
+
+        // מחשב אילו פריטים להציג
+        const existingItems = newsContainer.querySelectorAll('.news-item').length;
+        const itemsToShow = showAll ? 
+            sortedItems.slice(existingItems) : // רק פריטים חדשים
+            sortedItems.slice(0, 3); // 3 הראשונים
+
+        // מוסיף את הפריטים החדשים
+        itemsToShow.forEach((item, index) => {
             const date = new Date(item.date);
             const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
             const newsElement = document.createElement('div');
-            newsElement.className = 'news-item';
-           newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
+            newsElement.className = showAll ? 'news-item new-item' : 'news-item';
+            newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
             newsContainer.appendChild(newsElement);
+            
+            // מפעיל את האנימציה אחרי הוספה לDOM
+            setTimeout(() => {
+                newsElement.classList.add('visible');
+            }, index * 100);
         });
-    }
 
+        // מסיר כפתור קודם אם קיים
+        const existingButton = newsContainer.querySelector('.load-more-button');
+        if (existingButton) {
+            existingButton.remove();
+        }
+
+        // מוסיף כפתור חדש אם יש עוד פריטים להצגה
+        if (!showAll && sortedItems.length > 3) {
+            const loadMoreButton = document.createElement('button');
+            loadMoreButton.className = 'load-more-button';
+            loadMoreButton.textContent = 'חדשות נוספות';
+            loadMoreButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                loadNews(true);
+            });
+            newsContainer.appendChild(loadMoreButton);
+        }
+    }
     async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
         if (!albumContainer) return;
@@ -133,14 +172,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        albums.forEach(albumData => {
-             const albumElement = document.createElement('a');
-             albumElement.className = 'album-cover';
-             albumElement.innerHTML = `<img src="${albumData.thumbnail}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
-             albumElement.addEventListener('click', () => {
-                 openGridOverlay(albumData);
-             });
-             albumContainer.appendChild(albumElement);
+        albums.forEach((albumData, index) => {
+            const albumElement = document.createElement('a');
+            albumElement.className = 'album-cover';
+            albumElement.innerHTML = `<img src="${albumData.thumbnail}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+            albumElement.addEventListener('click', () => {
+                openGridOverlay(albumData);
+            });
+            albumContainer.appendChild(albumElement);
+            
+            // אנימציית הופעה הדרגתית
+            setTimeout(() => {
+                albumElement.classList.add('visible');
+            }, index * 150);
         });
     }
 
@@ -155,22 +199,53 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentAlbumImages.forEach((imgData, index) => {
                 const thumb = document.createElement('img');
-                thumb.src = imgData.src; thumb.alt = imgData.alt; thumb.dataset.index = index;
+                thumb.src = imgData.src;
+                thumb.alt = imgData.alt;
+                thumb.dataset.index = index;
                 thumb.addEventListener('click', () => {
-                    currentIndex = parseInt(thumb.dataset.index); showLightboxImage();
-                    gridOverlay.classList.remove('active'); lightbox.classList.add('active');
+                    currentIndex = parseInt(thumb.dataset.index);
+                    showLightboxImage();
+                    gridOverlay.classList.remove('active');
+                    lightbox.classList.add('active');
                 });
                 thumbnailGrid.appendChild(thumb);
+                
+                // אנימציית הופעה הדרגתית לתמונות ממוזערות
+                setTimeout(() => {
+                    thumb.classList.add('visible');
+                }, index * 50);
             });
         }
         gridOverlay.classList.add('active');
     }
     
-    function showLightboxImage() { if (!currentAlbumImages[currentIndex]) return; lightboxImg.src = currentAlbumImages[currentIndex].src; lightboxImg.alt = currentAlbumImages[currentIndex].alt; prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none'; nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none'; }
-    function closeLightbox() { lightbox.classList.remove('active'); }
-    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
-    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
+    function showLightboxImage() { 
+        if (!currentAlbumImages[currentIndex]) return;
+        lightboxImg.src = currentAlbumImages[currentIndex].src;
+        lightboxImg.alt = currentAlbumImages[currentIndex].alt;
+        prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none';
+        nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+    }
+
+    function showNextImage() {
+        if (currentIndex < currentAlbumImages.length - 1) {
+            currentIndex++;
+            showLightboxImage();
+        }
+    }
+
+    function showPrevImage() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            showLightboxImage();
+        }
+    }
     
+    // הוספת מאזיני אירועים
     if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
     if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
@@ -193,8 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
     }
 
+    // אתחול הפונקציות
     updateDateTime();
     setInterval(updateDateTime, 1000);
     loadNews();
     loadGallery();
-});
+})();
