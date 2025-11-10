@@ -5,8 +5,363 @@ html {
 }
 
 /* --- הגדרות כלליות וגופנים --- */
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap');
-body { font-family: 'Assistant', sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; line-height: 1.6; }
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap');
+
+:root {
+    --primary-color: #1a4b84;
+    --secondary-color: #3498db;
+    --accent-color: #f39c12;
+    --background-color: #f8f9fa;
+    --text-color: #2c3e50;
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
+}
+
+body { 
+    font-family: 'Assistant', sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background-color: var(--background-color); 
+    color: var(--text-color); 
+    line-height: 1.6;
+}
+
+/* --- אנימציות --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* אנימציות לחדשות */
+.news-item {
+    opacity: 0;
+}
+
+.news-item.visible {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.news-item.new-item {
+    animation: slideInRight 0.6s ease-out forwards;
+}
+
+/* אנימציות לגלריה */
+.album-cover {
+    opacity: 0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.album-cover.visible {
+    animation: zoomIn 0.5s ease-out forwards;
+}
+
+.album-cover:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* אנימציות לתמונות בגלריה */
+.thumbnail-grid img {
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.thumbnail-grid img.visible {
+    animation: zoomIn 0.4s ease-out forwards;
+}
+
+.thumbnail-grid img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1;
+}
+
+/* אנימציה ללייטבוקס */
+.lightbox.active {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.lightbox-content img {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.4s ease-out;
+}
+
+.lightbox.active .lightbox-content img {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* --- כפתור חדשות נוספות --- */
+.load-more-button {
+    display: block;
+    margin: 30px auto;
+    padding: 12px 24px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.load-more-button:hover {
+    background-color: #2980b9;
+}
+
+.load-more-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+/* --- עיצוב טופס צור קשר משופר --- */
+#contact {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 2rem auto;
+    max-width: 1200px;
+}
+
+#contact h2 {
+    margin-bottom: 1rem;
+}
+
+#contact h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+#contact h3::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 3px;
+    background-color: var(--accent-color);
+    margin: 0.5rem auto 0;
+    border-radius: 2px;
+}
+
+/* קונטיינר ראשי לאזור צור קשר */
+.contact-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem;
+    margin-top: 2rem;
+}
+
+/* עמודת הטופס */
+.form-column, .contact-info {
+    flex: 1;
+    min-width: 300px;
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 500px; /* גובה קבוע לשני החלקים */
+}
+
+#contact-form {
+    flex: 1; 
+    min-width: 300px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 500px; /* גובה קבוע זהה למפה */
+}
+
+#contact .form-row {
+    display: flex; 
+    gap: 1rem;
+}
+#contact input, #contact textarea {
+    width: 100%;
+    padding: 12px; /* <-- הוחזר לגודל הקודם */
+    border: 1px solid #ccc; /* <-- הוחזר לעיצוב הקודם */
+    border-radius: 5px; /* <-- הוחזר לעיצוב הקודם */
+    transition: all var(--transition-speed);
+    font-family: inherit;
+    box-sizing: border-box; /* <-- חשוב מאוד למנוע גלישה */
+}
+
+#contact textarea {
+    min-height: 150px;
+     flex-grow: 1; /* נשאיר גובה מינימלי רק לתיבת הטקסט */
+}
+
+#contact input:focus, #contact textarea:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+#contact button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    font-weight: 600;
+    width: auto;
+    align-self: center;
+    margin-top: auto; /* דוחף את הכפתור לתחתית */
+    font-size: 1.1rem;
+}
+
+#contact button:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* מידע ומפה */
+.contact-info p {
+    margin: 0;
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+/* מפת גוגל */
+.map-container {
+    flex-grow: 1;
+    margin-top: 1rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    min-height: 250px;
+}
+
+/* רספונסיביות משופרת */
+@media (max-width: 768px) {
+    .form-column, .contact-info {
+        height: auto;
+        min-height: 400px;
+    }
+    
+    #contact textarea {
+        min-height: 120px;
+    }
+    
+    .map-container {
+        min-height: 200px;
+    }
+    
+    #contact {
+        padding: 1.5rem;
+    }
+}
+
+/* רספונסיביות */
+@media (max-width: 768px) {
+    .contact-container {
+        flex-direction: column;
+    }
+    
+    .map-container {
+        min-height: 250px;
+    }
+}
+
+/* --- עיצובים כלליים משופרים --- */
+section {
+    padding: 3rem 1rem;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+section h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    position: relative;
+}
+
+section h2::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    background-color: var(--accent-color);
+    margin: 1rem auto 0;
+    border-radius: 2px;
+}
+
+.news-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform var(--transition-speed);
+}
+
+.news-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.album-cover {
+    transition: all var(--transition-speed);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.album-cover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* --- כפתור חזרה למעלה משופר --- */
+#back-to-top-btn {
+    background-color: var(--primary-color);
+    opacity: 0.8;
+    transition: all var(--transition-speed);
+}
+
+#back-to-top-btn:hover {
+    opacity: 1;
+    transform: translateY(-3px);
+}
 
 .bsd { position: absolute; top: 5px; right: 10px; font-size: 1em; color: #555; }
 .top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
