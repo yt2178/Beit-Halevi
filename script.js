@@ -25,6 +25,36 @@ document.addEventListener('DOMContentLoaded', () => {
         backToTopButton.addEventListener("click", () => window.scrollTo({top: 0, behavior: 'smooth'}) );
     }
 
+    // ---- [חדש] פונקציה פשוטה לפירוק Front Matter ----
+    function parseFrontMatter(content) {
+        const match = /^---\s*([\s\S]+?)\s*---/.exec(content);
+        if (!match) return { data: {}, content };
+
+        const yamlText = match[1];
+        const body = content.slice(match[0].length).trim();
+
+        const data = {};
+        let currentList = null;
+        yamlText.trim().split('\n').forEach(line => {
+            const keyValueMatch = line.match(/^([^:]+):(.*)/);
+            if (keyValueMatch) {
+                const key = keyValueMatch[1].trim();
+                const value = keyValueMatch[2].trim().replace(/^['"]|['"]$/g, '');
+                if (value) {
+                    data[key] = value;
+                    currentList = null;
+                } else {
+                    data[key] = [];
+                    currentList = key;
+                }
+            } else if (currentList && line.trim().startsWith('- ')) {
+                const value = line.replace(/^- /, '').trim().replace(/^['"]|['"]$/g, '');
+                if (value) data[currentList].push(value);
+            }
+        });
+        return { data, content: body };
+    }
+
     // ---- פונקציות טעינה ועיבוד ----
     async function fetchAndParse(path) {
         const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
@@ -41,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const fileResponse = await fetch(file.download_url);
                         if (!fileResponse.ok) return null;
                         const content = await fileResponse.text();
-                        return matter(content);
+                        return parseFrontMatter(content);
                     } catch { return null; }
                 })
             );
@@ -76,11 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedItems.forEach(item => {
             const date = new Date(item.date);
             const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-            const hDate = new Hebcal.HDate(date);
-            const hebrewDate = hDate.toString('h');
             const newsElement = document.createElement('div');
             newsElement.className = 'news-item';
-           newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate} (${hebrewDate})</strong></p><div>${marked.marked(item.body)}</div>`;
+           newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
             newsContainer.appendChild(newsElement);
         });
     }
@@ -94,11 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
             albumContainer.innerHTML = '<p style="text-align:center; color: red;">שגיאה בטעינת האלבומים.</p>';
             return;
         }
-        
-        // [תיקון] שומרים את כל המידע של האלבום, כולל התוכן
+
         const albums = items
-            .map(item => ({ data: item.data, content: item.content }))
-            .filter(item => item.data.title && item.data.thumbnail);
+            .map(item => item.data)
+            .filter(item => item.title && item.thumbnail);
         
         albumContainer.innerHTML = '';
         if (albums.length === 0) {
@@ -106,13 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        albums.forEach(albumWrapper => {
-             const albumData = albumWrapper.data;
+        albums.forEach(albumData => {
              const albumElement = document.createElement('a');
              albumElement.className = 'album-cover';
              albumElement.innerHTML = `<img src="${albumData.thumbnail}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
-             
-             // [תיקון] מעבירים את כל המידע הדרוש לפונקציה
              albumElement.addEventListener('click', () => {
                  openGridOverlay(albumData);
              });
@@ -120,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- שאר הפונקציות ---
     function openGridOverlay(albumData) {
         thumbnailGrid.innerHTML = '';
         gridAlbumTitle.textContent = albumData.title;
@@ -146,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
     function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
     
-    // [תיקון] מוודאים שהאלמנטים קיימים לפני הוספת מאזינים
     if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
     if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
@@ -166,15 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
         const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        let hebrewDate = '';
-        if (typeof Hebcal !== 'undefined' && Hebcal.HDate) {
-            const hDate = new Hebcal.HDate(now);
-            hebrewDate = hDate.toString('h');
-        }
-        dateTimeDisplay.textContent = `${gregorianDate} | ${hebrewDate} | ${time}`;
+        dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
     }
 
-    // ---- הפעלה ----
     updateDateTime();
     setInterval(updateDateTime, 1000);
     loadNews();
