@@ -15,6 +15,14 @@ html {
     --text-color: #2c3e50;
     --border-radius: 8px;
     --transition-speed: 0.3s;
+    
+    /* משתנים חדשים למצב כהה */
+    --dark-background: #1a1a1a;
+    --dark-text: #e0e0e0;
+    --dark-primary: #2d6baf;
+    --dark-secondary: #235d8c;
+    --dark-accent: #b37609;
+    --dark-surface: #2d2d2d;
 }
 
 body { 
@@ -270,6 +278,33 @@ body {
     min-height: 250px;
 }
 
+@media (max-width: 768px) {
+    nav {
+        justify-content: space-between; /* העבר את הלוגו והכפתור לקצוות */
+    }
+
+    .menu-toggle {
+        display: block; /* [תיקון] הצג את כפתור ההמבורגר רק במובייל */
+    }
+
+    .nav-links {
+        display: none; /* [תיקון] הסתר את רשימת הקישורים הרגילה */
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: #333;
+        flex-direction: column;
+    }
+
+    .nav-links.active {
+        display: flex; /* הצג את התפריט כשהוא פעיל */
+    }
+
+    nav a {
+        border-bottom: 1px solid #444;
+    }
+}
 /* רספונסיביות משופרת */
 @media (max-width: 768px) {
     .form-column, .contact-info {
@@ -367,9 +402,41 @@ section h2::after {
 .top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
 header { background-color: #003366; color: white; padding: 20px 0; text-align: center; }
 header h1 { margin: 0; font-size: 2.5em; }
-nav { background-color: #333; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
-nav a { color: white; text-decoration: none; padding: 10px 15px; font-size: 1.1em; transition: background-color 0.3s; }
-nav a:hover { background-color: #555; }
+nav {
+    background-color: #333;
+    padding: 10px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex; /* שינוי חשוב */
+    justify-content: center; /* שינוי חשוב */
+    align-items: center; /* שינוי חשוב */
+}
+.nav-links {
+    display: flex; /* הצג קישורים בשורה כברירת מחדל */
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 15px;
+    font-size: 1.1em;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: #555;
+}
+
+.menu-toggle {
+    display: none; /* [תיקון] הסתר את כפתור ההמבורגר במחשב */
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
 main { max-width: 1100px; margin: 30px auto; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
 section { padding-top: 20px; margin-bottom: 40px; }
 section h2 { text-align: center; font-size: 2em; color: #003366; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
