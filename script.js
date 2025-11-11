@@ -1,6 +1,17 @@
 (function() {
     'use strict';
     
+    // ---- פונקציית עזר לניקוי נתיבים ----
+    function cleanPath(path) {
+        if (!path) return '';
+        let p = String(path).trim();
+        if (p.startsWith('- ')) p = p.slice(2).trim();
+        p = p.replace(/^['"]|['"]$/g, '').trim();
+        p = p.replace(/^(?:\.\/|\/)+/, '');
+        try { p = decodeURIComponent(p); } catch (e) { /* silent */ }
+        return p;
+    }
+    
     // ---- הגדרות כלליות ----
     const repoOwner = 'yt2178';
     const repoName = 'Beit-Halevi';
@@ -27,7 +38,7 @@
         backToTopButton.addEventListener("click", () => window.scrollTo({top: 0, behavior: 'smooth'}) );
     }
 
-    // ---- [חדש] פונקציה פשוטה לפירוק Front Matter ----
+    // ---- פונקציה פשוטה לפירוק Front Matter ----
     function parseFrontMatter(content) {
         const match = /^---\s*([\s\S]+?)\s*---/.exec(content);
         if (!match) return { data: {}, content };
@@ -36,22 +47,25 @@
         const body = content.slice(match[0].length).trim();
 
         const data = {};
-        let currentList = null;
+        let currentListKey = null;
+
         yamlText.trim().split('\n').forEach(line => {
             const keyValueMatch = line.match(/^([^:]+):(.*)/);
             if (keyValueMatch) {
                 const key = keyValueMatch[1].trim();
-                const value = keyValueMatch[2].trim().replace(/^['"]|['"]$/g, '');
+                const value = keyValueMatch[2].trim();
                 if (value) {
-                    data[key] = value;
-                    currentList = null;
+                    data[key] = value.replace(/^['"]|['"]$/g, '');
+                    currentListKey = null;
                 } else {
                     data[key] = [];
-                    currentList = key;
+                    currentListKey = key;
                 }
-            } else if (currentList && line.trim().startsWith('- ')) {
-                const value = line.replace(/^- /, '').trim().replace(/^['"]|['"]$/g, '');
-                if (value) data[currentList].push(value);
+            } else if (currentListKey && line.trim().startsWith('- ')) {
+                const listItemMatch = line.match(/-\s*['"]?([^'"]+)['"]?$/);
+                if (listItemMatch && listItemMatch[1]) {
+                    data[currentListKey].push(listItemMatch[1].trim());
+                }
             }
         });
         return { data, content: body };
@@ -69,7 +83,7 @@
             const parsedItems = await Promise.all(data
                 .filter(file => file.type === 'file') // מקבל כל קובץ, לא רק עם סיומת .md
                 .map(async file => {
-                    try {
+                   try {
                         const fileResponse = await fetch(file.download_url);
                         if (!fileResponse.ok) return null;
                         const content = await fileResponse.text();
@@ -84,83 +98,81 @@
             return parsedItems.filter(item => item !== null);
         } catch (error) {
             console.error(`Error processing ${path}:`, error);
-            return null;
+            return { error: true, message: 'אירעה שגיאה בטעינת הנתונים. נא לנסות שוב מאוחר יותר.' };
         }
     }
 
-    async function loadNews(showAll = false) {
+    async function loadNews(loadMore = false) {
         const newsContainer = document.getElementById('news-container');
         if (!newsContainer) return;
 
-        const items = await fetchAndParse('_posts/news');
-        if (items === null) {
-            newsContainer.innerHTML = '<p style="text-align:center; color: red;">שגיאה בטעינת העדכונים.</p>';
+        // הצג הודעת טעינה רק אם הקונטיינר ריק
+        if (!loadMore) {
+            newsContainer.innerHTML = '<p style="text-align:center;">טוען עדכונים...</p>';
+        }
+
+        const response = await fetchAndParse('_posts/news');
+        if (response === null || response.error) {
+            newsContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת העדכונים.'}</p>`;
             return;
         }
+        const items = response;
 
         const sortedItems = items
             .map(item => ({ ...item.data, body: item.content }))
             .filter(item => item.title && item.date)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+        if (!loadMore) {
+            newsContainer.innerHTML = '';
+        }
+        
         if (sortedItems.length === 0) {
             newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
             return;
         }
 
-        // בפעם הראשונה, מנקה את הקונטיינר
-        if (!showAll) {
-            newsContainer.innerHTML = '';
+        const existingItemsCount = newsContainer.querySelectorAll('.news-item').length;
+        const itemsToShow = sortedItems.slice(existingItemsCount, existingItemsCount + 3);
+
+       itemsToShow.forEach((item, index) => {
+        const date = new Date(item.date);
+        const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+        const newsElement = document.createElement('div');
+        newsElement.className = 'news-item';
+        // [מתוקן] הסרנו את התאריך העברי
+        newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
+        newsContainer.appendChild(newsElement);
+        
+        setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);
+    });
+        
+
+        const oldButton = newsContainer.querySelector('.load-more-button');
+        if (oldButton) {
+            oldButton.remove();
         }
 
-        // מחשב אילו פריטים להציג
-        const existingItems = newsContainer.querySelectorAll('.news-item').length;
-        const itemsToShow = showAll ? 
-            sortedItems.slice(existingItems) : // רק פריטים חדשים
-            sortedItems.slice(0, 3); // 3 הראשונים
-
-        // מוסיף את הפריטים החדשים
-        itemsToShow.forEach((item, index) => {
-            const date = new Date(item.date);
-            const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-            const newsElement = document.createElement('div');
-            newsElement.className = showAll ? 'news-item new-item' : 'news-item';
-            newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
-            newsContainer.appendChild(newsElement);
-            
-            // מפעיל את האנימציה אחרי הוספה לDOM
-            setTimeout(() => {
-                newsElement.classList.add('visible');
-            }, index * 100);
-        });
-
-        // מסיר כפתור קודם אם קיים
-        const existingButton = newsContainer.querySelector('.load-more-button');
-        if (existingButton) {
-            existingButton.remove();
-        }
-
-        // מוסיף כפתור חדש אם יש עוד פריטים להצגה
-        if (!showAll && sortedItems.length > 3) {
+        const totalDisplayed = newsContainer.querySelectorAll('.news-item').length;
+        if (totalDisplayed < sortedItems.length) {
             const loadMoreButton = document.createElement('button');
             loadMoreButton.className = 'load-more-button';
             loadMoreButton.textContent = 'חדשות נוספות';
-            loadMoreButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                loadNews(true);
-            });
+            loadMoreButton.addEventListener('click', () => loadNews(true));
             newsContainer.appendChild(loadMoreButton);
         }
     }
+    
     async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
         if (!albumContainer) return;
 
-        const items = await fetchAndParse('_posts/gallery');
-        if (items === null) {
-            albumContainer.innerHTML = '<p style="text-align:center; color: red;">שגיאה בטעינת האלבומים.</p>';
+        const response = await fetchAndParse('_posts/gallery');
+        if (response === null || response.error) {
+            albumContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת האלבומים.'}</p>`;
             return;
         }
+        const items = response;
 
         const albums = items
             .map(item => item.data)
@@ -175,30 +187,29 @@
         albums.forEach((albumData, index) => {
             const albumElement = document.createElement('a');
             albumElement.className = 'album-cover';
-            albumElement.innerHTML = `<img src="${albumData.thumbnail}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+            albumElement.innerHTML = `<img src="${cleanPath(albumData.thumbnail)}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
             albumElement.addEventListener('click', () => {
                 openGridOverlay(albumData);
             });
             albumContainer.appendChild(albumElement);
             
-            // אנימציית הופעה הדרגתית
             setTimeout(() => {
                 albumElement.classList.add('visible');
             }, index * 150);
         });
     }
 
-    // --- שאר הפונקציות ---
     function openGridOverlay(albumData) {
         thumbnailGrid.innerHTML = '';
         gridAlbumTitle.textContent = albumData.title;
-        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ src: imgSrc, alt: albumData.title }));
+        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ src: cleanPath(imgSrc), alt: albumData.title }));
 
         if (currentAlbumImages.length === 0) {
              thumbnailGrid.innerHTML = '<p style="color:white; text-align:center;">לא נמצאו תמונות באלבום זה.</p>';
         } else {
             currentAlbumImages.forEach((imgData, index) => {
                 const thumb = document.createElement('img');
+                thumb.loading = 'lazy';
                 thumb.src = imgData.src;
                 thumb.alt = imgData.alt;
                 thumb.dataset.index = index;
@@ -210,7 +221,6 @@
                 });
                 thumbnailGrid.appendChild(thumb);
                 
-                // אנימציית הופעה הדרגתית לתמונות ממוזערות
                 setTimeout(() => {
                     thumb.classList.add('visible');
                 }, index * 50);
@@ -227,25 +237,10 @@
         nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none';
     }
 
-    function closeLightbox() {
-        lightbox.classList.remove('active');
-    }
-
-    function showNextImage() {
-        if (currentIndex < currentAlbumImages.length - 1) {
-            currentIndex++;
-            showLightboxImage();
-        }
-    }
-
-    function showPrevImage() {
-        if (currentIndex > 0) {
-            currentIndex--;
-            showLightboxImage();
-        }
-    }
+    function closeLightbox() { lightbox.classList.remove('active'); }
+    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
+    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
     
-    // הוספת מאזיני אירועים
     if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
     if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
@@ -261,16 +256,89 @@
     });
 
     const dateTimeDisplay = document.getElementById('date-time-display');
-    function updateDateTime() {
-        const now = new Date();
-        const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
+  function updateDateTime() {
+    const now = new Date();
+    const gregorianDate = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // [מתוקן] הסרנו את התאריך העברי
+    dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
+}
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        const themeIcon = themeToggle.querySelector('i');
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+        }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            if (themeIcon) themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
+        });
     }
 
-    // אתחול הפונקציות
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (menuToggle && navLinks) {
+        const icon = menuToggle.querySelector('i');
+        const closeMenu = () => {
+            if (navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+                icon.classList.add('fa-bars');
+                icon.classList.remove('fa-times');
+            }
+        };
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navLinks.classList.toggle('active');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                closeMenu();
+            }
+        });
+        navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+        document.addEventListener('click', (e) => {
+            if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                closeMenu();
+            }
+        });
+    }
+
     updateDateTime();
     setInterval(updateDateTime, 1000);
     loadNews();
     loadGallery();
+    // ---- [חדש] בדיקה לפתיחת גלריה מקישור ישיר ----
+    function checkUrlForGallery() {
+        const params = new URLSearchParams(window.location.search);
+        const albumTitle = params.get('album');
+        if (!albumTitle) return;
+
+        // המתן עד שהגלריות ייטענו
+        const checkAlbumsLoaded = setInterval(async () => {
+            const albumContainer = document.getElementById('album-grid-container');
+            const albumsLoaded = albumContainer.querySelector('.album-cover');
+            
+            if (albumsLoaded) {
+                clearInterval(checkAlbumsLoaded);
+                
+                // מצא את האלבום המתאים ופתח אותו
+                const items = await fetchAndParse('_posts/gallery');
+                if (items) {
+                    const albums = items.map(item => item.data);
+                    const targetAlbum = albums.find(album => album.title === albumTitle);
+                    if (targetAlbum) {
+                        openGridOverlay(targetAlbum);
+                    }
+                }
+            }
+        }, 100);
+    }
+
+    // הפעלת הבדיקה בסוף הטעינה
+    checkUrlForGallery();
 })();
