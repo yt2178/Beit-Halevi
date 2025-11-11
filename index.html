@@ -19,11 +19,16 @@
     <div class="top-bar"><span id="date-time-display">טוען תאריך ושעה...</span></div>
     <header><h1>ישיבת בית הלוי - ראש העין</h1></header>
     <nav>
-        <a href="#about">אודות</a>
-        <a href="#news">חדשות ועדכונים</a>
-        <a href="#gallery">גלריה</a>
-        <a href="#donations">תרומות</a>
-        <a href="#contact">צור קשר</a>
+        <button class="menu-toggle" aria-label="תפריט">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="nav-links">
+            <a href="#about">אודות</a>
+            <a href="#news">חדשות ועדכונים</a>
+            <a href="#gallery">גלריה</a>
+            <a href="#donations">תרומות</a>
+            <a href="#contact">צור קשר</a>
+        </div>
     </nav>
 
     <main>
@@ -101,6 +106,10 @@
     </main>
     
     <footer><p>&copy; כל הזכויות שמורות לישיבת בית הלוי, ראש העין, תשפ"ה</p></footer>
+
+    <button class="theme-toggle" id="theme-toggle" title="שינוי מצב תצוגה">
+        <i class="fas fa-moon"></i>
+    </button>
 
     <div class="grid-overlay" id="grid-overlay"><span class="grid-close">&times;</span><div class="grid-header"><h2 id="grid-album-title"></h2></div><div class="thumbnail-grid" id="thumbnail-grid"></div></div>
     <div class="lightbox" id="lightbox"><span class="lightbox-close">&times;</span><a class="lightbox-prev">&#10094;</a><a class="lightbox-next">&#10095;</a><div class="lightbox-content"><img src="" id="lightbox-img"></div></div>
