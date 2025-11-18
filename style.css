@@ -688,7 +688,59 @@ body.dark-mode #album-download-btn {
     text-align: center;
     margin-top: 30px;
 }
+.news-modal .modal-controls {
+    display: flex;
+    justify-content: space-between; /* דוחף את הפקדים לקצוות */
+    align-items: center;
+    padding: 10px 0;
+    margin-top: 30px;
+    border-top: 1px solid #ddd;
+}
 
+/* עיצוב בסיסי לכפתורי ניווט (קודם/הבא) */
+#news-prev-btn, #news-next-btn {
+    background-color: var(--primary-color); /* כחול כהה */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.3s, transform 0.2s;
+    display: flex; /* כדי ליישר את האייקון והטקסט */
+    align-items: center;
+    gap: 8px; /* מרווח בין האייקון לטקסט */
+    width: 120px; /* רוחב קבוע למראה אחיד */
+    justify-content: center;
+}
+
+#news-prev-btn:hover, #news-next-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* התאמה למצב כהה */
+body.dark-mode #news-prev-btn,
+body.dark-mode #news-next-btn {
+    background-color: var(--dark-primary);
+}
+
+/* התאמת כפתור השיתוף כדי שיהיה קטן יותר במרכז */
+#news-share-btn {
+    flex-grow: 0;
+    margin: 0 10px; /* מרווח קטן מהצדדים */
+    width: 120px;
+    justify-content: center;
+}
+
+/* התאמה לצד ימין (קודם) וצד שמאל (הבא) */
+#news-prev-btn i {
+    order: 1; /* מזיז את האייקון לימין הכפתור (ב-RTL) */
+}
+#news-next-btn {
+    flex-direction: row-reverse; /* מזיז את האייקון לשמאל הכפתור (ב-RTL) */
+}
 #news-share-btn {
     background-color: var(--secondary-color);
     color: white;
