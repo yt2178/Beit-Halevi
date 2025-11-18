@@ -1,4 +1,4 @@
-(function() {
+(async function() { 
     'use strict';
     
     // ---- פונקציית עזר לניקוי נתיבים ----
@@ -23,11 +23,14 @@
     const gridAlbumTitle = document.getElementById('grid-album-title');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
+    const downloadBtn = document.getElementById('download-btn'); 
+    const shareBtn = document.getElementById('share-btn'); 
+    let currentAlbumImages = [];
     const lightboxCloseBtn = lightbox.querySelector('.lightbox-close');
     const nextBtn = lightbox.querySelector('.lightbox-next');
     const prevBtn = lightbox.querySelector('.lightbox-prev');
-    let currentAlbumImages = [];
     let currentIndex = 0;
+    let allLoadedAlbums = [];
 
     // ---- קוד כפתור "חזרה למעלה" ----
     let backToTopButton = document.getElementById("back-to-top-btn");
@@ -163,7 +166,7 @@
         }
     }
     
-    async function loadGallery() {
+ async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
         if (!albumContainer) return;
 
@@ -174,22 +177,31 @@
         }
         const items = response;
 
-        const albums = items
-            .map(item => item.data)
+        // [שינוי] שמירת האלבומים הגלובלי לצורך שימוש ב-Deep Linking
+        allLoadedAlbums = items
+            .map(item => ({ 
+                ...item.data, 
+                // [חדש] יצירת slug (מזהה ידידותי ל-URL)
+                slug: item.data.title.replace(/\s/g, '-') 
+            }))
             .filter(item => item.title && item.thumbnail);
         
         albumContainer.innerHTML = '';
-        if (albums.length === 0) {
+        if (allLoadedAlbums.length === 0) {
             albumContainer.innerHTML = '<p style="text-align:center;">לא נמצאו אלבומים.</p>';
             return;
         }
 
-        albums.forEach((albumData, index) => {
+        allLoadedAlbums.forEach((albumData, index) => {
             const albumElement = document.createElement('a');
             albumElement.className = 'album-cover';
-            albumElement.innerHTML = `<img src="${cleanPath(albumData.thumbnail)}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
-            albumElement.addEventListener('click', () => {
+            albumElement.innerHTML = `<img loading="lazy" src="${cleanPath(albumData.thumbnail)}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+            albumElement.addEventListener('click', (e) => {
+                e.preventDefault(); // מונע קפיצה של הדף
+                // [שינוי] פותח גלריה ומעדכן את ה-URL
                 openGridOverlay(albumData);
+                // עדכון ה-URL עם ה-Slug של האלבום
+                window.history.pushState(null, null, `#gallery/${albumData.slug}`); 
             });
             albumContainer.appendChild(albumElement);
             
@@ -197,12 +209,19 @@
                 albumElement.classList.add('visible');
             }, index * 150);
         });
+
+        checkUrlHash(); // [חדש] בדיקת ה-URL לאחר טעינת האלבומים
     }
+
 
     function openGridOverlay(albumData) {
         thumbnailGrid.innerHTML = '';
         gridAlbumTitle.textContent = albumData.title;
-        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ src: cleanPath(imgSrc), alt: albumData.title }));
+        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ 
+            src: cleanPath(imgSrc), 
+            alt: albumData.title,
+            albumSlug: albumData.slug // [חדש] שמירת ה-slug לצורך Deep Linking של תמונה בודדת
+        }));
 
         if (currentAlbumImages.length === 0) {
              thumbnailGrid.innerHTML = '<p style="color:white; text-align:center;">לא נמצאו תמונות באלבום זה.</p>';
@@ -215,7 +234,8 @@
                 thumb.dataset.index = index;
                 thumb.addEventListener('click', () => {
                     currentIndex = parseInt(thumb.dataset.index);
-                    showLightboxImage();
+                    // [שינוי] פותח תמונה ומעדכן את ה-URL
+                    showLightboxImage(true);
                     gridOverlay.classList.remove('active');
                     lightbox.classList.add('active');
                 });
@@ -228,19 +248,77 @@
         }
         gridOverlay.classList.add('active');
     }
+
     
-    function showLightboxImage() { 
-        if (!currentAlbumImages[currentIndex]) return;
-        lightboxImg.src = currentAlbumImages[currentIndex].src;
-        lightboxImg.alt = currentAlbumImages[currentIndex].alt;
-        prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none';
-        nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none';
+
+function showLightboxImage(isFirstLoad = false) { 
+    if (!currentAlbumImages[currentIndex]) return;
+    const currentImage = currentAlbumImages[currentIndex];
+    
+    lightboxImg.src = currentImage.src;
+    lightboxImg.alt = currentImage.alt;
+    
+    // [חדש] עדכון ה-URL עם הקישור לתמונה הספציפית
+    const newHash = `#gallery/${currentImage.albumSlug}/${currentIndex + 1}`;
+    // משתמש ב-replaceState כדי לא למלא את היסטוריית הדפדפן בצעדי ניווט מיותרים
+    if (!isFirstLoad) { 
+        window.history.replaceState(null, null, newHash);
+    } else {
+        // בטעינה הראשונה (מלחיצה על תמונה קטנה), עושים pushState
+        window.history.pushState(null, null, newHash);
     }
 
-    function closeLightbox() { lightbox.classList.remove('active'); }
-    function showNextImage() { if (currentIndex < currentAlbumImages.length - 1) { currentIndex++; showLightboxImage(); } }
-    function showPrevImage() { if (currentIndex > 0) { currentIndex--; showLightboxImage(); } }
+    // הגדרת כפתורי ניווט
+    prevBtn.style.display = (currentIndex > 0) ? 'block' : 'none';
+    nextBtn.style.display = (currentIndex < currentAlbumImages.length - 1) ? 'block' : 'none';
     
+    // הגדרת כפתור הורדה
+    if (downloadBtn) {
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = currentImage.src;
+            link.download = currentImage.src.split('/').pop() || 'image.jpg'; 
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+    }
+    
+    // הגדרת כפתור שיתוף (משתף את הקישור לעמוד)
+    if (shareBtn && navigator.share) {
+        shareBtn.style.display = 'block';
+        shareBtn.onclick = () => {
+            navigator.share({
+                title: `תמונה: ${currentImage.alt} (מס' ${currentIndex + 1})`,
+                text: `צפו בתמונה זו מאלבום ${currentImage.alt} של ישיבת בית הלוי.`,
+                // [שינוי] שיתוף הקישור המעודכן עם ה-Hash
+                url: window.location.href 
+            }).catch(error => console.log('Error sharing:', error));
+        };
+    } else if (shareBtn) {
+        shareBtn.style.display = 'none';
+    }
+}
+
+    function closeLightbox() { 
+        lightbox.classList.remove('active'); 
+        window.history.pushState(null, null, '#'); // מנקה את ה-hash
+    }
+    
+    function showNextImage() { 
+        if (currentIndex < currentAlbumImages.length - 1) { 
+            currentIndex++; 
+            showLightboxImage(false); // [שינוי] false = replaceState
+        } 
+    }
+    
+    function showPrevImage() { 
+        if (currentIndex > 0) { 
+            currentIndex--; 
+            showLightboxImage(false); // [שינוי] false = replaceState
+        } 
+    }
+
     if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
     if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
@@ -263,22 +341,65 @@
     // [מתוקן] הסרנו את התאריך העברי
     dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
 }
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-        const themeIcon = themeToggle.querySelector('i');
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
-        }
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            if (themeIcon) themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
-        });
-    }
+    // ... (נשאר הקוד של ה-dateTimeDisplay)
 
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) {
+    const themeIcon = themeToggle.querySelector('i');
+    const savedTheme = localStorage.getItem('theme');
+    
+    // [שינוי] ברירת מחדל למצב בהיר. אם שמור כהה - מפעיל.
+    const isDark = savedTheme === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
+    } else {
+        // ודא שמצב בהיר הוא ברירת המחדל (אם לא נשמר כלום, או נשמר 'light')
+        document.body.classList.remove('dark-mode');
+        if (themeIcon) themeIcon.classList.replace('fa-sun', 'fa-moon');
+    }
+    
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isCurrentlyDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isCurrentlyDark ? 'dark' : 'light');
+        if (themeIcon) themeIcon.classList.replace(isCurrentlyDark ? 'fa-moon' : 'fa-sun', isCurrentlyDark ? 'fa-sun' : 'fa-moon');
+    });
+}
+
+// ... (שאר הקוד נשאר כפי שהוא)
+// [חדש] טיפול בשליחת טופס צור קשר (תיקון באג חסר)
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+    contactForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const button = contactForm.querySelector('button[type="submit"]');
+        button.disabled = true;
+        
+        const response = await fetch(contactForm.action, {
+            method: contactForm.method,
+            body: new FormData(contactForm),
+            headers: {'Accept': 'application/json'}
+        });
+        
+        const statusMessage = document.createElement('p');
+        statusMessage.style.textAlign = 'center';
+        statusMessage.style.marginTop = '10px';
+        
+        if (response.ok) {
+            statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
+            statusMessage.style.color = 'green';
+            contactForm.reset();
+        } else {
+            statusMessage.textContent = "אירעה שגיאה בשליחת ההודעה. נסה שוב מאוחר יותר.";
+            statusMessage.style.color = 'red';
+        }
+        
+        contactForm.appendChild(statusMessage);
+        button.disabled = false;
+        setTimeout(() => statusMessage.remove(), 5000);
+    });
+}
     const menuToggle = document.querySelector('.menu-toggle');
     const navLinks = document.querySelector('.nav-links');
     if (menuToggle && navLinks) {
@@ -307,38 +428,54 @@
             }
         });
     }
-
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
-    loadNews();
-    loadGallery();
-    // ---- [חדש] בדיקה לפתיחת גלריה מקישור ישיר ----
-    function checkUrlForGallery() {
-        const params = new URLSearchParams(window.location.search);
-        const albumTitle = params.get('album');
-        if (!albumTitle) return;
-
-        // המתן עד שהגלריות ייטענו
-        const checkAlbumsLoaded = setInterval(async () => {
-            const albumContainer = document.getElementById('album-grid-container');
-            const albumsLoaded = albumContainer.querySelector('.album-cover');
-            
-            if (albumsLoaded) {
-                clearInterval(checkAlbumsLoaded);
-                
-                // מצא את האלבום המתאים ופתח אותו
-                const items = await fetchAndParse('_posts/gallery');
-                if (items) {
-                    const albums = items.map(item => item.data);
-                    const targetAlbum = albums.find(album => album.title === albumTitle);
-                    if (targetAlbum) {
-                        openGridOverlay(targetAlbum);
-                    }
-                }
-            }
-        }, 100);
+// [חדש] פונקציה לטעינת גלריה ספציפית
+function openAlbumFromSlug(albumSlug, imageIndex) {
+    const targetAlbum = allLoadedAlbums.find(album => album.slug === albumSlug);
+    if (!targetAlbum) {
+        console.error("Album not found for deep link:", albumSlug);
+        return;
     }
+    
+    // פתיחת רשת התמונות הקטנות
+    openGridOverlay(targetAlbum);
+    
+    // אם יש אינדקס תמונה חוקי, פותחים את ה-Lightbox
+    if (imageIndex !== undefined && imageIndex >= 1 && imageIndex <= currentAlbumImages.length) {
+        currentIndex = imageIndex - 1; // אינדקס הוא 0-based
+        // setTimeout כדי לתת זמן למערכת להגיב
+        setTimeout(() => { 
+            gridOverlay.classList.remove('active'); 
+            lightbox.classList.add('active'); 
+            showLightboxImage(true); // true = pushState (כניסה חדשה)
+        }, 50); 
+    }
+}
 
-    // הפעלת הבדיקה בסוף הטעינה
-    checkUrlForGallery();
-})();
+// [חדש] פונקציה לבדיקת ה-URL Hash
+function checkUrlHash() {
+    const hash = window.location.hash;
+    const match = hash.match(/^#gallery\/([^\/]+)(?:\/(\d+))?$/);
+
+    if (match) {
+        const albumSlug = match[1];
+        const imageIndex = match[2] ? parseInt(match[2]) : undefined;
+        openAlbumFromSlug(albumSlug, imageIndex);
+    }
+}
+
+// [חדש] טיפול בכפתורי Back/Forward של הדפדפן
+window.addEventListener('popstate', checkUrlHash);
+
+// ---- הפעלת לוגיקה ראשית (עכשיו הכל ב-async) ----
+
+updateDateTime();
+setInterval(updateDateTime, 1000);
+loadNews();
+
+// מחכים לטעינת האלבומים כדי לבדוק את ה-hash (ה-await עובד כי הפונקציה הראשית היא async)
+await loadGallery(); 
+
+// רק עכשיו, אחרי ש-allLoadedAlbums מלא, אפשר לבדוק את ה-hash
+checkUrlHash(); 
+
+})(); // סוף ה-IIFE הראשי והיחיד
