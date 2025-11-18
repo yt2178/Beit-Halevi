@@ -468,19 +468,34 @@ section h2::after {
     transform: translateY(-5px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
-
 /* --- כפתור חזרה למעלה משופר --- */
 #back-to-top-btn {
-    background-color: var(--primary-color);
+    /* [שינוי] transition opacity כדי ליצור אנימציה חלקה */
+    transition: all var(--transition-speed), opacity 0.3s, visibility 0.3s; 
+    opacity: 0;
+    visibility: hidden; /* הסתרה אמיתית ב-CSS */
+}
+
+#back-to-top-btn.visible { /* מחלקה חדשה שתופעל ב-JS */
     opacity: 0.8;
-    transition: all var(--transition-speed);
+    visibility: visible;
+}
+/* --- אנימציית ספינר --- */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-#back-to-top-btn:hover {
-    opacity: 1;
-    transform: translateY(-3px);
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
 }
-
 .bsd { position: absolute; top: 5px; right: 10px; font-size: 1em; color: #555; }
 .top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
 header { background-color: #003366; color: white; padding: 20px 0; text-align: center; }
