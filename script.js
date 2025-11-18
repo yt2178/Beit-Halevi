@@ -31,6 +31,15 @@
     const prevBtn = lightbox.querySelector('.lightbox-prev');
     let currentIndex = 0;
     let allLoadedAlbums = [];
+    const albumShareBtn = document.getElementById('album-share-btn');
+    const albumDownloadBtn = document.getElementById('album-download-btn');
+    let currentAlbumData = null; // ישמור את ה-data של האלבום הפתוח
+    const newsModal = document.getElementById('news-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDate = document.getElementById('modal-date');
+    const modalBody = document.getElementById('modal-body');
+    const newsShareBtn = document.getElementById('news-share-btn');
+    let allLoadedNews = []; // [חדש] מערך גלובלי לכל החדשות
 
     // ---- קוד כפתור "חזרה למעלה" ----
     let backToTopButton = document.getElementById("back-to-top-btn");
@@ -121,8 +130,14 @@
         }
         const items = response;
 
-        const sortedItems = items
-            .map(item => ({ ...item.data, body: item.content }))
+        // [שינוי] שמירת החדשות הגלובלי לצורך שימוש ב-Deep Linking ו-Modal
+        allLoadedNews = items
+            .map(item => ({ 
+                ...item.data, 
+                body: item.content,
+                // [חדש] יצירת slug ייחודי
+                slug: `${item.data.date}-${item.data.title.replace(/\s/g, '-').replace(/[^\w-]/g, '')}`
+            }))
             .filter(item => item.title && item.date)
             .sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -130,40 +145,47 @@
             newsContainer.innerHTML = '';
         }
         
-        if (sortedItems.length === 0) {
+        if (allLoadedNews.length === 0) {
             newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
             return;
         }
 
         const existingItemsCount = newsContainer.querySelectorAll('.news-item').length;
-        const itemsToShow = sortedItems.slice(existingItemsCount, existingItemsCount + 3);
+        const itemsToShow = allLoadedNews.slice(existingItemsCount, existingItemsCount + 3);
 
        itemsToShow.forEach((item, index) => {
         const date = new Date(item.date);
         const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
         const newsElement = document.createElement('div');
         newsElement.className = 'news-item';
+        
+        // [שינוי] הוספת Event Listener לפתיחת המודאל
+        newsElement.addEventListener('click', () => {
+            openNewsModal(item);
+            window.history.pushState(null, null, `#news/${item.slug}`); 
+        });
+        
         // [מתוקן] הסרנו את התאריך העברי
-        newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body)}</div>`;
+        newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
         newsContainer.appendChild(newsElement);
         
         setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);
     });
         
-
-        const oldButton = newsContainer.querySelector('.load-more-button');
+  const oldButton = newsContainer.querySelector('.load-more-button');
         if (oldButton) {
             oldButton.remove();
         }
 
         const totalDisplayed = newsContainer.querySelectorAll('.news-item').length;
-        if (totalDisplayed < sortedItems.length) {
+        if (totalDisplayed < allLoadedNews.length) {
             const loadMoreButton = document.createElement('button');
             loadMoreButton.className = 'load-more-button';
             loadMoreButton.textContent = 'חדשות נוספות';
             loadMoreButton.addEventListener('click', () => loadNews(true));
             newsContainer.appendChild(loadMoreButton);
         }
+
     }
     
  async function loadGallery() {
@@ -215,14 +237,18 @@
 
 
     function openGridOverlay(albumData) {
-        thumbnailGrid.innerHTML = '';
-        gridAlbumTitle.textContent = albumData.title;
-        currentAlbumImages = (albumData.images || []).map(imgSrc => ({ 
-            src: cleanPath(imgSrc), 
-            alt: albumData.title,
-            albumSlug: albumData.slug // [חדש] שמירת ה-slug לצורך Deep Linking של תמונה בודדת
-        }));
-
+    currentAlbumData = albumData; // [חדש] שמירת נתוני האלבום
+    
+    thumbnailGrid.innerHTML = '';
+    gridAlbumTitle.textContent = albumData.title;
+    currentAlbumImages = (albumData.images || []).map(imgSrc => ({ 
+        src: cleanPath(imgSrc), 
+        alt: albumData.title,
+        albumSlug: albumData.slug
+    }));
+ // [חדש] חיבור כפתורי השיתוף וההורדה
+    setupAlbumControls(albumData);
+    
         if (currentAlbumImages.length === 0) {
              thumbnailGrid.innerHTML = '<p style="color:white; text-align:center;">לא נמצאו תמונות באלבום זה.</p>';
         } else {
@@ -248,9 +274,119 @@
         }
         gridOverlay.classList.add('active');
     }
+// ... (בסוף הקטע של פונקציות הגלריה) ...
 
-    
+// [חדש] פונקציה לבדיקת ה-URL Hash עבור חדשות
+function checkNewsHash() {
+    const hash = window.location.hash;
+    const match = hash.match(/^#news\/([^\/]+)$/); // בודק #news/slug
 
+    if (match) {
+        let newsSlug = match[1];
+        // פענוח ה-URL
+        try {
+            newsSlug = decodeURIComponent(newsSlug);
+        } catch (e) {
+            console.error("Failed to decode news slug", e);
+        }
+
+        // חפש את הפריט המלא
+        const targetNews = allLoadedNews.find(item => item.slug === newsSlug);
+
+        if (targetNews) {
+            openNewsModal(targetNews);
+            // גלילה אוטומטית לראש העמוד
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+}
+    // [חדש] פתיחת חלון קופץ עבור ידיעה אחת
+function openNewsModal(newsItem) {
+    if (!newsModal) return;
+
+    const date = new Date(newsItem.date);
+    const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    modalTitle.textContent = newsItem.title;
+    modalDate.textContent = `פורסם בתאריך: ${formattedDate}`;
+    modalBody.innerHTML = marked.parse(newsItem.body);
+
+    // לוגיקת שיתוף
+    if (newsShareBtn && navigator.share) {
+        newsShareBtn.style.display = 'flex';
+        newsShareBtn.onclick = () => {
+            navigator.share({
+                title: newsItem.title,
+                text: `ידיעה חדשה מישיבת בית הלוי: ${newsItem.title}`,
+                url: window.location.href 
+            }).catch(error => console.log('Error sharing news:', error));
+        };
+    } else if (newsShareBtn) {
+        newsShareBtn.style.display = 'none';
+    }
+
+    newsModal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // מונע גלילה ברקע
+}
+
+// [חדש] סגירת חלון קופץ עבור ידיעה אחת
+function closeNewsModal() {
+    newsModal.classList.remove('active');
+    document.body.style.overflow = '';
+    // ניקוי ה-hash לכתובת הבסיס של #news
+    window.history.pushState(null, null, '#'); 
+}
+// [חדש] לוגיקה לכפתורי שיתוף והורדה של כל האלבום
+function setupAlbumControls(albumData) {
+    const albumSlug = albumData.slug;
+
+    // 1. כפתור שיתוף
+    if (albumShareBtn && navigator.share) {
+        albumShareBtn.style.display = 'flex';
+        albumShareBtn.onclick = () => {
+            navigator.share({
+                title: `גלריית תמונות: ${albumData.title}`,
+                text: `צפו בגלריית התמונות המלאה של ישיבת בית הלוי - ${albumData.title}`,
+                url: `${window.location.origin}/#gallery/${albumSlug}`
+            }).catch(error => console.log('Error sharing album:', error));
+        };
+    } else if (albumShareBtn) {
+        // הסתר אם אין תמיכה ב-Share API
+        albumShareBtn.style.display = 'none'; 
+    }
+
+    // 2. כפתור הורדת הכל (עם אישור)
+    if (albumDownloadBtn) {
+        albumDownloadBtn.onclick = async () => {
+            if (!confirm(`האם אתה בטוח שברצונך להוריד ${currentAlbumImages.length} תמונות מהאלבום "${albumData.title}"?`)) {
+                return;
+            }
+
+            // יצירת קובץ zip באופן אסינכרוני - לצורך הדגמה, נשתמש בלוגיקה של הורדת כל קובץ בנפרד
+            // בפרויקט אמיתי יש להשתמש בספריית JSZip כדי ליצור קובץ ZIP.
+            
+            albumDownloadBtn.disabled = true;
+            albumDownloadBtn.textContent = 'מוריד... אנא המתן';
+
+            for (let i = 0; i < currentAlbumImages.length; i++) {
+                const img = currentAlbumImages[i];
+                // יצירת קישור זמני והורדה
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = `${albumSlug}-${i + 1}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                // הפסקה קצרה כדי לא לחסום את הדפדפן (Browser Download Manager)
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            albumDownloadBtn.disabled = false;
+            albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
+            alert('הורדת התמונות החלה. ייתכן שתצטרך לאשר הורדות נוספות בדפדפן.');
+        };
+    }
+}
 function showLightboxImage(isFirstLoad = false) { 
     if (!currentAlbumImages[currentIndex]) return;
     const currentImage = currentAlbumImages[currentIndex];
@@ -302,7 +438,9 @@ function showLightboxImage(isFirstLoad = false) {
 
     function closeLightbox() { 
         lightbox.classList.remove('active'); 
-        window.history.pushState(null, null, '#'); // מנקה את ה-hash
+        // [שינוי] במקום hash '#', נחזיר ל-hash של האלבום אם הוא פתוח ברקע
+        const albumSlug = currentAlbumData ? currentAlbumData.slug : '';
+        window.history.pushState(null, null, albumSlug ? `#gallery/${albumSlug}` : '#'); 
     }
     
     function showNextImage() { 
@@ -323,8 +461,20 @@ function showLightboxImage(isFirstLoad = false) {
     if (nextBtn) nextBtn.addEventListener('click', showNextImage);
     if (prevBtn) prevBtn.addEventListener('click', showPrevImage);
     if (lightbox) lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-    if (gridCloseBtn) gridCloseBtn.addEventListener('click', () => { gridOverlay.classList.remove('active'); currentAlbumImages = []; });
-
+    if (gridCloseBtn) gridCloseBtn.addEventListener('click', () => { 
+        gridOverlay.classList.remove('active'); 
+        currentAlbumImages = [];
+        window.history.pushState(null, null, '#'); // [שינוי] מנקה את ה-URL hash
+        currentAlbumData = null; // [חדש] איפוס נתוני האלבום
+    });
+if (newsModal) {
+    const modalCloseBtn = newsModal.querySelector('.modal-close');
+    modalCloseBtn.addEventListener('click', closeNewsModal);
+    // סגירה בלחיצה מחוץ למודאל
+    newsModal.addEventListener('click', (e) => {
+        if (e.target === newsModal) closeNewsModal();
+    });
+}
     document.addEventListener('keydown', (e) => {
         if (lightbox && lightbox.classList.contains('active')) {
             if (e.key === 'ArrowRight') showNextImage();
@@ -457,14 +607,24 @@ function checkUrlHash() {
     const match = hash.match(/^#gallery\/([^\/]+)(?:\/(\d+))?$/);
 
     if (match) {
-        const albumSlug = match[1];
+        let albumSlug = match[1];
+        // [תיקון קריטי] פענוח ה-URL כדי להתאים ל-slug שנוצר
+        try {
+            albumSlug = decodeURIComponent(albumSlug);
+        } catch (e) {
+            console.error("Failed to decode album slug", e);
+        }
+        
         const imageIndex = match[2] ? parseInt(match[2]) : undefined;
         openAlbumFromSlug(albumSlug, imageIndex);
     }
 }
 
 // [חדש] טיפול בכפתורי Back/Forward של הדפדפן
-window.addEventListener('popstate', checkUrlHash);
+window.addEventListener('popstate', () => {
+    checkUrlHash(); // בדיקת גלריה (שכבר קיימת)
+    checkNewsHash(); // [חדש] בדיקת חדשות
+});
 
 // ---- הפעלת לוגיקה ראשית (עכשיו הכל ב-async) ----
 
@@ -477,5 +637,6 @@ await loadGallery();
 
 // רק עכשיו, אחרי ש-allLoadedAlbums מלא, אפשר לבדוק את ה-hash
 checkUrlHash(); 
+checkNewsHash(); // [חדש] בדיקת חדשות
 
 })(); // סוף ה-IIFE הראשי והיחיד
