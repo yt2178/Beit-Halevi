@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ישיבת בית הלוי - ראש העין</title>
-    <meta name="description" content="האתר הרשמי של ישיבת בית הלוי בראש העין בראשות הגר''א עפג'ין שליט''א. באתר תוכלו למצוא חדשות, עדכונים, גלריות תמונות מאירועים בישיבה ועוד.">
-    <meta name="keywords" content="ישיבת בית הלוי, הרב אבנר עפג'ין, ראש העין, ישיבה, עולם התורה, שיעורים">
+    <meta name="description" content="האתר הרשמי של ישיבת בית הלוי בראש העין בראשות הגה"צ אבנר עפג'ין שליט''א. באתר תוכלו למצוא חדשות, עדכונים, גלריות תמונות מאירועים בישיבה ועוד.">
+    <meta name="keywords" content="ישיבת בית הלוי, הרב אבנר עפג'ין, ראש העין, ישיבה, עולם התורה">
    <meta name="google-site-verification" content="LX0EklOQrRGJZHHPzn8RdxEcI824X5sYfZAaHuLXYT0" />
-    <!-- קישור לקובץ העיצוב החיצוני -->
+   <!-- [חדש] הגדרות תמונה לשיתוף ברשתות חברתיות (Open Graph) -->
+<meta property="og:title" content="ישיבת בית הלוי - ראש העין" />
+<meta property="og:description" content="האתר הרשמי של ישיבת בית הלוי בראש העין..." />
+<meta property="og:image" content="https://yt2178.github.io/Beit-Halevi/assets/uploads/social-image.jpg" />
+<meta property="og:url" content="https://yt2178.github.io/Beit-Halevi/" />
+<meta property="og:type" content="website" />
+   <!-- קישור לקובץ העיצוב החיצוני -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -61,7 +67,7 @@
 
         <section id="contact">
             <h2>צור קשר</h2>
-            <p style="text-align: center;">ניתן ליצור קשר עם משרדי הישיבה באמצעות הטופס הבא, או לבוא ללמוד או להתפלל בכתובת המצוינת במפה.</p>
+            <p style="text-align: center;">ניתן ליצור קשר עם משרדי הישיבה באמצעות הטופס הבא, או להגיע ללמוד או להתפלל בכתובת המצוינת במפה.</p>
             
             <div class="contact-container">
                 <!-- עמודת הטופס -->
@@ -69,8 +75,8 @@
                     <h3>שליחת הודעה</h3>
                     <form id="contact-form" action="https://formspree.io/f/xanlzozq" method="POST">
                         <div class="form-row">
-                            <input type="text" name="name" placeholder="שם מלא" required>
-                            <input type="email" name="email" placeholder="כתובת דוא''ל" required>
+                         <input type="text" name="name" placeholder="שם מלא" required autocomplete="name">
+                            <input type="email" name="email" placeholder="כתובת דוא''ל" required autocomplete="email">  
                         </div>
                         <textarea name="message" placeholder="נשמח לענות על כל שאלה או בקשה..." required></textarea>
                         <button type="submit">
@@ -112,15 +118,32 @@
     </button>
 
     <div class="grid-overlay" id="grid-overlay"><span class="grid-close">&times;</span><div class="grid-header"><h2 id="grid-album-title"></h2></div><div class="thumbnail-grid" id="thumbnail-grid"></div></div>
-    <div class="lightbox" id="lightbox"><span class="lightbox-close">&times;</span><a class="lightbox-prev">&#10094;</a><a class="lightbox-next">&#10095;</a><div class="lightbox-content"><img src="" id="lightbox-img"></div></div>
+
+<div class="lightbox" id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <a class="lightbox-prev">&#10094;</a>
+        <a class="lightbox-next">&#10095;</a>
+        
+   
+        <div class="lightbox-controls">
+            <button id="download-btn" title="הורדת תמונה" aria-label="הורדת תמונה">
+                <i class="fas fa-download"></i>
+            </button>
+            <button id="share-btn" title="שיתוף תמונה" aria-label="שיתוף תמונה">
+                <i class="fas fa-share-alt"></i>
+            </button>
+        </div>
+
+        <div class="lightbox-content">
+            <img src="" id="lightbox-img">
+        </div>
+    </div>
     
     <button id="back-to-top-btn" title="חזרה למעלה"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg></button>
     
-<!-- קישורים לספריות חיצוניות (הגרסאות שעובדות) -->
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<!-- קישור לקובץ הסקריפט הראשי -->
 <script src="script.js"></script>
 </body>
 </html>
-
