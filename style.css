@@ -1,11 +1,12 @@
+/* --- הגדרות כלליות וגופנים --- */
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap');
+
 /* --- [תיקון] הגדרות גלילה ותיקון תפריט דביק --- */
 html {
     scroll-padding-top: 60px; /* גובה משוער של תפריט הניווט */
     scroll-behavior: smooth;   /* גלילה חלקה ואנימטיבית */
 }
 
-/* --- הגדרות כלליות וגופנים --- */
-@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap');
 
 :root {
     --primary-color: #1a4b84;
@@ -24,7 +25,60 @@ html {
     --dark-accent: #b37609;
     --dark-surface: #2d2d2d;
 }
+/* --- תיקון: הגדרות מצב כהה חסרות --- */
 
+/* הגדרות כלליות למצב כהה */
+body.dark-mode {
+    background-color: var(--dark-background);
+    color: var(--dark-text);
+}
+
+body.dark-mode header,
+body.dark-mode nav {
+    background-color: var(--dark-primary);
+}
+
+/* שדרוג: מעבר מהיר בין מצבי תצוגה */
+body {
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+main {
+    transition: box-shadow var(--transition-speed);
+}
+
+/* אלמנטים שצריכים להפוך כהים */
+body.dark-mode main,
+body.dark-mode #contact {
+    background-color: var(--dark-surface);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .news-item {
+    background-color: var(--dark-surface);
+    border: 1px solid #333;
+    border-right-color: var(--dark-primary);
+}
+
+body.dark-mode .news-item h3 {
+    color: var(--dark-text);
+}
+
+body.dark-mode .album-cover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode footer {
+    background-color: #0d0d0d;
+}
+
+/* צבעי כפתורים ודגשים */
+body.dark-mode .donation-button {
+    background-color: #387638; /* ירוק כהה יותר */
+}
+
+body.dark-mode .donation-button:hover {
+    background-color: #4a914a;
+}
 body { 
     font-family: 'Assistant', sans-serif; 
     margin: 0; 
@@ -127,7 +181,36 @@ body {
     opacity: 1;
     transform: scale(1);
 }
+/* --- עיצוב כפתורי שיתוף והורדה ב-Lightbox --- */
+.lightbox-controls {
+    position: absolute;
+    top: 10px; /* מיקום אנכי */
+    left: 15px; /* מיקום אופקי (שמאל בגלל RTL) */
+    z-index: 99999;
+    display: flex;
+    gap: 10px;
+}
 
+.lightbox-controls button {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.lightbox-controls button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* יישור הפקדים הקיימים כך שלא יתנגשו */
+.lightbox-close { top: 10px; right: 25px; font-size: 2.5em; z-index: 99999; }
+.lightbox-next, .lightbox-prev { z-index: 99999; }
 /* --- כפתור חדשות נוספות --- */
 .load-more-button {
     display: block;
@@ -436,6 +519,176 @@ nav a:hover {
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
+}
+/* --- עיצוב כפתורי האלבום בתוך ה-Grid Overlay --- */
+.album-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.album-controls button {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color var(--transition-speed), transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.album-controls button:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* כפתור הורדה בצבע שונה לדגש */
+#album-download-btn {
+    background-color: #28a745; /* ירוק */
+}
+
+#album-download-btn:hover {
+    background-color: #218838; /* ירוק כהה יותר */
+}
+
+/* התאמת הכותרת למיקום הכפתורים */
+.grid-header { 
+    text-align: center; 
+    color: white; 
+    margin-bottom: 20px; 
+    padding-top: 20px; /* רווח מהחלק העליון */
+}
+
+.grid-header h2 { 
+    margin-bottom: 5px; /* צמצום המרווח מהכותרת לכפתורים */
+    font-size: 2.2em;
+}
+
+/* מצב כהה - ודא שגם הכפתורים החדשים נראים טוב */
+body.dark-mode .album-controls button {
+    background-color: var(--dark-secondary);
+}
+
+body.dark-mode #album-download-btn {
+    background-color: #387638; 
+}
+/* --- עיצוב News Modal --- */
+
+.news-modal {
+    display: none; /* הסתרה כברירת מחדל */
+    position: fixed;
+    z-index: 9997; /* מתחת ל-Lightbox (9999) אבל מעל הכל */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8); /* רקע מעומעם */
+    padding-top: 50px;
+    box-sizing: border-box;
+    backdrop-filter: blur(5px); /* אפקט טשטוש יפה */
+}
+
+.news-modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.news-modal .modal-content {
+    background-color: var(--background-color);
+    margin: 15% auto; /* מיקום במרכז */
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: zoomIn 0.3s ease-out; /* אנימציה קטנה */
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* כפתור סגירה */
+.news-modal .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: var(--text-color);
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.news-modal .modal-close:hover,
+.news-modal .modal-close:focus {
+    color: red;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* עיצוב כותרת ותוכן */
+.news-modal #modal-title {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+    margin-top: 0;
+    font-size: 1.8em;
+    text-align: center;
+}
+
+.news-modal #modal-date {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.news-modal #modal-body p {
+    margin-bottom: 15px;
+}
+
+/* כפתור שיתוף */
+.modal-controls {
+    text-align: center;
+    margin-top: 30px;
+}
+
+#news-share-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color var(--transition-speed);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#news-share-btn:hover {
+    background-color: #2980b9;
+}
+
+/* מצב כהה */
+body.dark-mode .news-modal .modal-content {
+    background-color: var(--dark-surface);
+    color: var(--dark-text);
+}
+
+body.dark-mode .news-modal .modal-close {
+    color: var(--dark-text);
 }
 main { max-width: 1100px; margin: 30px auto; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
 section { padding-top: 20px; margin-bottom: 40px; }
