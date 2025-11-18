@@ -496,6 +496,18 @@ section h2::after {
     display: inline-block;
     margin-right: 8px;
 }
+@keyframes loading-pulse {
+    0% { background-color: rgba(255, 255, 255, 0.1); }
+    50% { background-color: rgba(255, 255, 255, 0.3); }
+    100% { background-color: rgba(255, 255, 255, 0.1); }
+}
+body.dark-mode .loading-thumbnail,
+.loading-thumbnail {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    height: 120px;
+    animation: loading-pulse 1.5s infinite ease-in-out;
+}
 .bsd { position: absolute; top: 5px; right: 10px; font-size: 1em; color: #555; }
 .top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
 header { background-color: #003366; color: white; padding: 20px 0; text-align: center; }
