@@ -1,0 +1,25 @@
+[
+  {
+    "data": {
+      "title": "הקפות שניות",
+      "thumbnail": "assets/uploads/hakafot/thumb.jpg",
+      "images": [
+        "assets/uploads/hakafot/img1.jpg",
+        "assets/uploads/hakafot/img2.jpg",
+        "assets/uploads/hakafot/img3.jpg"
+      ]
+    },
+    "content": ""
+  },
+  {
+    "data": {
+      "title": "זמן אלול",
+      "thumbnail": "assets/uploads/elul/thumb.jpg",
+      "images": [
+        "assets/uploads/elul/img1.jpg",
+        "assets/uploads/elul/img2.jpg"
+      ]
+    },
+    "content": ""
+  }
+]
