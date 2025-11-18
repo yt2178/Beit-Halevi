@@ -117,7 +117,24 @@
         <i class="fas fa-moon"></i>
     </button>
 
-    <div class="grid-overlay" id="grid-overlay"><span class="grid-close">&times;</span><div class="grid-header"><h2 id="grid-album-title"></h2></div><div class="thumbnail-grid" id="thumbnail-grid"></div></div>
+<div class="grid-overlay" id="grid-overlay">
+    <span class="grid-close">&times;</span>
+    <div class="grid-header">
+        <h2 id="grid-album-title"></h2>
+        <!-- [חדש] כפתורי שיתוף והורדה לכל האלבום -->
+        <div class="album-controls">
+            <button id="album-share-btn" title="שיתוף האלבום" aria-label="שיתוף האלבום">
+                <i class="fas fa-share-alt"></i> שתף גלריה
+            </button>
+            <button id="album-download-btn" title="הורדת כל האלבום" aria-label="הורדת כל האלבום">
+                <i class="fas fa-file-archive"></i> הורד הכל
+            </button>
+        </div>
+        <!-- סוף כפתורים חדשים -->
+    </div>
+    <div class="thumbnail-grid" id="thumbnail-grid"></div>
+</div>
+
 
 <div class="lightbox" id="lightbox">
         <span class="lightbox-close">&times;</span>
@@ -138,7 +155,19 @@
             <img src="" id="lightbox-img">
         </div>
     </div>
-    
+    <div class="news-modal" id="news-modal">
+    <span class="modal-close">&times;</span>
+    <div class="modal-content">
+        <h2 id="modal-title"></h2>
+        <p id="modal-date"></p>
+        <div id="modal-body"></div>
+        <div class="modal-controls">
+            <button id="news-share-btn" title="שיתוף ידיעה זו" aria-label="שיתוף ידיעה זו">
+                <i class="fas fa-share-alt"></i> שיתוף
+            </button>
+        </div>
+    </div>
+</div>
     <button id="back-to-top-btn" title="חזרה למעלה"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg></button>
     
 
