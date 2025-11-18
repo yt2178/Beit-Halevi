@@ -41,14 +41,18 @@
     const newsShareBtn = document.getElementById('news-share-btn');
     let allLoadedNews = []; // [חדש] מערך גלובלי לכל החדשות
 
-    // ---- קוד כפתור "חזרה למעלה" ----
-    let backToTopButton = document.getElementById("back-to-top-btn");
-    if (backToTopButton) {
-        window.onscroll = () => {
-            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) { backToTopButton.style.display = "flex"; } else { backToTopButton.style.display = "none"; }
-        };
-        backToTopButton.addEventListener("click", () => window.scrollTo({top: 0, behavior: 'smooth'}) );
-    }
+   // [שינוי] קוד כפתור "חזרה למעלה"
+let backToTopButton = document.getElementById("back-to-top-btn");
+if (backToTopButton) {
+    window.onscroll = () => {
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) { 
+            backToTopButton.classList.add('visible'); 
+        } else { 
+            backToTopButton.classList.remove('visible'); 
+        }
+    };
+    backToTopButton.addEventListener("click", () => window.scrollTo({top: 0, behavior: 'smooth'}) );
+}
 
     // ---- פונקציה פשוטה לפירוק Front Matter ----
     function parseFrontMatter(content) {
@@ -82,111 +86,116 @@
         });
         return { data, content: body };
     }
-
+async function fetchStaticJson(path) {
+    const url = `./data/${path}.json`; // מצפה לקובץ בנתיב /data/news.json או /data/gallery.json
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Network response error for ${url}`);
+        return await response.json();
+    } catch (error) {
+        console.error(`Error fetching static JSON ${path}:`, error);
+        return { error: true, message: 'אירעה שגיאה בטעינת הנתונים (JSON). נא לנסות שוב מאוחר יותר.' };
+    }
+}
     // ---- פונקציות טעינה ועיבוד ----
-    async function fetchAndParse(path) {
-        const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
-        try {
-            const response = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
-            if (!response.ok) throw new Error(`Network response error for ${path}`);
-            const data = await response.json();
-            if (!Array.isArray(data)) return [];
-
-            const parsedItems = await Promise.all(data
-                .filter(file => file.type === 'file') // מקבל כל קובץ, לא רק עם סיומת .md
-                .map(async file => {
-                   try {
-                        const fileResponse = await fetch(file.download_url);
-                        if (!fileResponse.ok) return null;
-                        const content = await fileResponse.text();
-                        // מנסה לפרסר את הקובץ כ-MD, אם זה לא עובד מחזיר null
-                        const parsed = parseFrontMatter(content);
-                        // בודק אם יש front matter תקין
-                        if (!parsed.data || Object.keys(parsed.data).length === 0) return null;
-                        return parsed;
-                    } catch { return null; }
-                })
-            );
-            return parsedItems.filter(item => item !== null);
-        } catch (error) {
-            console.error(`Error processing ${path}:`, error);
-            return { error: true, message: 'אירעה שגיאה בטעינת הנתונים. נא לנסות שוב מאוחר יותר.' };
-        }
+async function fetchAndParse(path) {
+    // [שינוי קריטי]: עכשיו קורא ל-JSON מוכן במקום לבנות אותו מ-GitHub API
+    
+    // אם הנתיב מכיל news, קרא את קובץ news.json
+    if (path.includes('news')) {
+        return fetchStaticJson('news');
+    }
+    // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
+    if (path.includes('gallery')) {
+        return fetchStaticJson('gallery');
     }
 
-    async function loadNews(loadMore = false) {
-        const newsContainer = document.getElementById('news-container');
-        if (!newsContainer) return;
+    // אם הנתיב לא מוכר, החזר שגיאה
+    return { error: true, message: 'נתיב נתונים לא חוקי. יש צורך בקובץ news.json או gallery.json.' };
+}
 
-        // הצג הודעת טעינה רק אם הקונטיינר ריק
-        if (!loadMore) {
-            newsContainer.innerHTML = '<p style="text-align:center;">טוען עדכונים...</p>';
-        }
+   async function loadNews(loadMore = false) {
+    const newsContainer = document.getElementById('news-container');
+    if (!newsContainer) return;
 
-        const response = await fetchAndParse('_posts/news');
-        if (response === null || response.error) {
-            newsContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת העדכונים.'}</p>`;
-            return;
-        }
-        const items = response;
+    // הצג הודעת טעינה רק אם הקונטיינר ריק
+    if (!loadMore) {
+        newsContainer.innerHTML = '<p style="text-align:center;">טוען עדכונים...</p>';
+    }
 
-        // [שינוי] שמירת החדשות הגלובלי לצורך שימוש ב-Deep Linking ו-Modal
-        allLoadedNews = items
-            .map(item => ({ 
-                ...item.data, 
-                body: item.content,
-                // [חדש] יצירת slug ייחודי
-                slug: `${item.data.date}-${item.data.title.replace(/\s/g, '-').replace(/[^\w-]/g, '')}`
-            }))
-            .filter(item => item.title && item.date)
-            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    const response = await fetchAndParse('_posts/news'); // עכשיו קורא ל-news.json
+    
+    if (response === null || response.error) {
+        newsContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת העדכונים. ודא שקובץ data/news.json קיים.'}</p>`;
+        return;
+    }
+    const items = response;
 
-        if (!loadMore) {
-            newsContainer.innerHTML = '';
-        }
-        
-        if (allLoadedNews.length === 0) {
-            newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
-            return;
-        }
+    // [שינוי] שמירת החדשות הגלובלי לצורך שימוש ב-Deep Linking ו-Modal
+    allLoadedNews = items
+        .map(item => ({ 
+            ...item.data, 
+            body: item.content,
+            // [חדש] יצירת slug חזק: תאריך + כותרת מנוקה
+            slug: `${item.data.date}-${item.data.title.replace(/\s/g, '-').replace(/[^א-תa-zA-Z0-9-]/g, '')}`
+        }))
+        .filter(item => item.title && item.date)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const existingItemsCount = newsContainer.querySelectorAll('.news-item').length;
-        const itemsToShow = allLoadedNews.slice(existingItemsCount, existingItemsCount + 3);
+    if (!loadMore) {
+        newsContainer.innerHTML = '';
+    }
+    
+    if (allLoadedNews.length === 0) {
+        newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
+        return;
+    }
 
-       itemsToShow.forEach((item, index) => {
-        const date = new Date(item.date);
-        const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
-        const newsElement = document.createElement('div');
-        newsElement.className = 'news-item';
-        
-        // [שינוי] הוספת Event Listener לפתיחת המודאל
-        newsElement.addEventListener('click', () => {
-            openNewsModal(item);
-            window.history.pushState(null, null, `#news/${item.slug}`); 
-        });
-        
-        // [מתוקן] הסרנו את התאריך העברי
-        newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
-        newsContainer.appendChild(newsElement);
-        
-        setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);
+    const existingItemsCount = newsContainer.querySelectorAll('.news-item').length;
+    const itemsToShow = allLoadedNews.slice(existingItemsCount, existingItemsCount + 3);
+
+   itemsToShow.forEach((item, index) => {
+    const date = new Date(item.date);
+    const formattedDate = date.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
+    const newsElement = document.createElement('div');
+    newsElement.className = 'news-item';
+    
+    // [שינוי] הוספת Event Listener לפתיחת המודאל
+    newsElement.addEventListener('click', () => {
+        openNewsModal(item);
+        window.history.pushState(null, null, `#news/${item.slug}`); 
     });
-        
-  const oldButton = newsContainer.querySelector('.load-more-button');
-        if (oldButton) {
-            oldButton.remove();
-        }
-
-        const totalDisplayed = newsContainer.querySelectorAll('.news-item').length;
-        if (totalDisplayed < allLoadedNews.length) {
-            const loadMoreButton = document.createElement('button');
-            loadMoreButton.className = 'load-more-button';
-            loadMoreButton.textContent = 'חדשות נוספות';
-            loadMoreButton.addEventListener('click', () => loadNews(true));
-            newsContainer.appendChild(loadMoreButton);
-        }
-
+    
+    // הצגת תקציר (עד 150 תווים)
+    newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
+    newsContainer.appendChild(newsElement);
+    
+    setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);
+});
+    
+    const oldButton = newsContainer.querySelector('.load-more-button');
+    if (oldButton) {
+        oldButton.remove();
     }
+
+    const totalDisplayed = newsContainer.querySelectorAll('.news-item').length;
+    // [תיקון] רק אם יש עוד פריטים להצגה, צור את הכפתור
+    if (totalDisplayed < allLoadedNews.length) {
+        const loadMoreButton = document.createElement('button');
+        loadMoreButton.className = 'load-more-button';
+        loadMoreButton.textContent = 'חדשות נוספות';
+        
+        loadMoreButton.addEventListener('click', async () => {
+            // [חדש] הצגת ספינר בזמן הטעינה
+            loadMoreButton.disabled = true;
+            loadMoreButton.innerHTML = '<span class="spinner"></span>טוען...';
+            
+            // [שינוי] משתמש ב-await כדי לחכות שהטעינה תסתיים
+            await loadNews(true);
+        });
+        newsContainer.appendChild(loadMoreButton);
+    }
+}
     
  async function loadGallery() {
         const albumContainer = document.getElementById('album-grid-container');
@@ -204,7 +213,7 @@
             .map(item => ({ 
                 ...item.data, 
                 // [חדש] יצירת slug (מזהה ידידותי ל-URL)
-                slug: item.data.title.replace(/\s/g, '-') 
+              slug: item.data.title.replace(/\s/g, '-').replace(/[^א-תa-zA-Z0-9-]/g, '')
             }))
             .filter(item => item.title && item.thumbnail);
         
@@ -246,7 +255,6 @@
         alt: albumData.title,
         albumSlug: albumData.slug
     }));
- // [חדש] חיבור כפתורי השיתוף וההורדה
     setupAlbumControls(albumData);
     
         if (currentAlbumImages.length === 0) {
@@ -264,6 +272,8 @@
                     showLightboxImage(true);
                     gridOverlay.classList.remove('active');
                     lightbox.classList.add('active');
+                     gridOverlay.setAttribute('aria-modal', 'true');
+    focusLock(gridOverlay, gridCloseBtn);
                 });
                 thumbnailGrid.appendChild(thumb);
                 
@@ -274,7 +284,7 @@
         }
         gridOverlay.classList.add('active');
     }
-// ... (בסוף הקטע של פונקציות הגלריה) ...
+
 
 // [חדש] פונקציה לבדיקת ה-URL Hash עבור חדשות
 function checkNewsHash() {
@@ -327,12 +337,17 @@ function openNewsModal(newsItem) {
 
     newsModal.classList.add('active');
     document.body.style.overflow = 'hidden'; // מונע גלילה ברקע
+    newsModal.setAttribute('aria-modal', 'true');
+    // [חדש] נעל את הפוקוס על כפתור הסגירה
+    const modalCloseBtn = newsModal.querySelector('.modal-close');
+    focusLock(newsModal, modalCloseBtn);
 }
 
 // [חדש] סגירת חלון קופץ עבור ידיעה אחת
 function closeNewsModal() {
     newsModal.classList.remove('active');
     document.body.style.overflow = '';
+    newsModal.removeAttribute('aria-modal');
     // ניקוי ה-hash לכתובת הבסיס של #news
     window.history.pushState(null, null, '#'); 
 }
@@ -387,6 +402,36 @@ function setupAlbumControls(albumData) {
         };
     }
 }
+// פונקציות עזר לנעילת הפוקוס
+function focusLock(modalElement, focusTarget = null) {
+    const focusable = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (focusTarget) {
+        focusTarget.focus();
+    } else if (first) {
+        first.focus();
+    }
+
+    modalElement.addEventListener('keydown', (e) => {
+        const isTab = (e.key === 'Tab' || e.keyCode === 9);
+        if (!isTab) return;
+
+        if (e.shiftKey) { // Shift + Tab
+            if (document.activeElement === first) {
+                last.focus();
+                e.preventDefault();
+            }
+        } else { // Tab
+            if (document.activeElement === last) {
+                first.focus();
+                e.preventDefault();
+            }
+        }
+    });
+}
+
 function showLightboxImage(isFirstLoad = false) { 
     if (!currentAlbumImages[currentIndex]) return;
     const currentImage = currentAlbumImages[currentIndex];
@@ -464,6 +509,7 @@ function showLightboxImage(isFirstLoad = false) {
     if (gridCloseBtn) gridCloseBtn.addEventListener('click', () => { 
         gridOverlay.classList.remove('active'); 
         currentAlbumImages = [];
+        gridOverlay.removeAttribute('aria-modal');
         window.history.pushState(null, null, '#'); // [שינוי] מנקה את ה-URL hash
         currentAlbumData = null; // [חדש] איפוס נתוני האלבום
     });
@@ -517,14 +563,26 @@ if (themeToggle) {
     });
 }
 
-// ... (שאר הקוד נשאר כפי שהוא)
-// [חדש] טיפול בשליחת טופס צור קשר (תיקון באג חסר)
+// [שינוי] טיפול בשליחת טופס צור קשר (כולל הודעות UX)
 const contactForm = document.getElementById('contact-form');
 if (contactForm) {
     contactForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const button = contactForm.querySelector('button[type="submit"]');
+        const originalButtonHtml = button.innerHTML;
+        
+        // 1. מצב "שולח..."
         button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שולח...'; // ספינר מ-Font Awesome
+        
+        // הסר כל הודעה קודמת
+        let statusMessage = contactForm.querySelector('.form-status');
+        if (statusMessage) statusMessage.remove();
+        
+        statusMessage = document.createElement('p');
+        statusMessage.className = 'form-status';
+        statusMessage.style.textAlign = 'center';
+        statusMessage.style.marginTop = '10px';
         
         const response = await fetch(contactForm.action, {
             method: contactForm.method,
@@ -532,10 +590,7 @@ if (contactForm) {
             headers: {'Accept': 'application/json'}
         });
         
-        const statusMessage = document.createElement('p');
-        statusMessage.style.textAlign = 'center';
-        statusMessage.style.marginTop = '10px';
-        
+        // 2. טיפול בתגובה
         if (response.ok) {
             statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
             statusMessage.style.color = 'green';
@@ -545,9 +600,14 @@ if (contactForm) {
             statusMessage.style.color = 'red';
         }
         
+        // 3. הצגת הודעה סופית ושחזור כפתור
         contactForm.appendChild(statusMessage);
-        button.disabled = false;
-        setTimeout(() => statusMessage.remove(), 5000);
+        
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = originalButtonHtml; // שחזור המצב המקורי
+            statusMessage.remove(); // הסרת ההודעה אחרי 5 שניות
+        }, 5000);
     });
 }
     const menuToggle = document.querySelector('.menu-toggle');
