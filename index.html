@@ -155,15 +155,21 @@
             <img src="" id="lightbox-img">
         </div>
     </div>
-    <div class="news-modal" id="news-modal">
+<div class="news-modal" id="news-modal">
     <span class="modal-close">&times;</span>
     <div class="modal-content">
         <h2 id="modal-title"></h2>
         <p id="modal-date"></p>
         <div id="modal-body"></div>
         <div class="modal-controls">
+            <button id="news-prev-btn" title="ידיעה קודמת" aria-label="ידיעה קודמת" style="display:none;">
+                <i class="fas fa-chevron-right"></i> קודם
+            </button>
             <button id="news-share-btn" title="שיתוף ידיעה זו" aria-label="שיתוף ידיעה זו">
                 <i class="fas fa-share-alt"></i> שיתוף
+            </button>
+            <button id="news-next-btn" title="ידיעה הבאה" aria-label="ידיעה הבאה" style="display:none;">
+                הבא <i class="fas fa-chevron-left"></i>
             </button>
         </div>
     </div>
@@ -173,6 +179,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<script src="script.js" defer></script>
+<script type="module" src="main.js"></script>
 </body>
 </html>
