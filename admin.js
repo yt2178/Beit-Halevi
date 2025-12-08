@@ -16,7 +16,7 @@ const GOOGLE_API_KEY = "YOUR_API_KEY";
 const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
 
 const ADMIN_USER_CODES = {
-    "12589": "YEDIDYA",      // שם משתמש GitHub: Avner-Halevi
+    "12589": "YT",      // שם משתמש GitHub: Avner-Halevi
     "9999": "Admin-Test",    // שם משתמש GitHub: Admin-Test
     // ניתן להוסיף קודים נוספים...
 };
@@ -418,4 +418,5 @@ loginForm.addEventListener('submit', (e) => {
 addNewsForm.addEventListener('submit', handleSaveNews);
 
 // כפתור יציאה
+
 document.getElementById('logout-btn').addEventListener('click', logout);
