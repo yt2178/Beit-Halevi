@@ -1,0 +1,83 @@
+<!-- START OF FILE admin.html -->
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בית הלוי - פאנל ניהול</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>פאנל ניהול תוכן - ישיבת בית הלוי</h1>
+        <button id="logout-btn">יציאה</button>
+    </header>
+    <main class="admin-main">
+
+        <section id="login-section">
+            <h2>כניסת מנהלים</h2>
+            <form id="login-form">
+                <!-- [חדש] שדה קוד משתמש -->
+                <input type="password" id="admin-usercode" placeholder="קוד משתמש אישי" required>
+                <!-- [חדש] שדה טוקן (GitHub PAT) -->
+                <input type="password" id="github-token" placeholder="GitHub Personal Access Token" required>
+                <button type="submit">כניסה והתחברות ל-GitHub</button>
+                <p id="login-message" style="color:red; margin-top: 10px;"></p>
+            </form>
+        </section>
+        <section id="news-section" style="display:none;">
+            <h2>הוספת ידיעה חדשה</h2>
+
+            <form id="add-news-form">
+                <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
+                <input type="date" id="news-date" required>
+                <textarea id="news-body"></textarea>
+                <button type="submit">פרסם</button>
+            </form>
+
+            <p id="news-status-message"></p>
+            <!-- ספינר -->
+            <div id="spinner" style="display:none; text-align:center; margin:10px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i> טוען...
+            </div>
+
+            <h2>כל הידיעות הקיימות</h2>
+            <div id="news-list-container">
+            </div>
+        </section>
+        <section id="gallery-section" style="display:none;">
+            <h2>ניהול גלריה</h2>
+
+            <form id="add-album-form">
+                <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
+                <input type="text" id="albumThumbnailInput" placeholder="קישור לתמונת שער (מדרייב)">
+                <input type="file" id="albumImagesInput" multiple accept="image/*">
+                <!-- אחרי input של album-images -->
+                <div id="albumPreview" class="album-preview-grid"></div>
+
+                <button type="submit">שמור אלבום</button>
+            </form>
+
+            <p id="gallery-status-message"></p>
+
+            <h3>כל האלבומים הקיימים</h3>
+            <div id="gallery-list-container"></div>
+        </section>
+
+    </main>
+
+
+    <script src="admin-gallery.js"></script>
+    <script src="admin.js"></script>
+
+</body>
+
+</html>
+<!-- END OF FILE admin.html -->

@@ -3,8 +3,10 @@
 
 /* --- [תיקון] הגדרות גלילה ותיקון תפריט דביק --- */
 html {
-    scroll-padding-top: 60px; /* גובה משוער של תפריט הניווט */
-    scroll-behavior: smooth;   /* גלילה חלקה ואנימטיבית */
+    scroll-padding-top: 60px;
+    /* גובה משוער של תפריט הניווט */
+    scroll-behavior: smooth;
+    /* גלילה חלקה ואנימטיבית */
 }
 
 
@@ -16,7 +18,7 @@ html {
     --text-color: #2c3e50;
     --border-radius: 8px;
     --transition-speed: 0.3s;
-    
+
     /* משתנים חדשים למצב כהה */
     --dark-background: #1a1a1a;
     --dark-text: #e0e0e0;
@@ -25,6 +27,7 @@ html {
     --dark-accent: #b37609;
     --dark-surface: #2d2d2d;
 }
+
 /* --- תיקון: הגדרות מצב כהה חסרות --- */
 
 /* הגדרות כלליות למצב כהה */
@@ -42,6 +45,7 @@ body.dark-mode nav {
 body {
     transition: background-color var(--transition-speed), color var(--transition-speed);
 }
+
 main {
     transition: box-shadow var(--transition-speed);
 }
@@ -73,18 +77,20 @@ body.dark-mode footer {
 
 /* צבעי כפתורים ודגשים */
 body.dark-mode .donation-button {
-    background-color: #387638; /* ירוק כהה יותר */
+    background-color: #387638;
+    /* ירוק כהה יותר */
 }
 
 body.dark-mode .donation-button:hover {
     background-color: #4a914a;
 }
-body { 
-    font-family: 'Assistant', sans-serif; 
-    margin: 0; 
-    padding: 0; 
-    background-color: var(--background-color); 
-    color: var(--text-color); 
+
+body {
+    font-family: 'Assistant', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
     line-height: 1.6;
 }
 
@@ -94,6 +100,7 @@ body {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -105,6 +112,7 @@ body {
         opacity: 0;
         transform: scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -116,6 +124,7 @@ body {
         opacity: 0;
         transform: translateX(30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -147,7 +156,7 @@ body {
 
 .album-cover:hover {
     transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* אנימציות לתמונות בגלריה */
@@ -162,7 +171,7 @@ body {
 
 .thumbnail-grid img:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1;
 }
 
@@ -181,36 +190,86 @@ body {
     opacity: 1;
     transform: scale(1);
 }
+
 /* --- עיצוב כפתורי שיתוף והורדה ב-Lightbox --- */
 .lightbox-controls {
     position: absolute;
-    top: 10px; /* מיקום אנכי */
-    left: 15px; /* מיקום אופקי (שמאל בגלל RTL) */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 99999;
     display: flex;
-    gap: 10px;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
 }
 
 .lightbox-controls button {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.95);
     color: #2c3e50;
     border: none;
-    padding: 10px 12px;
-    border-radius: 5px;
+    padding: 12px 16px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 1.2em;
-    transition: background-color 0.3s, transform 0.2s;
+    font-size: 1.3em;
+    transition: all 0.3s;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .lightbox-controls button:hover {
     background-color: var(--primary-color);
     color: white;
-    transform: scale(1.05);
+    transform: scale(1.1);
 }
 
 /* יישור הפקדים הקיימים כך שלא יתנגשו */
-.lightbox-close { top: 10px; right: 25px; font-size: 2.5em; z-index: 99999; }
-.lightbox-next, .lightbox-prev { z-index: 99999; }
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 3em;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 99999;
+    transition: all 0.3s;
+    line-height: 1;
+    font-weight: 300;
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 0, 0, 0.7);
+    transform: rotate(90deg) scale(1.1);
+}
+
+.lightbox-next,
+.lightbox-prev {
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 20px 15px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.lightbox-next:hover,
+.lightbox-prev:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+}
+
 /* --- כפתור חדשות נוספות --- */
 .load-more-button {
     display: block;
@@ -275,7 +334,8 @@ body {
 }
 
 /* עמודת הטופס */
-.form-column, .contact-info {
+.form-column,
+.contact-info {
     flex: 1;
     min-width: 300px;
     background: #ffffff;
@@ -284,39 +344,49 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    height: 500px; /* גובה קבוע לשני החלקים */
+    height: 500px;
+    /* גובה קבוע לשני החלקים */
 }
 
 #contact-form {
-    flex: 1; 
+    flex: 1;
     min-width: 300px;
     margin: 0;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    height: 500px; /* גובה קבוע זהה למפה */
+    height: 500px;
+    /* גובה קבוע זהה למפה */
 }
 
 #contact .form-row {
-    display: flex; 
+    display: flex;
     gap: 1rem;
 }
-#contact input, #contact textarea {
+
+#contact input,
+#contact textarea {
     width: 100%;
-    padding: 12px; /* <-- הוחזר לגודל הקודם */
-    border: 1px solid #ccc; /* <-- הוחזר לעיצוב הקודם */
-    border-radius: 5px; /* <-- הוחזר לעיצוב הקודם */
+    padding: 12px;
+    /* <-- הוחזר לגודל הקודם */
+    border: 1px solid #ccc;
+    /* <-- הוחזר לעיצוב הקודם */
+    border-radius: 5px;
+    /* <-- הוחזר לעיצוב הקודם */
     transition: all var(--transition-speed);
     font-family: inherit;
-    box-sizing: border-box; /* <-- חשוב מאוד למנוע גלישה */
+    box-sizing: border-box;
+    /* <-- חשוב מאוד למנוע גלישה */
 }
 
 #contact textarea {
     min-height: 150px;
-     flex-grow: 1; /* נשאיר גובה מינימלי רק לתיבת הטקסט */
+    flex-grow: 1;
+    /* נשאיר גובה מינימלי רק לתיבת הטקסט */
 }
 
-#contact input:focus, #contact textarea:focus {
+#contact input:focus,
+#contact textarea:focus {
     border-color: var(--secondary-color);
     outline: none;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
@@ -333,7 +403,8 @@ body {
     font-weight: 600;
     width: auto;
     align-self: center;
-    margin-top: auto; /* דוחף את הכפתור לתחתית */
+    margin-top: auto;
+    /* דוחף את הכפתור לתחתית */
     font-size: 1.1rem;
 }
 
@@ -363,46 +434,53 @@ body {
 
 @media (max-width: 768px) {
     nav {
-        justify-content: space-between; /* העבר את הלוגו והכפתור לקצוות */
+        justify-content: space-between;
+        /* העבר את הלוגו והכפתור לקצוות */
     }
 
     .menu-toggle {
-        display: block; /* [תיקון] הצג את כפתור ההמבורגר רק במובייל */
+        display: block;
+        /* [תיקון] הצג את כפתור ההמבורגר רק במובייל */
     }
 
     .nav-links {
-        display: none; /* [תיקון] הסתר את רשימת הקישורים הרגילה */
+        display: none;
+        /* [תיקון] הסתר את רשימת הקישורים הרגילה */
         position: absolute;
         top: 100%;
         left: 0;
         width: 100%;
         background-color: #333;
-        flex-direction: column;
+        flex-direction: row;
     }
 
     .nav-links.active {
-        display: flex; /* הצג את התפריט כשהוא פעיל */
+        display: flex;
+        /* הצג את התפריט כשהוא פעיל */
     }
 
     nav a {
         border-bottom: 1px solid #444;
     }
 }
+
 /* רספונסיביות משופרת */
 @media (max-width: 768px) {
-    .form-column, .contact-info {
+
+    .form-column,
+    .contact-info {
         height: auto;
         min-height: 400px;
     }
-    
+
     #contact textarea {
         min-height: 120px;
     }
-    
+
     .map-container {
         min-height: 200px;
     }
-    
+
     #contact {
         padding: 1.5rem;
     }
@@ -413,7 +491,7 @@ body {
     .contact-container {
         flex-direction: column;
     }
-    
+
     .map-container {
         min-height: 250px;
     }
@@ -468,22 +546,31 @@ section h2::after {
     transform: translateY(-5px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
+
 /* --- כפתור חזרה למעלה משופר --- */
 #back-to-top-btn {
     /* [שינוי] transition opacity כדי ליצור אנימציה חלקה */
-    transition: all var(--transition-speed), opacity 0.3s, visibility 0.3s; 
+    transition: all var(--transition-speed), opacity 0.3s, visibility 0.3s;
     opacity: 0;
-    visibility: hidden; /* הסתרה אמיתית ב-CSS */
+    visibility: hidden;
+    /* הסתרה אמיתית ב-CSS */
 }
 
-#back-to-top-btn.visible { /* מחלקה חדשה שתופעל ב-JS */
+#back-to-top-btn.visible {
+    /* מחלקה חדשה שתופעל ב-JS */
     opacity: 0.8;
     visibility: visible;
 }
+
 /* --- אנימציית ספינר --- */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .spinner {
@@ -496,11 +583,21 @@ section h2::after {
     display: inline-block;
     margin-right: 8px;
 }
+
 @keyframes loading-pulse {
-    0% { background-color: rgba(255, 255, 255, 0.1); }
-    50% { background-color: rgba(255, 255, 255, 0.3); }
-    100% { background-color: rgba(255, 255, 255, 0.1); }
+    0% {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    50% {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    100% {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 }
+
 body.dark-mode .loading-thumbnail,
 .loading-thumbnail {
     background-color: rgba(255, 255, 255, 0.1);
@@ -508,10 +605,36 @@ body.dark-mode .loading-thumbnail,
     height: 120px;
     animation: loading-pulse 1.5s infinite ease-in-out;
 }
-.bsd { position: absolute; top: 5px; right: 10px; font-size: 1em; color: #555; }
-.top-bar { background-color: #e9ecef; color: #333; text-align: center; padding: 5px; font-size: 0.9em; border-bottom: 1px solid #ddd; }
-header { background-color: #003366; color: white; padding: 20px 0; text-align: center; }
-header h1 { margin: 0; font-size: 2.5em; }
+
+.bsd {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 1em;
+    color: #555;
+}
+
+.top-bar {
+    background-color: #e9ecef;
+    color: #333;
+    text-align: center;
+    padding: 5px;
+    font-size: 0.9em;
+    border-bottom: 1px solid #ddd;
+}
+
+header {
+    background-color: #003366;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+}
+
 nav {
     background-color: #333;
     padding: 10px;
@@ -519,12 +642,17 @@ nav {
     position: sticky;
     top: 0;
     z-index: 1000;
-    display: flex; /* שינוי חשוב */
-    justify-content: center; /* שינוי חשוב */
-    align-items: center; /* שינוי חשוב */
+    display: flex;
+    /* שינוי חשוב */
+    justify-content: center;
+    /* שינוי חשוב */
+    align-items: center;
+    /* שינוי חשוב */
 }
+
 .nav-links {
-    display: flex; /* הצג קישורים בשורה כברירת מחדל */
+    display: flex;
+    /* הצג קישורים בשורה כברירת מחדל */
 }
 
 nav a {
@@ -540,13 +668,15 @@ nav a:hover {
 }
 
 .menu-toggle {
-    display: none; /* [תיקון] הסתר את כפתור ההמבורגר במחשב */
+    display: none;
+    /* [תיקון] הסתר את כפתור ההמבורגר במחשב */
     background: none;
     border: none;
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
 }
+
 /* --- עיצוב כפתורי האלבום בתוך ה-Grid Overlay --- */
 .album-controls {
     display: flex;
@@ -577,23 +707,27 @@ nav a:hover {
 
 /* כפתור הורדה בצבע שונה לדגש */
 #album-download-btn {
-    background-color: #28a745; /* ירוק */
+    background-color: #28a745;
+    /* ירוק */
 }
 
 #album-download-btn:hover {
-    background-color: #218838; /* ירוק כהה יותר */
+    background-color: #218838;
+    /* ירוק כהה יותר */
 }
 
 /* התאמת הכותרת למיקום הכפתורים */
-.grid-header { 
-    text-align: center; 
-    color: white; 
-    margin-bottom: 20px; 
-    padding-top: 20px; /* רווח מהחלק העליון */
+.grid-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+    padding-top: 20px;
+    /* רווח מהחלק העליון */
 }
 
-.grid-header h2 { 
-    margin-bottom: 5px; /* צמצום המרווח מהכותרת לכפתורים */
+.grid-header h2 {
+    margin-bottom: 5px;
+    /* צמצום המרווח מהכותרת לכפתורים */
     font-size: 2.2em;
 }
 
@@ -603,23 +737,28 @@ body.dark-mode .album-controls button {
 }
 
 body.dark-mode #album-download-btn {
-    background-color: #387638; 
+    background-color: #387638;
 }
+
 /* --- עיצוב News Modal --- */
 
 .news-modal {
-    display: none; /* הסתרה כברירת מחדל */
+    display: none;
+    /* הסתרה כברירת מחדל */
     position: fixed;
-    z-index: 9997; /* מתחת ל-Lightbox (9999) אבל מעל הכל */
+    z-index: 9997;
+    /* מתחת ל-Lightbox (9999) אבל מעל הכל */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.8); /* רקע מעומעם */
+    background-color: rgba(0, 0, 0, 0.8);
+    /* רקע מעומעם */
     padding-top: 50px;
     box-sizing: border-box;
-    backdrop-filter: blur(5px); /* אפקט טשטוש יפה */
+    backdrop-filter: blur(5px);
+    /* אפקט טשטוש יפה */
 }
 
 .news-modal.active {
@@ -630,15 +769,17 @@ body.dark-mode #album-download-btn {
 
 .news-modal .modal-content {
     background-color: var(--background-color);
-    margin: 15% auto; /* מיקום במרכז */
+    margin: 15% auto;
+    /* מיקום במרכז */
     padding: 30px;
     border: 1px solid #888;
     width: 80%;
     max-width: 800px;
     border-radius: 12px;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    animation: zoomIn 0.3s ease-out; /* אנימציה קטנה */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.3s ease-out;
+    /* אנימציה קטנה */
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -688,9 +829,11 @@ body.dark-mode #album-download-btn {
     text-align: center;
     margin-top: 30px;
 }
+
 .news-modal .modal-controls {
     display: flex;
-    justify-content: space-between; /* דוחף את הפקדים לקצוות */
+    justify-content: space-between;
+    /* דוחף את הפקדים לקצוות */
     align-items: center;
     padding: 10px 0;
     margin-top: 30px;
@@ -698,8 +841,10 @@ body.dark-mode #album-download-btn {
 }
 
 /* עיצוב בסיסי לכפתורי ניווט (קודם/הבא) */
-#news-prev-btn, #news-next-btn {
-    background-color: var(--primary-color); /* כחול כהה */
+#news-prev-btn,
+#news-next-btn {
+    background-color: var(--primary-color);
+    /* כחול כהה */
     color: white;
     border: none;
     padding: 10px 15px;
@@ -708,14 +853,18 @@ body.dark-mode #album-download-btn {
     font-size: 1em;
     font-weight: 600;
     transition: background-color 0.3s, transform 0.2s;
-    display: flex; /* כדי ליישר את האייקון והטקסט */
+    display: flex;
+    /* כדי ליישר את האייקון והטקסט */
     align-items: center;
-    gap: 8px; /* מרווח בין האייקון לטקסט */
-    width: 120px; /* רוחב קבוע למראה אחיד */
+    gap: 8px;
+    /* מרווח בין האייקון לטקסט */
+    width: 120px;
+    /* רוחב קבוע למראה אחיד */
     justify-content: center;
 }
 
-#news-prev-btn:hover, #news-next-btn:hover {
+#news-prev-btn:hover,
+#news-next-btn:hover {
     background-color: var(--secondary-color);
     transform: translateY(-2px);
 }
@@ -729,18 +878,23 @@ body.dark-mode #news-next-btn {
 /* התאמת כפתור השיתוף כדי שיהיה קטן יותר במרכז */
 #news-share-btn {
     flex-grow: 0;
-    margin: 0 10px; /* מרווח קטן מהצדדים */
+    margin: 0 10px;
+    /* מרווח קטן מהצדדים */
     width: 120px;
     justify-content: center;
 }
 
 /* התאמה לצד ימין (קודם) וצד שמאל (הבא) */
 #news-prev-btn i {
-    order: 1; /* מזיז את האייקון לימין הכפתור (ב-RTL) */
+    order: 1;
+    /* מזיז את האייקון לימין הכפתור (ב-RTL) */
 }
+
 #news-next-btn {
-    flex-direction: row-reverse; /* מזיז את האייקון לשמאל הכפתור (ב-RTL) */
+    flex-direction: row-reverse;
+    /* מזיז את האייקון לשמאל הכפתור (ב-RTL) */
 }
+
 #news-share-btn {
     background-color: var(--secondary-color);
     color: white;
@@ -769,52 +923,531 @@ body.dark-mode .news-modal .modal-content {
 body.dark-mode .news-modal .modal-close {
     color: var(--dark-text);
 }
-main { max-width: 1100px; margin: 30px auto; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); border-radius: 8px; }
-section { padding-top: 20px; margin-bottom: 40px; }
-section h2 { text-align: center; font-size: 2em; color: #003366; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 20px; }
 
-.news-container { display: flex; flex-direction: column; gap: 15px; }
-.news-item { background-color: #fafafa; border: 1px solid #eee; border-right: 5px solid #003366; padding: 15px; border-radius: 5px; }
-.news-item h3 { margin: 0 0 5px 0; color: #333; }
-.news-item p { margin: 0; }
+main {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
 
-.album-grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.album-cover { border-radius: 8px; overflow: hidden; position: relative; display: block; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; }
-.album-cover:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
-.album-cover img { width: 100%; height: 220px; object-fit: cover; display: block; }
-.album-cover .album-title { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)); color: white; padding: 20px 10px 10px; text-align: center; font-size: 1.2em; font-weight: bold; }
+section {
+    padding-top: 20px;
+    margin-bottom: 40px;
+}
 
-.grid-overlay { display: none; position: fixed; z-index: 9998; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); overflow-y: auto; padding: 20px; box-sizing: border-box; }
-.grid-overlay.active { display: block; }
-.grid-header { text-align: center; color: white; margin-bottom: 20px; }
-.grid-header h2 { margin: 0; }
-.grid-close { position: absolute; top: 15px; right: 25px; color: white; font-size: 3em; cursor: pointer; }
-.thumbnail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-width: 1200px; margin: 0 auto; }
-.thumbnail-grid img { width: 100%; height: 120px; object-fit: cover; border-radius: 5px; cursor: pointer; transition: opacity 0.3s; }
-.thumbnail-grid img:hover { opacity: 0.8; }
+section h2 {
+    text-align: center;
+    font-size: 2em;
+    color: #003366;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
 
-.lightbox { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; }
-.lightbox.active { display: flex; }
-.lightbox-content { position: relative; max-width: 90%; max-height: 80%; }
-.lightbox-content img { width: auto; height: auto; max-width: 100%; max-height: 80vh; }
-.lightbox-close, .lightbox-next, .lightbox-prev { position: absolute; color: white; font-size: 3em; font-weight: bold; cursor: pointer; user-select: none; }
-.lightbox-close { top: 10px; right: 25px; }
-.lightbox-next, .lightbox-prev { top: 50%; transform: translateY(-50%); }
-.lightbox-next { right: 15px; }
-.lightbox-prev { left: 15px; }
+.news-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
 
-.donation-section { text-align: center; }
-.donation-button { display: inline-block; background-color: #28a745; color: white; padding: 15px 30px; font-size: 1.2em; font-weight: bold; text-decoration: none; border-radius: 5px; transition: background-color 0.3s; }
-.donation-button:hover { background-color: #218838; }
+.news-item {
+    background-color: #fafafa;
+    border: 1px solid #eee;
+    border-right: 5px solid #003366;
+    padding: 15px;
+    border-radius: 5px;
+}
 
-#contact-form { max-width: 600px; margin: 30px auto 0; display: flex; flex-direction: column; gap: 15px; }
-.form-row { display: flex; gap: 15px; }
-#contact-form input, #contact-form textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Assistant', sans-serif; font-size: 1em; box-sizing: border-box; }
-.form-row input { flex: 1; }
-#contact-form button { background-color: #003366; color: white; padding: 12px 20px; font-size: 1.1em; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
-#contact-form button:hover { background-color: #004488; }
+.news-item h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
 
-#back-to-top-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99; border: none; outline: none; background-color: #003366; color: white; cursor: pointer; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s, visibility 0.3s; }
-#back-to-top-btn:hover { background-color: #004488; }
+.news-item p {
+    margin: 0;
+}
 
-footer { text-align: center; padding: 20px; background-color: #333; color: white; }
+.album-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.album-cover {
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    display: block;
+    text-decoration: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.album-cover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.album-cover img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+.album-cover .album-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+    color: white;
+    padding: 20px 10px 10px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.grid-overlay {
+    display: none;
+    position: fixed;
+    z-index: 9998;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow-y: auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.grid-overlay.active {
+    display: block;
+}
+
+.grid-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.grid-header h2 {
+    margin: 0;
+}
+
+.grid-close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: white;
+    font-size: 3em;
+    cursor: pointer;
+}
+
+.thumbnail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.thumbnail-grid img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.thumbnail-grid img:hover {
+    opacity: 0.8;
+}
+
+.lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox.active {
+    display: flex;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 80%;
+}
+
+.lightbox-content img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 80vh;
+}
+
+/* --- עיצוב ווידג'ט זמני היום --- */
+.zmanim-container {
+    background: linear-gradient(135deg, #f6f8fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+
+.zmanim-widget {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.zmanim-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.current-date-box {
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 150px;
+}
+
+.parasha-tag {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.location-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 0.95em;
+    min-width: 150px;
+}
+
+#change-city-btn {
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    padding: 2px;
+    transition: color 0.2s;
+}
+
+#change-city-btn:hover {
+    color: var(--secondary-color);
+}
+
+.zmanim-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    flex: 1;
+}
+
+.zman-item {
+    background: white;
+    padding: 4px 8px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+}
+
+.zman-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--secondary-color);
+}
+
+.zman-label {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.zman-time {
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+/* מצב כהה לזמנים */
+body.dark-mode .zmanim-container {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-bottom-color: #444;
+}
+
+body.dark-mode .location-box,
+body.dark-mode .zman-item {
+    background-color: var(--dark-surface);
+    border-color: #444;
+}
+
+body.dark-mode .zman-label {
+    color: #aaa;
+}
+
+body.dark-mode .zman-time,
+body.dark-mode .current-date-box,
+body.dark-mode #current-city-name {
+    color: var(--dark-text);
+}
+
+/* רספונסיביות לזמנים במובייל */
+@media (max-width: 768px) {
+    .zmanim-layout {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .current-date-box,
+    .location-box {
+        width: 100%;
+        min-width: auto;
+        align-items: center;
+        text-align: center;
+    }
+
+    .current-date-box {
+        align-items: center;
+    }
+
+    .zmanim-grid {
+        width: 100%;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+}
+
+/* מודאל בחירת עיר */
+.city-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+}
+
+.city-modal.active {
+    display: flex;
+}
+
+.city-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.city-close {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    /* RTL */
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+.city-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.city-option {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.city-option:hover {
+    background: #e9ecef;
+    border-color: #ccc;
+}
+
+.city-option.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .city-modal-content {
+    background-color: var(--dark-surface);
+    color: var(--dark-text);
+}
+
+body.dark-mode .city-option {
+    background-color: #333;
+    border-color: #555;
+    color: #ddd;
+}
+
+body.dark-mode .city-option:hover {
+    background-color: #444;
+}
+
+body.dark-mode .city-option.active {
+    background-color: var(--dark-primary);
+    color: white;
+}
+
+.lightbox-close {
+    top: 10px;
+    right: 25px;
+}
+
+.lightbox-next,
+.lightbox-prev {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.lightbox-next {
+    right: 15px;
+}
+
+.lightbox-prev {
+    left: 15px;
+}
+
+.donation-section {
+    text-align: center;
+}
+
+.donation-button {
+    display: inline-block;
+    background-color: #28a745;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.donation-button:hover {
+    background-color: #218838;
+}
+
+#contact-form {
+    max-width: 600px;
+    margin: 30px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+#contact-form input,
+#contact-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: 'Assistant', sans-serif;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-row input {
+    flex: 1;
+}
+
+#contact-form button {
+    background-color: #003366;
+    color: white;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#contact-form button:hover {
+    background-color: #004488;
+}
+
+#back-to-top-btn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 99;
+    border: none;
+    outline: none;
+    background-color: #003366;
+    color: white;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+#back-to-top-btn:hover {
+    background-color: #004488;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #333;
+    color: white;
+}

@@ -1,48 +1,48 @@
 // utils.js
-    // ---- פונקציית עזר לניקוי נתיבים ----
-    export function cleanPath(path) {
-        if (!path) return '';
-        let p = String(path).trim();
-        if (p.startsWith('- ')) p = p.slice(2).trim();
-        p = p.replace(/^['"]|['"]$/g, '').trim();
-        p = p.replace(/^(?:\.\/|\/)+/, '');
-        try { p = decodeURIComponent(p); } catch (e) { /* silent */ }
-        return p;
+// ---- פונקציית עזר לניקוי נתיבים ----
+export function cleanPath(path) {
+    if (!path) return '';
+    let p = String(path).trim();
+    if (p.startsWith('- ')) p = p.slice(2).trim();
+    p = p.replace(/^['"]|['"]$/g, '').trim();
+    p = p.replace(/^(?:\.\/|\/)+/, '');
+    try { p = decodeURIComponent(p); } catch (e) { /* silent */ }
+    return p;
 }
-    // ---- פונקציה פשוטה לפירוק Front Matter ----
-    export  function parseFrontMatter(content) {
-        const match = /^---\s*([\s\S]+?)\s*---/.exec(content);
-        if (!match) return { data: {}, content };
+// ---- פונקציה פשוטה לפירוק Front Matter ----
+export function parseFrontMatter(content) {
+    const match = /^---\s*([\s\S]+?)\s*---/.exec(content);
+    if (!match) return { data: {}, content };
 
-        const yamlText = match[1];
-        const body = content.slice(match[0].length).trim();
+    const yamlText = match[1];
+    const body = content.slice(match[0].length).trim();
 
-        const data = {};
-        let currentListKey = null;
+    const data = {};
+    let currentListKey = null;
 
-        yamlText.trim().split('\n').forEach(line => {
-            const keyValueMatch = line.match(/^([^:]+):(.*)/);
-            if (keyValueMatch) {
-                const key = keyValueMatch[1].trim();
-                const value = keyValueMatch[2].trim();
-                if (value) {
-                    data[key] = value.replace(/^['"]|['"]$/g, '');
-                    currentListKey = null;
-                } else {
-                    data[key] = [];
-                    currentListKey = key;
-                }
-            } else if (currentListKey && line.trim().startsWith('- ')) {
-                const listItemMatch = line.match(/-\s*['"]?([^'"]+)['"]?$/);
-                if (listItemMatch && listItemMatch[1]) {
-                    data[currentListKey].push(listItemMatch[1].trim());
-                }
+    yamlText.trim().split('\n').forEach(line => {
+        const keyValueMatch = line.match(/^([^:]+):(.*)/);
+        if (keyValueMatch) {
+            const key = keyValueMatch[1].trim();
+            const value = keyValueMatch[2].trim();
+            if (value) {
+                data[key] = value.replace(/^['"]|['"]$/g, '');
+                currentListKey = null;
+            } else {
+                data[key] = [];
+                currentListKey = key;
             }
-        });
-        return { data, content: body };
+        } else if (currentListKey && line.trim().startsWith('- ')) {
+            const listItemMatch = line.match(/-\s*['"]?([^'"]+)['"]?$/);
+            if (listItemMatch && listItemMatch[1]) {
+                data[currentListKey].push(listItemMatch[1].trim());
+            }
+        }
+    });
+    return { data, content: body };
 }
-    // ---- פונקציה לטעינת JSON סטטי ----
-    export  async function fetchStaticJson(path) {
+// ---- פונקציה לטעינת JSON סטטי ----
+export async function fetchStaticJson(path) {
     const url = `./data/${path}.json`; // מצפה לקובץ בנתיב /data/news.json או /data/gallery.json
     try {
         const response = await fetch(url);
@@ -53,8 +53,8 @@
         return { error: true, message: 'אירעה שגיאה בטעינת הנתונים (JSON). נא לנסות שוב מאוחר יותר.' };
     }
 }
-    // פונקציות עזר לנעילת הפוקוס
-    export function focusLock(modalElement, focusTarget = null) {
+// פונקציות עזר לנעילת הפוקוס
+export function focusLock(modalElement, focusTarget = null) {
     const focusable = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -81,4 +81,11 @@
             }
         }
     });
+}
+export function getHebrewYear() {
+    const now = new Date();
+    // יצירת פורמט עברי (מספרים עבריים)
+    const hebrewDate = now.toLocaleDateString('he-IL-u-ca-hebrew', { year: 'numeric' });
+    // לצרכי פשטות, נשתמש בפורמט המספרי העברי:
+    return hebrewDate;
 }
