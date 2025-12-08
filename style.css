@@ -256,12 +256,14 @@ body {
 
 .lightbox-next,
 .lightbox-prev {
+    position: absolute;
     z-index: 99999;
     background: rgba(0, 0, 0, 0.5);
     color: white;
     padding: 20px 15px;
     border-radius: 5px;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
 .lightbox-next:hover,
@@ -1350,11 +1352,11 @@ body.dark-mode .city-option.active {
 }
 
 .lightbox-next {
-    right: 15px;
+    left: 15px;
 }
 
 .lightbox-prev {
-    left: 15px;
+    right: 15px;
 }
 
 .donation-section {
