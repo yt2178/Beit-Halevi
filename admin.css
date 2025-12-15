@@ -51,7 +51,10 @@ header {
 }
 
 
+
 #logout-btn {
+    display: none;
+    /* הסתר כברירת מחדל */
     float: left;
     background: #e74c3c;
     color: white;

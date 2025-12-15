@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
     <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
-    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -74,10 +74,10 @@
     </main>
 
 
-    <script src="admin-gallery.js"></script>
-    <script src="admin.js"></script>
+    <script type="module" src="admin-gallery.js"></script>
+
+    <script type="module" src="admin.js"></script>
 
 </body>
 
 </html>
-<!-- END OF FILE admin.html -->
