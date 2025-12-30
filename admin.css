@@ -232,4 +232,32 @@ textarea {
     font-size: 0.8em;
 }
 
+/* login toggle eye */
+.input-group {
+    position: relative;
+    width: 100%;
+}
+
+.input-group input {
+    width: 100% !important;
+    padding-left: 40px !important;
+    /* רווח לאייקון מצד שמאל (בגלל RTL) */
+}
+
+.toggle-password {
+    position: absolute;
+    left: 10px;
+    /* צד שמאל בגלל RTL */
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+    z-index: 10;
+    padding: 5px;
+}
+
+.toggle-password:hover {
+    color: #3498db;
+}
+
 /* END OF FILE admin.css */

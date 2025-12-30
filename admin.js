@@ -52,17 +52,19 @@ const logoutBtn = document.getElementById('logout-btn');
 
 // משתנים גלובליים
 let googleApiInitialized = false;
-export let googleApiInitPromise = initGoogleApiGlobals();
 let tokenClient;
+
 // ============================================================
 // 4. פונקציות Google API (Google API Functions)
 // ============================================================
-// admin.js (initGoogleApiGlobals - תיקון חזק לכשל)
-function initGoogleApiGlobals() {
+async function initGoogleApiGlobals() {
+    if (typeof gapi === 'undefined') {
+        console.error("gapi is not loaded");
+        return false;
+    }
     return new Promise(resolve => {
-        gapi.load('client:auth2', async () => {
+        gapi.load('client', async () => {
             try {
-                // [תיקון קריטי] השתמש ב-await ישירות על ה-Promise של init
                 await gapi.client.init({
                     clientId: GOOGLE_CLIENT_ID,
                     scope: GOOGLE_SCOPES,
@@ -70,24 +72,19 @@ function initGoogleApiGlobals() {
                 googleApiInitialized = true;
                 console.log("Google API Client Initialized successfully.");
                 resolve(true);
-
             } catch (error) {
                 console.error("Google API Initialization Failed:", error);
-
-                // [חדש] מנגנון ניקוי localStorage במקרה של כשל ידוע
-                if (error.error === 'idpiframe_initialization_failed') {
-                    // אם נכשל, נסה לנקות את ה-Token ולבקש מהמשתמש לרענן
-                    alert('שגיאת אימות גוגל: נא לרענן את הדף ולהתחבר מחדש.');
-                    localStorage.removeItem(GITHUB_TOKEN_KEY);
-                    localStorage.removeItem(GITHUB_USERNAME_KEY);
-                }
-
-                resolve(false); // סיום ה-Promise עם כישלון
+                resolve(false);
             }
         });
     });
 }
+
 export function initGoogleLogin() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        console.error("Google Identity Services not loaded");
+        return;
+    }
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
@@ -231,10 +228,28 @@ export async function makeFilePublic(fileId, Token) {
 function logout() {
     localStorage.removeItem(GITHUB_TOKEN_KEY);
     localStorage.removeItem(GITHUB_USERNAME_KEY);
-    localStorage.removeItem(USER_CODE_KEY); // הסרת קוד המשתמש גם
+    localStorage.removeItem(USER_CODE_KEY);
     GITHUB_TOKEN = null;
     GITHUB_USERNAME = null;
     showAdminPanel();
+}
+
+// [חדש] פונקציה לאימות הטוקן מול GitHub
+async function verifyGitHubToken(token) {
+    try {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${token}`
+            }
+        });
+        if (response.ok) {
+            const userData = await response.json();
+            return userData.login; // מחזיר את שם המשתמש האמיתי
+        }
+    } catch (error) {
+        console.error("Token verification failed:", error);
+    }
+    return null;
 }
 
 // רינדור רשימת הידיעות
@@ -443,15 +458,40 @@ async function handleSaveNews(e) {
 // ============================================================
 
 // אתחול הדף
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // אתחול עורך Markdown
     simplemde = new SimpleMDE({
         element: document.getElementById("news-body"),
         status: false,
         spellChecker: false
     });
-    initGoogleLogin();
+
+    // מחכים שהספריות של גוגל יטענו (אם הן async)
+    if (typeof gapi !== 'undefined') {
+        await initGoogleApiGlobals();
+    }
+    if (typeof google !== 'undefined') {
+        initGoogleLogin();
+    }
+
     showAdminPanel();
+
+    // [חדש] מאזין לכפתורי "עין" להצגת/הסתרת סיסמה
+    document.querySelectorAll('.toggle-password').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const targetId = icon.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
 });
 
 // כפתור עריכה - delegated event
@@ -463,28 +503,41 @@ document.addEventListener('click', (e) => {
 });
 
 // טופס התחברות
-loginForm.addEventListener('submit', (e) => {
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userCodeInput = document.getElementById('admin-usercode').value;
-    const tokenInput = document.getElementById('github-token').value;
+    const tokenInput = document.getElementById('github-token').value.trim();
 
-    loginMessage.textContent = '';
+    loginMessage.textContent = 'מבצע אימות...';
+    loginMessage.style.color = 'blue';
 
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
         if (tokenInput) {
-            GITHUB_USERNAME = ADMIN_USER_CODES[userCodeInput];
-            GITHUB_TOKEN = tokenInput.trim();
+            // [חדש] אימות הטוקן מול GitHub
+            const verifiedLogin = await verifyGitHubToken(tokenInput);
 
-            localStorage.setItem(GITHUB_USERNAME_KEY, GITHUB_USERNAME);
-            localStorage.setItem(GITHUB_TOKEN_KEY, GITHUB_TOKEN);
-            localStorage.setItem(USER_CODE_KEY, userCodeInput);
+            if (verifiedLogin) {
+                // הצלחה - שומרים נתונים
+                GITHUB_USERNAME = verifiedLogin;
+                GITHUB_TOKEN = tokenInput;
 
-            showAdminPanel();
+                localStorage.setItem(GITHUB_USERNAME_KEY, GITHUB_USERNAME);
+                localStorage.setItem(GITHUB_TOKEN_KEY, GITHUB_TOKEN);
+                localStorage.setItem(USER_CODE_KEY, userCodeInput);
+
+                loginMessage.textContent = '';
+                showAdminPanel();
+            } else {
+                loginMessage.textContent = "טוקן GitHub אינו תקין.";
+                loginMessage.style.color = 'red';
+            }
         } else {
             loginMessage.textContent = "נדרש Token כדי להמשיך.";
+            loginMessage.style.color = 'red';
         }
     } else {
         loginMessage.textContent = "קוד משתמש שגוי.";
+        loginMessage.style.color = 'red';
     }
 });
 
