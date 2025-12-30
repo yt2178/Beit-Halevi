@@ -51,35 +51,11 @@ const newsStatusMessage = document.getElementById('news-status-message');
 const logoutBtn = document.getElementById('logout-btn');
 
 // משתנים גלובליים
-let googleApiInitialized = false;
 let tokenClient;
 
 // ============================================================
 // 4. פונקציות Google API (Google API Functions)
 // ============================================================
-async function initGoogleApiGlobals() {
-    if (typeof gapi === 'undefined') {
-        console.error("gapi is not loaded");
-        return false;
-    }
-    return new Promise(resolve => {
-        gapi.load('client', async () => {
-            try {
-                await gapi.client.init({
-                    clientId: GOOGLE_CLIENT_ID,
-                    scope: GOOGLE_SCOPES,
-                });
-                googleApiInitialized = true;
-                console.log("Google API Client Initialized successfully.");
-                resolve(true);
-            } catch (error) {
-                console.error("Google API Initialization Failed:", error);
-                resolve(false);
-            }
-        });
-    });
-}
-
 export function initGoogleLogin() {
     if (typeof google === 'undefined' || !google.accounts) {
         console.error("Google Identity Services not loaded");
@@ -467,9 +443,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // מחכים שהספריות של גוגל יטענו (אם הן async)
-    if (typeof gapi !== 'undefined') {
-        await initGoogleApiGlobals();
-    }
     if (typeof google !== 'undefined') {
         initGoogleLogin();
     }
