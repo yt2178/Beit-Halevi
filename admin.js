@@ -41,17 +41,57 @@ export let simplemde;
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 
+// משתנים גלובליים
+let tokenClient;
+
 // אלמנטי DOM
 const loginSection = document.getElementById('login-section');
 const newsSection = document.getElementById('news-section');
+const dashboardSection = document.getElementById('dashboard-section');
+const gallerySection = document.getElementById('gallery-section');
 const loginForm = document.getElementById('login-form');
 const addNewsForm = document.getElementById('add-news-form');
 const loginMessage = document.getElementById('login-message');
-const newsStatusMessage = document.getElementById('news-status-message');
 const logoutBtn = document.getElementById('logout-btn');
 
-// משתנים גלובליים
-let tokenClient;
+// אלמנטי סטטוס
+const statusOverlay = document.getElementById('status-overlay');
+const statusText = document.getElementById('status-text');
+const statusProgress = document.getElementById('status-progress');
+const closeStatusBtn = document.getElementById('close-status-btn');
+
+// ============================================================
+// 4. פונקציות סטטוס (Status Functions)
+// ============================================================
+export function showStatus(text, progress = null, isError = false) {
+    statusOverlay.style.display = 'flex';
+    statusText.textContent = text;
+    statusText.style.color = isError ? '#e74c3c' : '#2c3e50';
+    closeStatusBtn.style.display = isError ? 'inline-block' : 'none';
+
+    if (progress !== null) {
+        statusProgress.parentElement.style.display = 'block';
+        statusProgress.style.width = progress + '%';
+    } else {
+        statusProgress.parentElement.style.display = 'none';
+    }
+}
+
+export function hideStatus() {
+    statusOverlay.style.display = 'none';
+}
+
+function handleApiError(err) {
+    console.error(err);
+    let msg = "שגיאה לא צפויה";
+    if (err.message.includes("404")) msg = "הקובץ לא נמצא ב-GitHub";
+    if (err.message.includes("401")) msg = "טוקן לא בתוקף או חסר הרשאות";
+    if (err.message.includes("403")) msg = "אין הרשאה לביצוע הפעולה (ייתכן שהטוקן מוגבל)";
+    if (err.message.includes("sha")) msg = "שגיאת סנכרון: הקובץ עודכן על ידי מישהו אחר. נא לרענן.";
+    if (err.message.includes("Token client")) msg = "שגיאה בחיבור לגוגל. נא לרענן ולנסות שוב.";
+
+    showStatus(`שגיאה: ${msg} (${err.message})`, null, true);
+}
 
 // ============================================================
 // 4. פונקציות Google API (Google API Functions)
@@ -132,44 +172,91 @@ function getFinalSlug(title, date) {
 
 // הצגת/הסתרת פאנל הניהול
 function showAdminPanel() {
-    const logoutBtn = document.getElementById('logout-btn');
-
     if (GITHUB_TOKEN && GITHUB_USERNAME) {
         loginSection.style.display = 'none';
-        newsSection.style.display = 'block';
-        document.getElementById('gallery-section').style.display = 'block'; // <<<<<<<< חדש!
+        dashboardSection.style.display = 'block';
+        newsSection.style.display = 'none';
+        gallerySection.style.display = 'none';
 
         logoutBtn.style.display = 'inline-block';
-        if (typeof initGoogleDrive === 'function') {
-            initGoogleDrive(); // ודא ש-admin-gallery.js נטען לפני admin.js
-        }
-        loadAndRenderNewsList();// טוען את רשימת החדשות כאשר הפאנל מוצג
-        loadAndRenderGallery(); // טוען את רשימת האלבומים כאשר הפאנל מוצג
 
+        loadAndRenderNewsList();
+        loadAndRenderGallery();
     } else {
         loginSection.style.display = 'block';
+        dashboardSection.style.display = 'none';
         newsSection.style.display = 'none';
-        document.getElementById('gallery-section').style.display = 'none'; // <<<<<<<< חדש!
+        gallerySection.style.display = 'none';
         logoutBtn.style.display = 'none';
     }
 }
+
+function navigateTo(sectionId) {
+    const sections = [dashboardSection, newsSection, gallerySection];
+    sections.forEach(s => s.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+}
+// [חדש] פונקציה למציאת או יצירת תיקיית הגלריה בדרייב
+async function getFolderId(token) {
+    const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
+
+    try {
+        // 1. חיפוש תיקייה קיימת עם השם הזה
+        const searchRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+            { headers: { "Authorization": "Bearer " + token } }
+        );
+        const searchData = await searchRes.json();
+
+        if (searchData.files && searchData.files.length > 0) {
+            return searchData.files[0].id;
+        }
+
+        // 2. אם לא נמצאה - יצירת תיקייה חדשה
+        const createRes = await fetch(
+            "https://www.googleapis.com/drive/v3/files",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: FOLDER_NAME,
+                    mimeType: "application/vnd.google-apps.folder"
+                })
+            }
+        );
+        const createData = await createRes.json();
+
+        // הפיכת התיקייה לציבורית (כדי שהתמונות בתוכה יוכלו להיות ציבוריות בקלות)
+        await makeFilePublic(createData.id, token);
+
+        return createData.id;
+    } catch (err) {
+        console.error("Error in getFolderId:", err);
+        return "root"; // fallback לתיקיית השורש
+    }
+}
+
 export async function uploadFileToDrive(file, Token) {
+    const token = Token;
+    const folderId = await getFolderId(token); // [שינוי] מציאת/יצירת התיקייה הייעודית
+
     const metadata = {
         name: file.name,
-        parents: ["root"]
+        parents: [folderId] // [שינוי] העלאה לתוך התיקייה שנמצאה
     };
 
     const form = new FormData();
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    const token = Token;
-
     const res = await fetch(
         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
         {
             method: "POST",
-            headers: { "Authorization": "Bearer " + token }, // [שינוי] שימוש ב-Token שהתקבל
+            headers: { "Authorization": "Bearer " + token },
             body: form
         }
     );
@@ -195,19 +282,20 @@ export async function makeFilePublic(fileId, Token) {
         }
     );
 
-    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
 }
 // ============================================================
 // 7. פונקציות GitHub (GitHub Functions)
 // ============================================================
 // יציאה מהמערכת
 function logout() {
-    localStorage.removeItem(GITHUB_TOKEN_KEY);
-    localStorage.removeItem(GITHUB_USERNAME_KEY);
-    localStorage.removeItem(USER_CODE_KEY);
-    GITHUB_TOKEN = null;
-    GITHUB_USERNAME = null;
-    showAdminPanel();
+    showStatus('מתנתק מהמערכת... להתראות!', 100);
+    setTimeout(() => {
+        localStorage.removeItem(GITHUB_TOKEN_KEY);
+        localStorage.removeItem(GITHUB_USERNAME_KEY);
+        localStorage.removeItem(USER_CODE_KEY);
+        location.reload();
+    }, 1000);
 }
 
 // [חדש] פונקציה לאימות הטוקן מול GitHub
@@ -231,9 +319,19 @@ async function verifyGitHubToken(token) {
 // רינדור רשימת הידיעות
 function renderNewsList(newsArray) {
     const container = document.getElementById('news-list-container');
-    if (!container) return; // ודא שהאלמנט קיים
+    if (!container) return;
 
     container.innerHTML = '';
+
+    if (newsArray.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <p>אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!</p>
+            </div>
+        `;
+        return;
+    }
 
     newsArray.forEach(item => {
         const slug = generateSlug(item.data.title, item.data.date);
@@ -242,34 +340,77 @@ function renderNewsList(newsArray) {
         newsDiv.dataset.slug = slug;
 
         newsDiv.innerHTML = `
-            <h3>${item.data.title}</h3>
-            <p>תאריך: ${item.data.date}</p>
-            <button class="edit-news-btn" data-slug="${slug}">ערוך</button>
+            <div class="item-details">
+                <i class="fas fa-file-alt item-icon"></i>
+                <div>
+                    <h3>${item.data.title}</h3>
+                    <p>פורסם ב: ${item.data.date}</p>
+                </div>
+            </div>
+            <div class="item-actions">
+                <button class="edit-news-btn premium-btn small" data-slug="${slug}">
+                    <i class="fas fa-edit"></i> ערוך
+                </button>
+                <button class="delete-news-btn premium-btn small danger" data-slug="${slug}">
+                    <i class="fas fa-trash-alt"></i> מחק
+                </button>
+            </div>
         `;
         container.appendChild(newsDiv);
     });
+}
 
-    // [חדש] חיבור האירוע לכל כפתורי העריכה
-    document.querySelectorAll('.edit-news-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const slug = e.target.dataset.slug;
-            handleEditNews(slug);
+// מחיקת ידיעה
+async function handleDeleteNews(slug) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק ידיעה זו? הפעולה אינה ניתנת לביטול.')) return;
+
+    showStatus('מוחק ידיעה...', 50);
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+
+    try {
+        const fileResponse = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
-    });
-}
-function showSpinner() {
-    const spinner = document.getElementById('spinner');
-    if (spinner) spinner.style.display = 'block';
-}
 
-function hideSpinner() {
-    const spinner = document.getElementById('spinner');
-    if (spinner) spinner.style.display = 'none';
+        if (!fileResponse.ok) throw new Error('Failed to fetch JSON');
+
+        const fileData = await fileResponse.json();
+        const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+
+        const updatedContent = existingContent.filter(item =>
+            generateSlug(item.data.title, item.data.date) !== slug
+        );
+
+        const updatedContentBase64 = encodeToBase64(JSON.stringify(updatedContent, null, 2));
+
+        const updateResponse = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Delete news item: ${slug}`,
+                content: updatedContentBase64,
+                sha: fileData.sha,
+                branch: 'main'
+            })
+        });
+
+        if (updateResponse.ok) {
+            showStatus('הידיעה נמחקה בהצלחה!', 100);
+            setTimeout(hideStatus, 1500);
+            await loadAndRenderNewsList();
+        } else {
+            throw new Error('Delete failed on GitHub');
+        }
+    } catch (error) {
+        handleApiError(error);
+    }
 }
 
 async function loadAndRenderNewsList() {
     if (!GITHUB_TOKEN) return;
-    showSpinner(); // הצגת הספינר
 
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
 
@@ -278,25 +419,20 @@ async function loadAndRenderNewsList() {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
 
-        if (!fileResponse.ok) {
-            console.error('Failed to fetch news list:', fileResponse.status, fileResponse.statusText);
-            hideSpinner();
-            return;
-        }
+        if (!fileResponse.ok) return;
 
         const fileData = await fileResponse.json();
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
         renderNewsList(existingContent);
     } catch (error) {
         console.error('Error loading news list:', error);
-    } finally {
-        hideSpinner(); // הסתרת הספינר אחרי סיום
     }
 }
 
 
 // עריכת ידיעה קיימת
 async function handleEditNews(slug) {
+    showStatus('טוען ידיעה לעריכה...', 30);
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
 
     try {
@@ -307,54 +443,42 @@ async function handleEditNews(slug) {
             }
         });
 
-        if (!fileResponse.ok) {
-            alert('שגיאה בגישה לקובץ.');
-            return;
-        }
+        if (!fileResponse.ok) throw new Error('Failed to fetch news item');
 
         const fileData = await fileResponse.json();
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
 
-        // מציאת הידיעה לפי slug
         const newsItem = existingContent.find(item =>
             generateSlug(item.data.title, item.data.date) === slug
         );
 
-        if (!newsItem) {
-            alert('לא נמצאה הידיעה.');
-            return;
-        }
+        if (!newsItem) throw new Error('News item not found');
 
-        // מילוי הטופס
         document.getElementById('news-title').value = newsItem.data.title;
         document.getElementById('news-date').value = newsItem.data.date;
         simplemde.value(newsItem.data.body);
 
-        // שמירת מזהים גלובליים
         editingNewsSlug = slug;
         editingNewsSHA = fileData.sha;
 
-        // עדכון כפתור
         addNewsForm.querySelector('button').textContent = 'שמור שינויים';
+        hideStatus();
     } catch (error) {
-        console.error('Error editing news:', error);
-        alert('שגיאה בטעינת הידיעה.');
+        handleApiError(error);
     }
 }
 
 // שמירת ידיעה (חדשה או עריכה)
 async function handleSaveNews(e) {
     e.preventDefault();
-    newsStatusMessage.textContent = 'מבצע גישה לקובץ קיים... אנא המתן.';
-    showSpinner(); // הצגת הספינר
+    showStatus('מבצע גישה ל-GitHub... נא להמתין', 20);
 
     const title = document.getElementById('news-title').value;
     const date = document.getElementById('news-date').value;
     const body = simplemde.value();
 
     if (!title || !date || !body) {
-        newsStatusMessage.style.color = 'red';
-        newsStatusMessage.textContent = 'נא למלא את כל השדות.';
+        showStatus('נא למלא את כל השדות', null, true);
         return;
     }
 
@@ -369,30 +493,25 @@ async function handleSaveNews(e) {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
 
-        if (!fileResponse.ok) {
-            throw new Error('Failed to fetch JSON.');
-        }
+        if (!fileResponse.ok) throw new Error('Failed to fetch JSON: ' + fileResponse.status);
+        showStatus('מעבד נתונים ושומר שינויים...', 60);
 
         const fileData = await fileResponse.json();
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
         const sha = fileData.sha;
 
-        // עריכה או הוספה חדשה
         if (editingNewsSlug) {
             const index = existingContent.findIndex(item =>
-                generateSlug(item.data.title, item.data.date) === editingNewsSlug // [תיקון] היה צריך להיות generateSlug
+                generateSlug(item.data.title, item.data.date) === editingNewsSlug
             );
-            if (index !== -1) {
-                existingContent[index] = newItem;
-            }
+            if (index !== -1) existingContent[index] = newItem;
             editingNewsSlug = null;
             editingNewsSHA = null;
-            addNewsForm.querySelector('button').textContent = 'פרסם'; // שחזור כפתור
+            addNewsForm.querySelector('button').textContent = 'פרסם ידיעה';
         } else {
-            existingContent.unshift(newItem); // הוספה לראש הרשימה
+            existingContent.unshift(newItem);
         }
 
-        // קידוד ושליחה
         const updatedContentBase64 = encodeToBase64(JSON.stringify(existingContent, null, 2));
 
         const updateResponse = await fetch(API_URL, {
@@ -402,30 +521,25 @@ async function handleSaveNews(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title} (by ${GITHUB_USERNAME})`,
+                message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
                 content: updatedContentBase64,
-                sha: sha, // השתמש ב-SHA הנוכחי של הקובץ
+                sha: sha,
                 branch: 'main'
             })
         });
 
         if (updateResponse.ok) {
-            newsStatusMessage.style.color = 'green';
-            newsStatusMessage.textContent = 'הידיעה פורסמה בהצלחה!';
+            showStatus('הידיעה פורסמה בהצלחה!', 100);
+            setTimeout(hideStatus, 1500);
             addNewsForm.reset();
-            simplemde.value(''); // ניקוי העורך
-            await loadAndRenderNewsList(); // רענון רשימת הידיעות
+            simplemde.value('');
+            await loadAndRenderNewsList();
         } else {
             const errorData = await updateResponse.json();
-            throw new Error(errorData.message || 'API error');
+            throw new Error(errorData.message);
         }
     } catch (err) {
-        hideSpinner(); // הסתרת הספינר
-        console.error('Error saving news:', err);
-        newsStatusMessage.style.color = 'red';
-        newsStatusMessage.textContent = `שגיאה: ${err.message}. ודא של-Token יש הרשאת 'repo' ושהקובץ קיים.`;
-    } finally {
-        hideSpinner(); // הסתרת הספינר תמיד, גם אם הצליח וגם אם נכשל
+        handleApiError(err);
     }
 }
 
@@ -449,6 +563,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     showAdminPanel();
 
+    // ניווט
+    document.getElementById('nav-news-btn').addEventListener('click', () => navigateTo('news-section'));
+    document.getElementById('nav-gallery-btn').addEventListener('click', () => navigateTo('gallery-section'));
+    document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => {
+        btn.addEventListener('click', () => navigateTo('dashboard-section'));
+    });
+    closeStatusBtn.addEventListener('click', hideStatus);
+
     // [חדש] מאזין לכפתורי "עין" להצגת/הסתרת סיסמה
     document.querySelectorAll('.toggle-password').forEach(icon => {
         icon.addEventListener('click', () => {
@@ -467,11 +589,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// כפתור עריכה - delegated event
+// כפתור עריכה ומחיקה - delegated event
 document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('edit-news-btn')) {
-        const slug = e.target.closest('.news-item-admin').dataset.slug;
-        handleEditNews(slug);
+    const editBtn = e.target.closest('.edit-news-btn');
+    const deleteBtn = e.target.closest('.delete-news-btn');
+
+    if (editBtn) {
+        handleEditNews(editBtn.dataset.slug);
+    } else if (deleteBtn) {
+        handleDeleteNews(deleteBtn.dataset.slug);
     }
 });
 
@@ -481,16 +607,13 @@ loginForm.addEventListener('submit', async (e) => {
     const userCodeInput = document.getElementById('admin-usercode').value;
     const tokenInput = document.getElementById('github-token').value.trim();
 
-    loginMessage.textContent = 'מבצע אימות...';
-    loginMessage.style.color = 'blue';
+    showStatus('מבצע אימות מול GitHub...', 40);
 
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
         if (tokenInput) {
-            // [חדש] אימות הטוקן מול GitHub
             const verifiedLogin = await verifyGitHubToken(tokenInput);
 
             if (verifiedLogin) {
-                // הצלחה - שומרים נתונים
                 GITHUB_USERNAME = verifiedLogin;
                 GITHUB_TOKEN = tokenInput;
 
@@ -498,19 +621,19 @@ loginForm.addEventListener('submit', async (e) => {
                 localStorage.setItem(GITHUB_TOKEN_KEY, GITHUB_TOKEN);
                 localStorage.setItem(USER_CODE_KEY, userCodeInput);
 
-                loginMessage.textContent = '';
-                showAdminPanel();
+                showStatus('התרחבות הצליחה! ברוך הבא.', 100);
+                setTimeout(() => {
+                    hideStatus();
+                    showAdminPanel();
+                }, 1000);
             } else {
-                loginMessage.textContent = "טוקן GitHub אינו תקין.";
-                loginMessage.style.color = 'red';
+                showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
             }
         } else {
-            loginMessage.textContent = "נדרש Token כדי להמשיך.";
-            loginMessage.style.color = 'red';
+            showStatus('נדרש Token כדי להמשיך.', null, true);
         }
     } else {
-        loginMessage.textContent = "קוד משתמש שגוי.";
-        loginMessage.style.color = 'red';
+        showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
     }
 });
 

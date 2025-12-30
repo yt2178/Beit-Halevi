@@ -21,58 +21,117 @@
     </header>
     <main class="admin-main">
 
+        <!-- [חדש] שכבת סטטוס ופידבק -->
+        <div id="status-overlay" class="status-overlay" style="display:none;">
+            <div class="status-content">
+                <div class="status-spinner-premium"></div>
+                <div class="status-text" id="status-text">מבצע פעולה...</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="status-progress"></div>
+                </div>
+                <button id="close-status-btn" class="premium-btn"
+                    style="display:none; margin-top: 15px; background: #95a5a6;">סגור</button>
+            </div>
+        </div>
+
         <section id="login-section">
-            <h2>כניסת מנהלים</h2>
-            <form id="login-form">
-                <div class="input-group">
-                    <input type="password" id="admin-usercode" placeholder="קוד משתמש אישי" required>
-                    <i class="fas fa-eye toggle-password" data-target="admin-usercode"></i>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="github-token" placeholder="GitHub Personal Access Token" required>
-                    <i class="fas fa-eye toggle-password" data-target="github-token"></i>
-                </div>
-                <button type="submit">כניסה והתחברות ל-GitHub</button>
-                <p id="login-message" style="color:red; margin-top: 10px;"></p>
-            </form>
+            <div class="login-card">
+                <h2>כניסת מנהלים</h2>
+                <form id="login-form">
+                    <div class="input-group">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="admin-usercode" placeholder="קוד משתמש אישי" required>
+                        <i class="fas fa-eye toggle-password" data-target="admin-usercode"></i>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" id="github-token" placeholder="GitHub Personal Access Token" required>
+                        <i class="fas fa-eye toggle-password" data-target="github-token"></i>
+                    </div>
+                    <button type="submit" class="premium-btn">
+                        <i class="fas fa-sign-in-alt"></i> כניסה והתחברות
+                    </button>
+                    <p id="login-message"></p>
+                </form>
+            </div>
         </section>
+
+        <!-- [חדש] לוח בקרה ראשי -->
+        <section id="dashboard-section" style="display:none;">
+            <div class="dashboard-header">
+                <h2>מה תרצה לעשות היום?</h2>
+            </div>
+            <div class="dashboard-grid">
+                <div id="nav-news-btn" class="dashboard-card">
+                    <div class="card-icon"><i class="fas fa-newspaper"></i></div>
+                    <div class="card-content">
+                        <h3>ניהול ידיעות</h3>
+                        <p>הוספה, עריכה ומחיקה של חדשות ועדכונים</p>
+                    </div>
+                </div>
+                <div id="nav-gallery-btn" class="dashboard-card">
+                    <div class="card-icon"><i class="fas fa-images"></i></div>
+                    <div class="card-content">
+                        <h3>ניהול גלריה</h3>
+                        <p>העלאת תמונות ויצירת אלבומי תמונות</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section id="news-section" style="display:none;">
-            <h2>הוספת ידיעה חדשה</h2>
-
-            <form id="add-news-form">
-                <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
-                <input type="date" id="news-date" required>
-                <textarea id="news-body"></textarea>
-                <button type="submit">פרסם</button>
-            </form>
-
-            <p id="news-status-message"></p>
-            <!-- ספינר -->
-            <div id="spinner" style="display:none; text-align:center; margin:10px;">
-                <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i> טוען...
+            <div class="section-header">
+                <button class="back-to-dashboard-btn premium-btn small"><i class="fas fa-arrow-right"></i> חזרה ללוח
+                    הבקרה</button>
+                <h2>ניהול ידיעות</h2>
             </div>
 
-            <h2>כל הידיעות הקיימות</h2>
-            <div id="news-list-container">
+            <div class="admin-card">
+                <h3>הוספת ידיעה חדשה</h3>
+                <form id="add-news-form">
+                    <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
+                    <input type="date" id="news-date" required>
+                    <textarea id="news-body"></textarea>
+                    <button type="submit" class="premium-btn">פרסם ידיעה</button>
+                </form>
+            </div>
+
+            <div class="admin-card">
+                <h3>כל הידיעות הקיימות</h3>
+                <div id="news-list-container"></div>
             </div>
         </section>
+
         <section id="gallery-section" style="display:none;">
-            <h2>ניהול גלריה</h2>
+            <div class="section-header">
+                <button class="back-to-dashboard-btn premium-btn small"><i class="fas fa-arrow-right"></i> חזרה ללוח
+                    הבקרה</button>
+                <h2>ניהול גלריה</h2>
+            </div>
 
-            <form id="add-album-form">
-                <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
-                <input type="text" id="albumThumbnailInput" placeholder="קישור לתמונת שער (מדרייב)">
-                <input type="file" id="albumImagesInput" multiple accept="image/*">
-                <!-- אחרי input של album-images -->
-                <div id="albumPreview" class="album-preview-grid"></div>
+            <div class="admin-card">
+                <h3>הוספת אלבום חדש</h3>
+                <form id="add-album-form">
+                    <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
+                    <div class="thumbnail-input-group" style="display:none;">
+                        <input type="text" id="albumThumbnailInput" placeholder="קישור לתמונת שער">
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <label for="albumImagesInput" class="file-upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>בחר תמונות להעלאה</span>
+                            <input type="file" id="albumImagesInput" multiple accept="image/*" style="display:none;">
+                        </label>
+                    </div>
+                    <div id="albumPreview" class="album-preview-grid"></div>
+                    <button type="submit" class="premium-btn">שמור אלבום בדרייב ובאתר</button>
+                </form>
+            </div>
 
-                <button type="submit">שמור אלבום</button>
-            </form>
-
-            <p id="gallery-status-message"></p>
-
-            <h3>כל האלבומים הקיימים</h3>
-            <div id="gallery-list-container"></div>
+            <div class="admin-card">
+                <h3>כל האלבומים הקיימים</h3>
+                <div id="gallery-list-container"></div>
+            </div>
         </section>
 
     </main>

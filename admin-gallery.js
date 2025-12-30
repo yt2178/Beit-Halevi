@@ -8,7 +8,8 @@ import {
     GITHUB_TOKEN, GITHUB_USERNAME, REPO_OWNER, REPO_NAME,
     decodeBase64ToUtf8, encodeToBase64, // פונקציות עזר
     uploadFileToDrive, makeFilePublic, // פונקציות Google Drive 
-    googleLogin
+    googleLogin,
+    showStatus, hideStatus // [חדש] פונקציות סטטוס
 } from './admin.js';
 
 /* ----------------- אלמנטים ----------------- */
@@ -70,15 +71,34 @@ function renderGalleryList(galleryArray, sha) {
     if (!galleryListContainer) return;
     galleryListContainer.innerHTML = '';
 
+    if (galleryArray.length === 0) {
+        galleryListContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-images"></i>
+                <p>אין אלבומים להצגה. התחל ביצירת האלבום הראשון!</p>
+            </div>
+        `;
+        return;
+    }
+
     galleryArray.forEach((album, index) => {
         const div = document.createElement('div');
         div.className = 'album-item-admin';
         div.innerHTML = `
-            <h3>${album.data.title}</h3>
-            <img src="${album.data.thumbnail}" alt="${album.data.title}" style="max-width:120px; max-height:80px; object-fit:cover;">
-            <div style="margin-top:10px;">
-                <button class="edit-album-btn" data-index="${index}">ערוך</button>
-                <button class="delete-album-btn" data-index="${index}" style="background:#e74c3c; margin-right:5px;">מחק</button>
+            <div class="item-details">
+                <img src="${album.data.thumbnail}" alt="${album.data.title}" class="item-thumb-admin">
+                <div>
+                    <h3>${album.data.title}</h3>
+                    <p>${album.data.images ? album.data.images.length : 0} תמונות</p>
+                </div>
+            </div>
+            <div class="item-actions">
+                <button class="edit-album-btn premium-btn small" data-index="${index}">
+                    <i class="fas fa-edit"></i> ערוך
+                </button>
+                <button class="delete-album-btn premium-btn small danger" data-index="${index}">
+                    <i class="fas fa-trash-alt"></i> מחק
+                </button>
             </div>
         `;
         galleryListContainer.appendChild(div);
@@ -100,7 +120,7 @@ function editAlbum(album, index) {
     (album.data.images || []).forEach((imgPath, idx) => {
         const item = createPreviewItem(imgPath, true, idx);
         if (album.data.thumbnail === imgPath) {
-            item.querySelector('img').style.border = '2px solid gold';
+            item.classList.add('is-thumbnail');
             const badge = document.createElement('div');
             badge.className = 'preview-thumb-badge';
             badge.textContent = 'שער';
@@ -158,8 +178,7 @@ async function deleteAlbum(indexToDelete) {
         }
     } catch (err) {
         console.error('Error deleting album:', err);
-        galleryStatusMessage.textContent = 'שגיאה במחיקת האלבום';
-        galleryStatusMessage.style.color = 'red';
+        showStatus('שגיאה במחיקת האלבום: ' + err.message, null, true);
     }
 }
 
@@ -192,31 +211,45 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 
     const img = document.createElement('img');
     img.src = src;
+    img.style.cursor = 'pointer';
     wrapper.appendChild(img);
 
     // כפתורים: הגדר כתמונת שער + מחק
     const controls = document.createElement('div');
     controls.className = 'preview-controls';
 
-    // כפתור תמונת שער
+    // כפתור תמונת שער (סטאר)
     const thumbBtn = document.createElement('button');
     thumbBtn.type = 'button';
     thumbBtn.className = 'preview-btn';
     thumbBtn.title = 'הגדר כתמונת שער';
     thumbBtn.innerHTML = '⭐';
-    thumbBtn.addEventListener('click', () => {
-        albumThumbnailInput.value = src;
-        // עדכון ויזואלי
-        Array.from(albumPreview.querySelectorAll('img')).forEach(i => i.style.border = 'none');
-        img.style.border = '2px solid gold';
 
-        // עדכון תג
-        Array.from(albumPreview.querySelectorAll('.preview-thumb-badge')).forEach(b => b.remove());
+    const setAsThumbnail = () => {
+        albumThumbnailInput.value = src;
+
+        // עדכון ויזואלי של כל הפריטים
+        Array.from(albumPreview.querySelectorAll('.album-preview-item')).forEach(el => {
+            el.classList.remove('is-thumbnail');
+            const b = el.querySelector('.preview-thumb-badge');
+            if (b) b.remove();
+        });
+
+        // עדכון הפריט הנוכחי
+        wrapper.classList.add('is-thumbnail');
         const badge = document.createElement('div');
         badge.className = 'preview-thumb-badge';
         badge.textContent = 'שער';
         wrapper.appendChild(badge);
+    };
+
+    thumbBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setAsThumbnail();
     });
+
+    // לחיצה על התמונה עצמה גם מגדירה כעיקרית
+    img.addEventListener('click', setAsThumbnail);
 
     // כפתור מחיקה
     const removeBtn = document.createElement('button');
@@ -224,18 +257,14 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     removeBtn.className = 'preview-btn';
     removeBtn.title = 'הסר תמונה';
     removeBtn.innerHTML = '🗑';
-    removeBtn.addEventListener('click', () => {
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const url = img.src;
 
         if (wrapper.dataset.existing === '0') {
-            // תמונה חדשה - הסרה מהמערך
             selectedFiles = selectedFiles.filter(f => !(url.endsWith(f.file.name) || url === f.objectURL));
-        } else {
-            // תמונה קיימת - סימון למחיקה (אופציונלי, כרגע רק מסתירים)
-            // במימוש פשוט, אנחנו פשוט נבנה את רשימת התמונות מחדש לפי מה שנשאר ב-DOM
         }
 
-        // אם זו תמונת השער, נקה את השדה
         if (albumThumbnailInput.value === url) {
             albumThumbnailInput.value = '';
         }
@@ -252,15 +281,15 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 // admin-gallery.js (פונקציית handleGallerySubmit - מתוקנת)
 async function handleGallerySubmit(e) {
     e.preventDefault();
-    // [שינוי קל] העבר את הצגת ההודעה לכאן (לפני ה-try)
-    galleryStatusMessage.textContent = 'מבצע אימות...';
-    galleryStatusMessage.style.color = 'blue';
+    showStatus('מכין העלאה לדרייב... נא להמתין', 10);
 
     try {
         // [תיקון קריטי 1]: ביצוע Login וקבלת ה-Token
-        const googleAccessToken = await googleLogin(); // משמש רק להעלאה לדרייב
+        showStatus('מתחבר לחשבון גוגל...', 20);
+        const googleAccessToken = await googleLogin();
 
         // 1. השגת הקובץ הנוכחי
+        showStatus('ניגש למאגר הנתונים ב-GitHub...', 35);
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
         const fileResponse = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
@@ -270,26 +299,26 @@ async function handleGallerySubmit(e) {
         const fileData = await fileResponse.json();
         const galleryArray = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
 
-        // 2. איסוף רשימת התמונות הסופית מה-DOM (כדי לתמוך במחיקות וסדר)
+        // 2. איסוף רשימת התמונות הסופית מה-DOM
         const finalImages = [];
         const previewItems = albumPreview.querySelectorAll('.album-preview-item');
+        const totalItems = previewItems.length;
+        let processedCount = 0;
 
         for (const item of previewItems) {
             const img = item.querySelector('img');
 
             if (item.dataset.existing === '1') {
-                // תמונה קיימת - לא נוגעים
-                let path = img.getAttribute('src');
-                finalImages.push(path);
+                finalImages.push(img.getAttribute('src'));
+                processedCount++;
             } else {
-                // [תיקון קריטי 2]: תמונה חדשה - עכשיו מעלים!
-                const fileObj = selectedFiles.find(f => f.localUrl === img.src); // חפש לפי URL מקומי
+                const fileObj = selectedFiles.find(f => f.localUrl === img.src);
                 if (fileObj) {
-                    // [תיקון קריטי 2]: העבר את ה-Token לתוך הפונקציות
+                    showStatus(`מעלה תמונה ${processedCount + 1} מתוך ${totalItems} לדרייב...`, 40 + (processedCount / totalItems * 40));
                     const fileId = await uploadFileToDrive(fileObj.file, googleAccessToken);
-                    const publicUrl = await makeFilePublic(fileId, googleAccessToken); // וגם לכאן
-
+                    const publicUrl = await makeFilePublic(fileId, googleAccessToken);
                     finalImages.push(publicUrl);
+                    processedCount++;
                 }
             }
         }
@@ -298,21 +327,23 @@ async function handleGallerySubmit(e) {
         const newAlbum = {
             data: {
                 title: albumTitleInput.value,
-                thumbnail: albumThumbnailInput.value,
+                thumbnail: albumThumbnailInput.value || finalImages[0] || "",
                 images: finalImages
             },
             content: ""
         };
-        // 4. עדכון המערך (קוד קיים)
+
+        // 4. עדכון המערך
         if (editingAlbumIndex !== null) {
             galleryArray[editingAlbumIndex] = newAlbum;
             editingAlbumIndex = null;
-            galleryForm.querySelector('button[type="submit"]').textContent = 'שמור אלבום';
         } else {
             galleryArray.push(newAlbum);
         }
 
-        // 5. שמירה (קוד קיים)
+        showStatus('מעדכן את האתר... כמעט סיימנו', 90);
+
+        // 5. שמירה ב-GitHub
         const updatedContentBase64 = encodeToBase64(JSON.stringify(galleryArray, null, 2));
         const updateResponse = await fetch(API_URL, {
             method: 'PUT',
@@ -321,7 +352,7 @@ async function handleGallerySubmit(e) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: `Update gallery (by ${GITHUB_USERNAME})`,
+                message: `Update gallery: ${albumTitleInput.value}`,
                 content: updatedContentBase64,
                 sha: fileData.sha,
                 branch: 'main'
@@ -329,19 +360,19 @@ async function handleGallerySubmit(e) {
         });
 
         if (updateResponse.ok) {
-            galleryStatusMessage.textContent = 'נשמר בהצלחה!';
-            galleryStatusMessage.style.color = 'green';
+            showStatus('האלבום נשמר בהצלחה!', 100);
+            setTimeout(hideStatus, 1500);
             galleryForm.reset();
             albumPreview.innerHTML = '';
             selectedFiles = [];
             loadAndRenderGallery();
+            galleryForm.querySelector('button[type="submit"]').textContent = 'שמור אלבום';
         } else {
-            throw new Error('Save failed');
+            throw new Error('Save to GitHub failed');
         }
 
     } catch (err) {
         console.error(err);
-        galleryStatusMessage.textContent = 'שגיאה בשמירה: ' + err.message;
-        galleryStatusMessage.style.color = 'red';
+        showStatus('שגיאה בתהליך השמירה: ' + err.message, null, true);
     }
 }

@@ -21,7 +21,24 @@ async function fetchAndParse(path) {
     }
     // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
     if (path.includes('gallery')) {
-        return fetchStaticJson('gallery');
+        let data = await fetchStaticJson('gallery');
+        // [תיקון קריטי ל-403]: המרה של לינקים ישנים במידה וקיימים
+        if (Array.isArray(data)) {
+            data.forEach(album => {
+                if (album.data && album.data.images) {
+                    album.data.images = album.data.images.map(img =>
+                        img.includes('drive.google.com/uc') ?
+                            img.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1000') : img
+                    );
+                }
+                if (album.data && album.data.thumbnail) {
+                    if (album.data.thumbnail.includes('drive.google.com/uc')) {
+                        album.data.thumbnail = album.data.thumbnail.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1000');
+                    }
+                }
+            });
+        }
+        return data;
     }
 
     // אם הנתיב לא מוכר, החזר שגיאה
