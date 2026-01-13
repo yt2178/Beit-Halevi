@@ -108,13 +108,13 @@ if (contactForm) {
         statusMessage.style.marginTop = '10px';
 
         // הכתובת של ה-Google Form (formResponse)
-        const FORM_URL = "נא_להזין_כאן_את_קישור_ה-formResponse_של_גוגל_פורמס";
+        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSei1Bf5tZILqekHD0nV2QsirdzryO8YEoOtkcl7rVB9HCKUog/formResponse";
 
         // מיפוי השדות (המשתמש יצטרך להוציא את ה-entry.ID מהטופס שלו)
         const formData = new FormData();
-        formData.append('entry.1111111', contactForm.name.value);   // שם מלא
-        formData.append('entry.2222222', contactForm.email.value);  // אימייל
-        formData.append('entry.3333333', contactForm.message.value); // הודעה
+        formData.append('entry.659007933', contactForm.name.value);   // שם מלא
+        formData.append('entry.627036351', contactForm.email.value);  // אימייל
+        formData.append('entry.607110160', contactForm.message.value); // הודעה
 
         try {
             // שליחה ל-Google Forms

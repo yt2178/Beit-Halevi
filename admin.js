@@ -10,7 +10,7 @@ export const REPO_NAME = 'Beit-Halevi';
 export const NEWS_PATH = '_posts/news/'; // Not used in this version, but kept for context
 export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
-export const MESSAGES_SHEET_URL = "נא_להזין_כאן_את_קישור_הפרסום_של_האקסל_בתצורת_CSV";
+export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 import { loadAndRenderGallery } from './admin-gallery.js';
 
