@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cancelBtn = document.getElementById('cancel-album-edit');
     if (cancelBtn) cancelBtn.addEventListener('click', resetGalleryForm);
+
+    if (galleryForm) galleryForm.addEventListener('submit', handleGallerySubmit);
 });
 
 /* ----------------- לוגיקה ראשית ----------------- */
@@ -364,7 +366,8 @@ async function handleGallerySubmit(e) {
         };
 
         // 4. עדכון המערך
-        if (editingAlbumIndex !== null) {
+        const isUpdate = editingAlbumIndex !== null;
+        if (isUpdate) {
             galleryArray[editingAlbumIndex] = newAlbum;
             editingAlbumIndex = null;
         } else {
@@ -392,7 +395,7 @@ async function handleGallerySubmit(e) {
         if (updateResponse.ok) {
             showStatus('האלבום נשמר בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
-            logEvent(`${editingAlbumIndex !== null ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
+            logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
             resetGalleryForm();
             loadAndRenderGallery();
         } else {
