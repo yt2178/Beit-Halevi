@@ -133,13 +133,14 @@ if (contactForm) {
             statusMessage.style.color = 'red';
         }
 
-        // [ חדש] 3. הצגת הודעה סופית ושחזור כפתור
+        // [מתוקן] שחזור הכפתור מיד לאחר השליחה
+        button.disabled = false;
+        button.innerHTML = originalButtonHtml;
         contactForm.appendChild(statusMessage);
 
+        // הסרת הודעת הסטטוס בלבד אחרי 5 שניות
         setTimeout(() => {
-            button.disabled = false;
-            button.innerHTML = originalButtonHtml; // שחזור המצב המקורי
-            statusMessage.remove(); // הסרת ההודעה אחרי 5 שניות
+            if (statusMessage) statusMessage.remove();
         }, 5000);
     });
 }
