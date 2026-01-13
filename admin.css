@@ -257,6 +257,21 @@ textarea:focus {
     box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
 }
 
+.premium-btn.secondary {
+    background: #94a3b8;
+}
+
+.premium-btn.secondary:hover {
+    background: #64748b;
+    box-shadow: 0 10px 20px rgba(100, 116, 139, 0.3);
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 /* Status Overlay & Progress */
 .status-overlay {
     position: fixed;
@@ -487,15 +502,55 @@ textarea:focus {
     cursor: pointer;
 }
 
+.album-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 .album-preview-item.is-thumbnail {
     border-color: #f1c40f;
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
     transform: scale(1.05);
     z-index: 2;
 }
 
+.album-preview-item.is-thumbnail::after {
+    content: '⭐';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #f1c40f;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.preview-controls {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 5;
+}
+
+.album-preview-item:hover .preview-controls {
+    opacity: 1;
+}
+
 .preview-btn {
-    background: rgba(15, 23, 42, 0.7);
+    background: rgba(15, 23, 42, 0.8);
     color: white;
     border: none;
     width: 32px;
@@ -507,10 +562,16 @@ textarea:focus {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
+    font-size: 0.9rem;
 }
 
 .preview-btn:hover {
-    background: #e74c3c;
+    transform: scale(1.1);
+    background: var(--secondary-color);
+}
+
+.preview-btn.remove:hover {
+    background: var(--accent-danger);
 }
 
 /* Empty State */
@@ -549,6 +610,108 @@ textarea:focus {
     font-weight: 800;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     pointer-events: none;
+}
+
+/* History & Messages Styling */
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.2s;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item:hover {
+    background: #f8fafc;
+}
+
+.history-time {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    min-width: 140px;
+    font-family: monospace;
+}
+
+.history-user {
+    font-weight: 700;
+    color: var(--secondary-color);
+    min-width: 80px;
+}
+
+.history-action {
+    color: var(--text-main);
+    flex-grow: 1;
+}
+
+.history-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.history-icon.login {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.history-icon.news {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.history-icon.gallery {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+/* Messages Styling */
+.message-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.message-info h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.message-info p {
+    margin: 2px 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.message-date {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.message-body {
+    line-height: 1.6;
+    color: #475569;
+    white-space: pre-wrap;
 }
 
 /* END OF FILE admin.css */

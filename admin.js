@@ -9,6 +9,8 @@ export const REPO_OWNER = 'yt2178';
 export const REPO_NAME = 'Beit-Halevi';
 export const NEWS_PATH = '_posts/news/'; // Not used in this version, but kept for context
 export const JSON_FILE_PATH = 'data/news.json';
+export const HISTORY_JSON_PATH = 'data/history.json';
+export const MESSAGES_SHEET_URL = "נא_להזין_כאן_את_קישור_הפרסום_של_האקסל_בתצורת_CSV";
 
 import { loadAndRenderGallery } from './admin-gallery.js';
 
@@ -40,6 +42,7 @@ export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
 export let simplemde;
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
+const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
 // משתנים גלובליים
 let tokenClient;
@@ -49,6 +52,8 @@ const loginSection = document.getElementById('login-section');
 const newsSection = document.getElementById('news-section');
 const dashboardSection = document.getElementById('dashboard-section');
 const gallerySection = document.getElementById('gallery-section');
+const historySection = document.getElementById('history-section');
+const messagesSection = document.getElementById('messages-section');
 const loginForm = document.getElementById('login-form');
 const addNewsForm = document.getElementById('add-news-form');
 const loginMessage = document.getElementById('login-message');
@@ -146,6 +151,58 @@ export function decodeBase64ToUtf8(base64Str) {
     return decoder.decode(bytes);
 }
 
+// [חדש] פונקציה לתיעוד פעולות
+export async function logEvent(action, type = 'general') {
+    if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
+
+    try {
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
+        let historyArray = [];
+        let sha = null;
+
+        // 1. ניסיון לקרוא את הקובץ הקיים
+        const response = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+
+        if (response.ok) {
+            const fileData = await response.json();
+            sha = fileData.sha;
+            historyArray = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+        }
+
+        // 2. הוספת האירוע החדש לראש הרשימה
+        const newLog = {
+            timestamp: new Date().toLocaleString('he-IL'),
+            user: GITHUB_USERNAME,
+            action: action,
+            type: type // 'login', 'news', 'gallery'
+        };
+
+        historyArray.unshift(newLog);
+
+        // שמירה על הגודל (למשל 100 לוגים אחרונים)
+        if (historyArray.length > 100) historyArray = historyArray.slice(0, 100);
+
+        // 3. שמירה בחזרה ל-GitHub
+        await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Log action: ${action}`,
+                content: encodeToBase64(JSON.stringify(historyArray, null, 2)),
+                sha: sha,
+                branch: 'main'
+            })
+        });
+    } catch (err) {
+        console.error('Failed to log event:', err);
+    }
+}
+
 function generateSlug(title, date) {
     // [חובה] יש לוודא שהפונקציה הזו קיימת ב-admin.js
     // זה נותן slug חזק לשימוש ב-Commit Message ולחיפוש
@@ -192,9 +249,13 @@ function showAdminPanel() {
 }
 
 function navigateTo(sectionId) {
-    const sections = [dashboardSection, newsSection, gallerySection];
-    sections.forEach(s => s.style.display = 'none');
-    document.getElementById(sectionId).style.display = 'block';
+    const sections = [dashboardSection, newsSection, gallerySection, historySection, messagesSection];
+    sections.forEach(s => { if (s) s.style.display = 'none'; });
+    const target = document.getElementById(sectionId);
+    if (target) target.style.display = 'block';
+
+    if (sectionId === 'history-section') loadAndRenderHistory();
+    if (sectionId === 'messages-section') loadAndRenderMessages();
 }
 // [חדש] פונקציה למציאת או יצירת תיקיית הגלריה בדרייב
 async function getFolderId(token) {
@@ -400,6 +461,7 @@ async function handleDeleteNews(slug) {
         if (updateResponse.ok) {
             showStatus('הידיעה נמחקה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
+            logEvent(`מחק ידיעה: ${slug}`, 'news');
             await loadAndRenderNewsList();
         } else {
             throw new Error('Delete failed on GitHub');
@@ -427,6 +489,125 @@ async function loadAndRenderNewsList() {
     } catch (error) {
         console.error('Error loading news list:', error);
     }
+}
+
+// [חדש] טעינה ורינדור של ההיסטוריה
+async function loadAndRenderHistory() {
+    const container = document.getElementById('history-list-container');
+    if (!container) return;
+
+    try {
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
+        const response = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to load history');
+
+        const fileData = await response.json();
+        const history = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+
+        container.innerHTML = '';
+        if (history.length === 0) {
+            container.innerHTML = '<div class="empty-state"><p>אין פעולות מתועדות</p></div>';
+            return;
+        }
+
+        history.forEach(log => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div class="history-icon ${log.type || 'general'}">
+                    <i class="fas ${getIconForType(log.type)}"></i>
+                </div>
+                <div class="history-time">${log.timestamp}</div>
+                <div class="history-user">${log.user}</div>
+                <div class="history-action">${log.action}</div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (err) {
+        container.innerHTML = `<p style="color:red; text-align:center;">שגיאה בטעינת היסטוריה: ${err.message}</p>`;
+    }
+}
+
+function getIconForType(type) {
+    switch (type) {
+        case 'login': return 'fa-sign-in-alt';
+        case 'news': return 'fa-newspaper';
+        case 'gallery': return 'fa-images';
+        default: return 'fa-info-circle';
+    }
+}
+
+// [חדש] טעינה ורינדור של הודעות (מתוך Google Sheets)
+async function loadAndRenderMessages() {
+    const container = document.getElementById('messages-list-container');
+    if (!container) return;
+
+    if (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין")) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>טרם הוגדר קישור לגיליון ההודעות ב-admin.js</p></div>';
+        return;
+    }
+
+    try {
+        const response = await fetch(MESSAGES_SHEET_URL);
+        if (!response.ok) throw new Error('Failed to load messages sheet');
+
+        const csvData = await response.text();
+        const rows = parseCSV(csvData); // פונקציית עזר לפענוח CSV
+
+        container.innerHTML = '';
+        if (rows.length <= 1) { // רק כותרות או ריק
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+            return;
+        }
+
+        // דלוג על שורת הכותרת והצגת ההודעות (מהחדשה לישנה - אם האקסל מסודר כך)
+        // בדרך כלל גוגל מוסיף שורות למטה, אז נהפוך את הסדר
+        const messages = rows.slice(1).reverse();
+
+        messages.forEach(row => {
+            if (row.length < 4) return; // וודאות שיש מספיק עמודות
+            const [timestamp, name, email, body] = row;
+
+            const div = document.createElement('div');
+            div.className = 'message-card';
+            div.innerHTML = `
+                <div class="message-header">
+                    <div class="message-info">
+                        <h4>${name}</h4>
+                        <p>${email}</p>
+                    </div>
+                    <div class="message-date">${timestamp}</div>
+                </div>
+                <div class="message-body">${body}</div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (err) {
+        container.innerHTML = `<p style="color:red; text-align:center;">שגיאה בטעינת הודעות: ${err.message}</p>`;
+    }
+}
+
+// פונקציית עזר פשוטה לפיענוח CSV (מתחשבת במירכאות)
+function parseCSV(text) {
+    const lines = text.split('\n');
+    return lines.map(line => {
+        const result = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === ',' && !inQuotes) {
+                result.push(cur.trim());
+                cur = '';
+            } else cur += char;
+        }
+        result.push(cur.trim());
+        return result;
+    });
 }
 
 
@@ -461,11 +642,21 @@ async function handleEditNews(slug) {
         editingNewsSlug = slug;
         editingNewsSHA = fileData.sha;
 
-        addNewsForm.querySelector('button').textContent = 'שמור שינויים';
+        cancelNewsBtn.style.display = 'inline-block';
+        addNewsForm.querySelector('button[type="submit"]').textContent = 'שמור שינויים';
         hideStatus();
     } catch (error) {
         handleApiError(error);
     }
+}
+
+export function resetNewsForm() {
+    addNewsForm.reset();
+    simplemde.value('');
+    editingNewsSlug = null;
+    editingNewsSHA = null;
+    addNewsForm.querySelector('button[type="submit"]').textContent = 'פרסם ידיעה';
+    if (cancelNewsBtn) cancelNewsBtn.style.display = 'none';
 }
 
 // שמירת ידיעה (חדשה או עריכה)
@@ -531,8 +722,8 @@ async function handleSaveNews(e) {
         if (updateResponse.ok) {
             showStatus('הידיעה פורסמה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
-            addNewsForm.reset();
-            simplemde.value('');
+            logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
+            resetNewsForm();
             await loadAndRenderNewsList();
         } else {
             const errorData = await updateResponse.json();
@@ -566,6 +757,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ניווט
     document.getElementById('nav-news-btn').addEventListener('click', () => navigateTo('news-section'));
     document.getElementById('nav-gallery-btn').addEventListener('click', () => navigateTo('gallery-section'));
+    document.getElementById('nav-history-btn').addEventListener('click', () => navigateTo('history-section'));
+    document.getElementById('nav-messages-btn').addEventListener('click', () => navigateTo('messages-section'));
     document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => {
         btn.addEventListener('click', () => navigateTo('dashboard-section'));
     });
@@ -587,6 +780,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     });
+
+    if (cancelNewsBtn) {
+        cancelNewsBtn.addEventListener('click', resetNewsForm);
+    }
 });
 
 // כפתור עריכה ומחיקה - delegated event
@@ -621,7 +818,8 @@ loginForm.addEventListener('submit', async (e) => {
                 localStorage.setItem(GITHUB_TOKEN_KEY, GITHUB_TOKEN);
                 localStorage.setItem(USER_CODE_KEY, userCodeInput);
 
-                showStatus('התרחבות הצליחה! ברוך הבא.', 100);
+                showStatus('התחברות הצליחה! ברוך הבא.', 100);
+                logEvent('התחבר למערכת', 'login');
                 setTimeout(() => {
                     hideStatus();
                     showAdminPanel();

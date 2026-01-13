@@ -107,18 +107,28 @@ if (contactForm) {
         statusMessage.style.textAlign = 'center';
         statusMessage.style.marginTop = '10px';
 
-        const response = await fetch(contactForm.action, {
-            method: contactForm.method,
-            body: new FormData(contactForm),
-            headers: { 'Accept': 'application/json' }
-        });
+        // הכתובת של ה-Google Form (formResponse)
+        const FORM_URL = "נא_להזין_כאן_את_קישור_ה-formResponse_של_גוגל_פורמס";
 
-        // [ חדש] 2. טיפול בתגובה
-        if (response.ok) {
+        // מיפוי השדות (המשתמש יצטרך להוציא את ה-entry.ID מהטופס שלו)
+        const formData = new FormData();
+        formData.append('entry.1111111', contactForm.name.value);   // שם מלא
+        formData.append('entry.2222222', contactForm.email.value);  // אימייל
+        formData.append('entry.3333333', contactForm.message.value); // הודעה
+
+        try {
+            // שליחה ל-Google Forms
+            await fetch(FORM_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            });
+
             statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
             statusMessage.style.color = 'green';
             contactForm.reset();
-        } else {
+        } catch (error) {
+            console.error('Submission error:', error);
             statusMessage.textContent = "אירעה שגיאה בשליחת ההודעה. נסה שוב מאוחר יותר.";
             statusMessage.style.color = 'red';
         }

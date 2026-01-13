@@ -9,7 +9,8 @@ import {
     decodeBase64ToUtf8, encodeToBase64, // פונקציות עזר
     uploadFileToDrive, makeFilePublic, // פונקציות Google Drive 
     googleLogin,
-    showStatus, hideStatus // [חדש] פונקציות סטטוס
+    showStatus, hideStatus, // [חדש] פונקציות סטטוס
+    logEvent // [חדש]
 } from './admin.js';
 
 /* ----------------- אלמנטים ----------------- */
@@ -35,8 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ----------------- מאזינים לאירועים ----------------- */
-    if (galleryForm) galleryForm.addEventListener('submit', handleGallerySubmit);
     if (albumImagesInput) albumImagesInput.addEventListener('change', handleFileSelect);
+
+    const cancelBtn = document.getElementById('cancel-album-edit');
+    if (cancelBtn) cancelBtn.addEventListener('click', resetGalleryForm);
 });
 
 /* ----------------- לוגיקה ראשית ----------------- */
@@ -135,6 +138,28 @@ function editAlbum(album, index) {
     // שינוי כפתור השמירה
     const submitBtn = galleryForm.querySelector('button[type="submit"]');
     submitBtn.textContent = 'עדכן אלבום';
+    const cancelBtn = document.getElementById('cancel-album-edit');
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+}
+
+export function resetGalleryForm() {
+    if (galleryForm) galleryForm.reset();
+
+    // ניקוי URL-ים מהזיכרון
+    selectedFiles.forEach(f => {
+        if (f.localUrl) URL.revokeObjectURL(f.localUrl);
+    });
+
+    // ניקוי תצוגה מקדימה
+    if (albumPreview) albumPreview.innerHTML = '';
+    selectedFiles = [];
+    editingAlbumIndex = null;
+
+    const submitBtn = galleryForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = 'שמור אלבום';
+
+    const cancelBtn = document.getElementById('cancel-album-edit');
+    if (cancelBtn) cancelBtn.style.display = 'none';
 }
 async function deleteAlbum(indexToDelete) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את האלבום?')) return;
@@ -172,6 +197,7 @@ async function deleteAlbum(indexToDelete) {
         if (updateResponse.ok) {
             galleryStatusMessage.textContent = 'האלבום נמחק בהצלחה';
             galleryStatusMessage.style.color = 'green';
+            logEvent(`מחק אלבום תמונות אינדקס ${indexToDelete}`, 'gallery');
             loadAndRenderGallery();
         } else {
             throw new Error('Update failed');
@@ -254,7 +280,7 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     // כפתור מחיקה
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
-    removeBtn.className = 'preview-btn';
+    removeBtn.className = 'preview-btn remove';
     removeBtn.title = 'הסר תמונה';
     removeBtn.innerHTML = '🗑';
     removeBtn.addEventListener('click', (e) => {
@@ -262,7 +288,11 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
         const url = img.src;
 
         if (wrapper.dataset.existing === '0') {
-            selectedFiles = selectedFiles.filter(f => !(url.endsWith(f.file.name) || url === f.objectURL));
+            const fileObj = selectedFiles.find(f => f.localUrl === url);
+            if (fileObj) {
+                URL.revokeObjectURL(fileObj.localUrl);
+                selectedFiles = selectedFiles.filter(f => f.localUrl !== url);
+            }
         }
 
         if (albumThumbnailInput.value === url) {
@@ -362,11 +392,9 @@ async function handleGallerySubmit(e) {
         if (updateResponse.ok) {
             showStatus('האלבום נשמר בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
-            galleryForm.reset();
-            albumPreview.innerHTML = '';
-            selectedFiles = [];
+            logEvent(`${editingAlbumIndex !== null ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
+            resetGalleryForm();
             loadAndRenderGallery();
-            galleryForm.querySelector('button[type="submit"]').textContent = 'שמור אלבום';
         } else {
             throw new Error('Save to GitHub failed');
         }
