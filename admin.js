@@ -96,17 +96,25 @@ function handleApiError(err) {
 // ============================================================
 export function initGoogleLogin() {
     if (typeof google === 'undefined' || !google.accounts) {
-        console.warn("Google Identity Services not loaded");
+        console.warn("Google Identity Services not loaded yet.");
         return;
     }
-    // האתחול הבסיסי - שימוש בערכים קשיחים כדי למנוע שגיאות scope
-    window.tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com",
-        scope: "https://www.googleapis.com/auth/drive.file",
-        callback: (tokenResponse) => {
-            console.log("GIS Default Callback:", tokenResponse);
-        },
-    });
+
+    console.log("Initializing Google Login with Client ID:", GOOGLE_CLIENT_ID);
+    console.log("Requested Scopes:", GOOGLE_SCOPES);
+
+    try {
+        window.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: GOOGLE_SCOPES,
+            callback: (tokenResponse) => {
+                console.log("Google Token Response Received:", tokenResponse);
+            },
+        });
+        console.log("Google Token Client initialized successfully.");
+    } catch (err) {
+        console.error("Failed to initialize Google Token Client:", err);
+    }
 }
 // admin.js (חלק 4: פונקציות Google API - החלף את הפונקציות הקיימות)
 export async function googleLogin() {
@@ -127,9 +135,10 @@ export async function googleLogin() {
         };
 
         // בקשה ל-Token - הגדרה מפורשת של ה-scope כאן פותרת את הבעיה ברוב המקרים
+        console.log("Requesting Access Token for scope:", GOOGLE_SCOPES);
         window.tokenClient.requestAccessToken({
             prompt: 'select_account',
-            scope: "https://www.googleapis.com/auth/drive.file"
+            scope: GOOGLE_SCOPES // We use the constant here for consistency
         });
     });
 }
