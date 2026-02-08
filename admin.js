@@ -111,7 +111,7 @@ export function initGoogleLogin() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
-        prompt: 'consent', // [חדש] מאלץ הסכמה לקבלת scope
+       prompt: '', // Changed to empty to allow requestAccessToken to handle it if needed
         callback: (tokenResponse) => {
             console.log("Access Token Received:", tokenResponse.access_token);
         },
@@ -133,7 +133,7 @@ export async function googleLogin() {
         };
 
         // בקשה ל-Token - יופיע popup אם צריך
-        tokenClient.requestAccessToken();
+         tokenClient.requestAccessToken({ scope: GOOGLE_SCOPES });
     });
 }
 // ============================================================
@@ -1041,4 +1041,5 @@ loginForm.addEventListener('submit', async (e) => {
 addNewsForm.addEventListener('submit', handleSaveNews);
 
 // כפתור יציאה
+
 document.getElementById('logout-btn').addEventListener('click', logout);
