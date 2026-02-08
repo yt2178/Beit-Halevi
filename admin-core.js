@@ -16,7 +16,7 @@ export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PAC
 
 // Google API Config
 export const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com";
-export const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
+export const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file email profile openid";
 export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
 
 // Storage Keys
@@ -102,7 +102,7 @@ export function initGoogleLogin() {
         return;
     }
 
-    const scopeStr = "https://www.googleapis.com/auth/drive.file";
+    const scopeStr = "https://www.googleapis.com/auth/drive.file email profile openid";
     console.log("Initializing GIS with Client ID:", GOOGLE_CLIENT_ID);
     console.log("Scope string being used for init:", scopeStr);
 
@@ -148,7 +148,7 @@ export async function googleLogin() {
             }
         };
 
-        const scopeStr = "https://www.googleapis.com/auth/drive.file";
+        const scopeStr = "https://www.googleapis.com/auth/drive.file email profile openid";
         console.log("Requesting access token with explicit scope:", scopeStr);
 
         // REQUEST TOKEN
