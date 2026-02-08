@@ -55,6 +55,7 @@ const dashboardSection = document.getElementById('dashboard-section');
 const gallerySection = document.getElementById('gallery-section');
 const historySection = document.getElementById('history-section');
 const messagesSection = document.getElementById('messages-section');
+const siteSection = document.getElementById('site-section');
 const loginForm = document.getElementById('login-form');
 const addNewsForm = document.getElementById('add-news-form');
 const loginMessage = document.getElementById('login-message');
@@ -234,24 +235,27 @@ function showAdminPanel() {
     if (GITHUB_TOKEN && GITHUB_USERNAME) {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'block';
-        newsSection.style.display = 'none';
-        gallerySection.style.display = 'none';
+
+        // הסתרת כל השאר
+        [newsSection, gallerySection, historySection, messagesSection, siteSection].forEach(s => {
+            if (s) s.style.display = 'none';
+        });
 
         logoutBtn.style.display = 'inline-block';
 
         loadAndRenderNewsList();
         loadAndRenderGallery();
     } else {
+        [dashboardSection, newsSection, gallerySection, historySection, messagesSection, siteSection].forEach(s => {
+            if (s) s.style.display = 'none';
+        });
         loginSection.style.display = 'block';
-        dashboardSection.style.display = 'none';
-        newsSection.style.display = 'none';
-        gallerySection.style.display = 'none';
         logoutBtn.style.display = 'none';
     }
 }
 
 function navigateTo(sectionId) {
-    const sections = [dashboardSection, newsSection, gallerySection, historySection, messagesSection];
+    const sections = [dashboardSection, newsSection, gallerySection, historySection, messagesSection, siteSection];
     sections.forEach(s => { if (s) s.style.display = 'none'; });
     const target = document.getElementById(sectionId);
     if (target) target.style.display = 'block';
@@ -906,17 +910,21 @@ async function handleSaveNews(e) {
 // אתחול הדף
 document.addEventListener('DOMContentLoaded', async () => {
     // אתחול עורך Markdown
-    easyMDE = new EasyMDE({
-        element: document.getElementById("news-body"),
-        status: false,
-        spellChecker: false,
-        direction: 'rtl', // [חדש] תמיכה ב-RTL
-        autosave: {
-            enabled: true,
-            uniqueId: "news-editor",
-            delay: 1000,
-        },
-    });
+    try {
+        easyMDE = new EasyMDE({
+            element: document.getElementById("news-body"),
+            status: false,
+            spellChecker: false,
+            direction: 'rtl', // [חדש] תמיכה ב-RTL
+            autosave: {
+                enabled: true,
+                uniqueId: "news-editor",
+                delay: 1000,
+            },
+        });
+    } catch (e) {
+        console.error("EasyMDE failed to initialize:", e);
+    }
 
     // מחכים שהספריות של גוגל יטענו (אם הן async)
     if (typeof google !== 'undefined') {
