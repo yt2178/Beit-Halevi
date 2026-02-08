@@ -1,22 +1,14 @@
 // ============================================================
-// 1. הגדרות קבועות (Constants)
+// admin.js - ניהול חדשות דרך GitHub API
 // ============================================================
-export const REPO_OWNER = 'yt2178';
-export const REPO_NAME = 'Beit-Halevi';
-export const JSON_FILE_PATH = 'data/news.json';
-export const HISTORY_JSON_PATH = 'data/history.json';
-export const SITE_CONFIG_PATH = 'data/site-config.json';
-export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
-// Google API Constants
-export const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com";
-export const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
-export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
-
-// Storage Keys
-const GITHUB_TOKEN_KEY = 'admin_github_token';
-const USER_CODE_KEY = 'admin_user_code';
-const GITHUB_USERNAME_KEY = 'admin_github_username';
+import {
+    REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH, SITE_CONFIG_PATH,
+    GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
+    showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
+    initGoogleLogin, googleLogin, logEvent,
+    GOOGLE_CLIENT_ID, GOOGLE_SCOPES
+} from './admin-core.js';
 
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
 
@@ -25,19 +17,14 @@ const ADMIN_USER_CODES = {
     "112233": "Admin-Test",    // שם משתמש GitHub: Admin-Test
 };
 
-// ============================================================
-// 3. משתנים גלובליים (Global Variables)
-// ============================================================
-export let GITHUB_TOKEN = localStorage.getItem(GITHUB_TOKEN_KEY);
-export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
+const GITHUB_TOKEN_KEY = 'admin_github_token';
+const USER_CODE_KEY = 'admin_user_code';
+const GITHUB_USERNAME_KEY = 'admin_github_username';
+
 export let easyMDE;
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
-
-// משתנים גלובליים
-// Using window.tokenClient for better cross-module visibility if needed
-window.tokenClient = null;
 
 // אלמנטי DOM
 const loginSection = document.getElementById('login-section');
@@ -53,31 +40,7 @@ const loginMessage = document.getElementById('login-message');
 const logoutBtn = document.getElementById('logout-btn');
 
 // אלמנטי סטטוס
-const statusOverlay = document.getElementById('status-overlay');
-const statusText = document.getElementById('status-text');
-const statusProgress = document.getElementById('status-progress');
 const closeStatusBtn = document.getElementById('close-status-btn');
-
-// ============================================================
-// 4. פונקציות סטטוס (Status Functions)
-// ============================================================
-export function showStatus(text, progress = null, isError = false) {
-    statusOverlay.style.display = 'flex';
-    statusText.textContent = text;
-    statusText.style.color = isError ? '#e74c3c' : '#2c3e50';
-    closeStatusBtn.style.display = isError ? 'inline-block' : 'none';
-
-    if (progress !== null) {
-        statusProgress.parentElement.style.display = 'block';
-        statusProgress.style.width = progress + '%';
-    } else {
-        statusProgress.parentElement.style.display = 'none';
-    }
-}
-
-export function hideStatus() {
-    statusOverlay.style.display = 'none';
-}
 
 function handleApiError(err) {
     console.error(err);
@@ -91,126 +54,6 @@ function handleApiError(err) {
     showStatus(`שגיאה: ${msg} (${err.message})`, null, true);
 }
 
-// ============================================================
-// 4. פונקציות Google API (Google API Functions)
-// ============================================================
-export function initGoogleLogin() {
-    if (typeof google === 'undefined' || !google.accounts) {
-        console.warn("Google Identity Services not loaded yet.");
-        return;
-    }
-
-    console.log("Initializing Google Login with Client ID:", GOOGLE_CLIENT_ID);
-    console.log("Requested Scopes:", GOOGLE_SCOPES);
-
-    try {
-        window.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: GOOGLE_SCOPES,
-            callback: (tokenResponse) => {
-                console.log("Google Token Response Received:", tokenResponse);
-            },
-        });
-        console.log("Google Token Client initialized successfully.");
-    } catch (err) {
-        console.error("Failed to initialize Google Token Client:", err);
-    }
-}
-// admin.js (חלק 4: פונקציות Google API - החלף את הפונקציות הקיימות)
-export async function googleLogin() {
-    return new Promise((resolve, reject) => {
-        if (!window.tokenClient) {
-            initGoogleLogin();
-        }
-        if (!window.tokenClient) {
-            return reject(new Error("Token client not initialized"));
-        }
-
-        window.tokenClient.callback = (tokenResponse) => {
-            if (tokenResponse.error) {
-                reject(tokenResponse.error);
-            } else {
-                resolve(tokenResponse.access_token);
-            }
-        };
-
-        // בקשה ל-Token - הגדרה מפורשת של ה-scope כאן פותרת את הבעיה ברוב המקרים
-        console.log("Requesting Access Token for scope:", GOOGLE_SCOPES);
-        window.tokenClient.requestAccessToken({
-            prompt: 'select_account',
-            scope: GOOGLE_SCOPES // We use the constant here for consistency
-        });
-    });
-}
-// ============================================================
-// 5. פונקציות עזר (Utility Functions)
-// ============================================================
-export function encodeToBase64(str) {
-    const encoder = new TextEncoder();           // UTF-8
-    const bytes = encoder.encode(str);          // מחרוזת לבייטים
-    let binary = '';
-    bytes.forEach((b) => binary += String.fromCharCode(b));
-    return btoa(binary);
-}
-
-export function decodeBase64ToUtf8(base64Str) {
-    const binary = atob(base64Str);
-    const bytes = Uint8Array.from(binary.split('').map(char => char.charCodeAt(0)));
-    const decoder = new TextDecoder(); // UTF-8
-    return decoder.decode(bytes);
-}
-
-// [חדש] פונקציה לתיעוד פעולות
-export async function logEvent(action, type = 'general') {
-    if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
-
-    try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
-        let historyArray = [];
-        let sha = null;
-
-        // 1. ניסיון לקרוא את הקובץ הקיים
-        const response = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
-
-        if (response.ok) {
-            const fileData = await response.json();
-            sha = fileData.sha;
-            historyArray = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
-        }
-
-        // 2. הוספת האירוע החדש לראש הרשימה
-        const newLog = {
-            timestamp: new Date().toLocaleString('he-IL'),
-            user: GITHUB_USERNAME,
-            action: action,
-            type: type // 'login', 'news', 'gallery'
-        };
-
-        historyArray.unshift(newLog);
-
-        // שמירה על הגודל (למשל 100 לוגים אחרונים)
-        if (historyArray.length > 100) historyArray = historyArray.slice(0, 100);
-
-        // 3. שמירה בחזרה ל-GitHub
-        await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Log action: ${action}`,
-                content: encodeToBase64(JSON.stringify(historyArray, null, 2)),
-                sha: sha,
-                branch: 'main'
-            })
-        });
-    } catch (err) {
-        console.error('Failed to log event:', err);
-    }
-}
 
 function generateSlug(title, date) {
     // [חובה] יש לוודא שהפונקציה הזו קיימת ב-admin.js
@@ -1019,11 +862,10 @@ loginForm.addEventListener('submit', async (e) => {
             const verifiedLogin = await verifyGitHubToken(tokenInput);
 
             if (verifiedLogin) {
-                GITHUB_USERNAME = verifiedLogin;
-                GITHUB_TOKEN = tokenInput;
+                updateGithubAuth(tokenInput, verifiedLogin);
 
-                localStorage.setItem(GITHUB_USERNAME_KEY, GITHUB_USERNAME);
-                localStorage.setItem(GITHUB_TOKEN_KEY, GITHUB_TOKEN);
+                localStorage.setItem(GITHUB_USERNAME_KEY, verifiedLogin);
+                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
                 localStorage.setItem(USER_CODE_KEY, userCodeInput);
 
                 showStatus('התחברות הצליחה! ברוך הבא.', 100);

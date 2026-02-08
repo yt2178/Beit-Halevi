@@ -1,17 +1,14 @@
+import {
+    GITHUB_TOKEN, GITHUB_USERNAME, REPO_OWNER, REPO_NAME, GALLERY_JSON_PATH,
+    decodeBase64ToUtf8, encodeToBase64,
+    uploadFileToDrive, makeFilePublic,
+    googleLogin,
+    showStatus, hideStatus,
+    logEvent
+} from './admin-core.js';
 
-const GALLERY_JSON_PATH = 'data/gallery.json';
 let editingAlbumIndex = null; // לאחסן אם עורכים אלבום קיים
 let selectedFiles = [];       // התמונות שנבחרו להעלאה
-
-
-import {
-    GITHUB_TOKEN, GITHUB_USERNAME, REPO_OWNER, REPO_NAME,
-    decodeBase64ToUtf8, encodeToBase64, // פונקציות עזר
-    uploadFileToDrive, makeFilePublic, // פונקציות Google Drive 
-    googleLogin,
-    showStatus, hideStatus, // [חדש] פונקציות סטטוס
-    logEvent // [חדש]
-} from './admin.js';
 
 // [חדש] פונקציה להצגת תמונה בתצוגה מקדימה גדולה במודאל הניהול
 function showLargePreview(src) {
