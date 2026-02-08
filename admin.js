@@ -24,8 +24,8 @@ const ADMIN_USER_CODES = {
 // ============================================================
 // 2. הגדרות קבועות (Constants)
 // ============================================================
-const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com";
-const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
+const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com".trim();
+const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file".trim();
 export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow"; // [חדש]
 
 // ============================================================
@@ -46,7 +46,8 @@ export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
 // משתנים גלובליים
-let tokenClient;
+// Using window.tokenClient for better cross-module visibility if needed
+window.tokenClient = null;
 
 // אלמנטי DOM
 const loginSection = document.getElementById('login-section');
@@ -105,26 +106,29 @@ function handleApiError(err) {
 // ============================================================
 export function initGoogleLogin() {
     if (typeof google === 'undefined' || !google.accounts) {
-        console.error("Google Identity Services not loaded");
+        console.warn("Google Identity Services not loaded");
         return;
     }
-    tokenClient = google.accounts.oauth2.initTokenClient({
+    // האתחול הבסיסי - מבטיחים שהפרמטרים עוברים כראוי
+    window.tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
-       prompt: '', // Changed to empty to allow requestAccessToken to handle it if needed
         callback: (tokenResponse) => {
-            console.log("Access Token Received:", tokenResponse.access_token);
+            console.log("GIS Default Callback:", tokenResponse);
         },
     });
 }
 // admin.js (חלק 4: פונקציות Google API - החלף את הפונקציות הקיימות)
 export async function googleLogin() {
     return new Promise((resolve, reject) => {
-        if (!tokenClient) {
+        if (!window.tokenClient) {
+            initGoogleLogin();
+        }
+        if (!window.tokenClient) {
             return reject(new Error("Token client not initialized"));
         }
 
-        tokenClient.callback = (tokenResponse) => {
+        window.tokenClient.callback = (tokenResponse) => {
             if (tokenResponse.error) {
                 reject(tokenResponse.error);
             } else {
@@ -132,8 +136,11 @@ export async function googleLogin() {
             }
         };
 
-        // בקשה ל-Token - יופיע popup אם צריך
-         tokenClient.requestAccessToken({ scope: GOOGLE_SCOPES });
+        // בקשה ל-Token - שימוש מפורש בפרמטרים כדי למנוע את שגיאת ה-scope
+        window.tokenClient.requestAccessToken({
+            scope: "https://www.googleapis.com/auth/drive.file",
+            prompt: 'select_account'
+        });
     });
 }
 // ============================================================
@@ -1041,5 +1048,4 @@ loginForm.addEventListener('submit', async (e) => {
 addNewsForm.addEventListener('submit', handleSaveNews);
 
 // כפתור יציאה
-
 document.getElementById('logout-btn').addEventListener('click', logout);
