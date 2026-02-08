@@ -926,6 +926,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     showAdminPanel();
 
     // ניווט
+    document.getElementById('nav-news-btn').addEventListener('click', () => navigateTo('news-section'));
+    document.getElementById('nav-gallery-btn').addEventListener('click', () => navigateTo('gallery-section'));
+    document.getElementById('nav-history-btn').addEventListener('click', () => navigateTo('history-section'));
     document.getElementById('nav-messages-btn').addEventListener('click', () => navigateTo('messages-section'));
     document.getElementById('nav-site-btn').addEventListener('click', async () => {
         navigateTo('site-section');
