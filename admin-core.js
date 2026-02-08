@@ -97,45 +97,72 @@ export function initGoogleLogin() {
         return;
     }
 
-    console.log("Initializing GIS with Scope:", GOOGLE_SCOPES);
+    if (window.tokenClient) {
+        console.log("Google Token Client already exists.");
+        return;
+    }
+
+    const scopeStr = "https://www.googleapis.com/auth/drive.file";
+    console.log("Initializing GIS with Client ID:", GOOGLE_CLIENT_ID);
+    console.log("Scope string being used for init:", scopeStr);
 
     try {
         window.tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
-            scope: GOOGLE_SCOPES,
+            scope: scopeStr,
             callback: (tokenResponse) => {
-                console.log("GIS Callback hit:", tokenResponse);
+                // This will be overridden in googleLogin
+                console.log("GIS Global Callback Response:", tokenResponse);
             },
         });
-        console.log("Google Token Client initialized.");
+        console.log("Google Token Client initialized successfully.");
     } catch (err) {
         console.error("GIS Init Failed:", err);
     }
 }
+window.initGoogleLogin = initGoogleLogin; // Export to window for global access
 
 export async function googleLogin() {
     return new Promise((resolve, reject) => {
         if (!window.tokenClient) {
+            console.log("tokenClient not found, attempting to initialize...");
             initGoogleLogin();
         }
+
         if (!window.tokenClient) {
-            return reject(new Error("גוגל לא נטען כראוי, נא לרענן"));
+            return reject(new Error("גוגל לא נטען כראוי, נא לרענן או לבדוק חיבור אינטרנט."));
         }
 
+        console.log("Setting up token callback...");
         window.tokenClient.callback = (tokenResponse) => {
+            console.log("Received Token Response in googleLogin:", tokenResponse);
             if (tokenResponse.error) {
                 console.error("Google Auth Error:", tokenResponse);
-                reject(new Error(tokenResponse.error_description || tokenResponse.error));
-            } else {
+                const errorMsg = tokenResponse.error_description || tokenResponse.error;
+                reject(new Error(`שגיאת אימות גוגל: ${errorMsg}`));
+            } else if (tokenResponse.access_token) {
+                console.log("Success! Access token obtained.");
                 resolve(tokenResponse.access_token);
+            } else {
+                reject(new Error("לא התקבל Access Token מגוגל."));
             }
         };
 
-        // REQUEST TOKEN - Explicitly including scope to fix "Missing required parameter: scope"
-        window.tokenClient.requestAccessToken({
-            prompt: 'select_account',
-            scope: GOOGLE_SCOPES
-        });
+        const scopeStr = "https://www.googleapis.com/auth/drive.file";
+        console.log("Requesting access token with explicit scope:", scopeStr);
+
+        // REQUEST TOKEN
+        // Explicitly passing the scope here is the RECOMMENDED fix for "Missing required parameter: scope"
+        try {
+            window.tokenClient.requestAccessToken({
+                prompt: 'select_account',
+                scope: scopeStr
+            });
+            console.log("requestAccessToken called.");
+        } catch (requestErr) {
+            console.error("Error calling requestAccessToken:", requestErr);
+            reject(requestErr);
+        }
     });
 }
 

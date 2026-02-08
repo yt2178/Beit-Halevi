@@ -13,7 +13,7 @@ import {
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
 
 const ADMIN_USER_CODES = {
-    "12589": "YT",      // שם משתמש GitHub: Avner-Halevi
+    "12589": "yt2178",      // שם משתמש GitHub: Avner-Halevi
     "112233": "Admin-Test",    // שם משתמש GitHub: Admin-Test
 };
 
