@@ -1,39 +1,29 @@
 // ============================================================
-// admin.js - ניהול חדשות דרך GitHub API
-// ============================================================
-
-// ============================================================
 // 1. הגדרות קבועות (Constants)
 // ============================================================
 export const REPO_OWNER = 'yt2178';
 export const REPO_NAME = 'Beit-Halevi';
-export const NEWS_PATH = '_posts/news/'; // Not used in this version, but kept for context
 export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
+export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
+// Google API Constants
+export const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com";
+export const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file";
+export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
+
+// Storage Keys
+const GITHUB_TOKEN_KEY = 'admin_github_token';
+const USER_CODE_KEY = 'admin_user_code';
+const GITHUB_USERNAME_KEY = 'admin_github_username';
+
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
-const SITE_CONFIG_PATH = 'data/site-config.json';
 
 const ADMIN_USER_CODES = {
     "12589": "YT",      // שם משתמש GitHub: Avner-Halevi
     "112233": "Admin-Test",    // שם משתמש GitHub: Admin-Test
-    // ניתן להוסיף קודים נוספים...
 };
-
-// ============================================================
-// 2. הגדרות קבועות (Constants)
-// ============================================================
-const GOOGLE_CLIENT_ID = "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com".trim();
-const GOOGLE_SCOPES = "https://www.googleapis.com/auth/drive.file".trim();
-export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow"; // [חדש]
-
-// ============================================================
-// 3. הגדרות קבועות (Constants)
-// ============================================================
-const GITHUB_TOKEN_KEY = 'admin_github_token';
-const USER_CODE_KEY = 'admin_user_code';
-const GITHUB_USERNAME_KEY = 'admin_github_username';
 
 // ============================================================
 // 3. משתנים גלובליים (Global Variables)
@@ -109,10 +99,10 @@ export function initGoogleLogin() {
         console.warn("Google Identity Services not loaded");
         return;
     }
-    // האתחול הבסיסי - מבטיחים שהפרמטרים עוברים כראוי
+    // האתחול הבסיסי - שימוש בערכים קשיחים כדי למנוע שגיאות scope
     window.tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: GOOGLE_SCOPES,
+        client_id: "1038052523883-b3r3k21kc6pvu3t3vken0f963q6cl0q1.apps.googleusercontent.com",
+        scope: "https://www.googleapis.com/auth/drive.file",
         callback: (tokenResponse) => {
             console.log("GIS Default Callback:", tokenResponse);
         },
@@ -136,10 +126,10 @@ export async function googleLogin() {
             }
         };
 
-        // בקשה ל-Token - שימוש מפורש בפרמטרים כדי למנוע את שגיאת ה-scope
+        // בקשה ל-Token - הגדרה מפורשת של ה-scope כאן פותרת את הבעיה ברוב המקרים
         window.tokenClient.requestAccessToken({
-            scope: "https://www.googleapis.com/auth/drive.file",
-            prompt: 'select_account'
+            prompt: 'select_account',
+            scope: "https://www.googleapis.com/auth/drive.file"
         });
     });
 }
