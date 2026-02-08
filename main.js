@@ -211,4 +211,44 @@ if (hebrewYearDisplay) {
                 });
         });
     }
+
+    // [חדש] טעינת הגדרות אתר (ערכת נושא וטקסטים)
+    try {
+        const configRes = await fetch('./data/site-config.json');
+        if (configRes.ok) {
+            const config = await configRes.json();
+            if (config.theme && config.theme !== 'light') {
+                document.body.className = `theme-${config.theme}`;
+            }
+            if (config.primaryColor) {
+                document.documentElement.style.setProperty('--primary-color', config.primaryColor);
+            }
+            // עדכון טקסטים
+            if (config.texts) {
+                if (config.texts.about_title) document.querySelector('#about h2').textContent = config.texts.about_title;
+                if (config.texts.about_body) document.querySelector('#about p').textContent = config.texts.about_body;
+                if (config.texts.donation_title) document.querySelector('#donations h2').textContent = config.texts.donation_title;
+                if (config.texts.donation_body) document.querySelector('#donations p').textContent = config.texts.donation_body;
+            }
+        }
+    } catch (e) { console.log("No site-config.json found yet"); }
+
+    // [חדש] לוגיקת הרשמה להתראות
+    const subscribeBtn = document.getElementById('subscribe-btn');
+    if (subscribeBtn) {
+        subscribeBtn.addEventListener('click', async () => {
+            if (!('Notification' in window)) {
+                alert("הדפדפן שלך לא תומך בהתראות");
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                alert("נרשמת בהצלחה להתראות! (סימולציה - בקרוב תיווסף הרשמה מלאה ל-Push API)");
+                // כאן יבוא הקוד לרישום ב-Push API
+            } else {
+                alert("לא התקבל אישור להצגת התראות");
+            }
+        });
+    }
 })();

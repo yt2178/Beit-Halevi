@@ -13,6 +13,27 @@ import {
     logEvent // [חדש]
 } from './admin.js';
 
+// [חדש] פונקציה להצגת תמונה בתצוגה מקדימה גדולה במודאל הניהול
+function showLargePreview(src) {
+    const modal = document.getElementById('image-preview-modal');
+    const img = document.getElementById('preview-large-img');
+    if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+    }
+}
+
+export function initGalleryAdminEvents() {
+    // מאזין לסגירת מודאל תצוגה מקדימה לתמונות (אם קיים בדף הניהול)
+    const closeBtn = document.getElementById('close-preview-modal');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            const modal = document.getElementById('image-preview-modal');
+            if (modal) modal.style.display = 'none';
+        };
+    }
+}
+
 /* ----------------- אלמנטים ----------------- */
 let galleryForm, albumTitleInput, albumThumbnailInput, albumImagesInput, galleryStatusMessage, galleryListContainer, albumPreview;
 
@@ -306,6 +327,19 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 
     controls.appendChild(thumbBtn);
     controls.appendChild(removeBtn);
+
+    // [חדש] כפתור תצוגה מקדימה גדולה
+    const viewBtn = document.createElement('button');
+    viewBtn.type = 'button';
+    viewBtn.className = 'preview-btn view';
+    viewBtn.title = 'הצג תמונה גדולה';
+    viewBtn.innerHTML = '👁';
+    viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showLargePreview(img.src);
+    });
+    controls.appendChild(viewBtn);
+
     wrapper.appendChild(controls);
 
     return wrapper;

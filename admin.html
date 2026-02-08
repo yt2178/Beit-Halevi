@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
-    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 
@@ -31,6 +31,14 @@
                 </div>
                 <button id="close-status-btn" class="premium-btn"
                     style="display:none; margin-top: 15px; background: #95a5a6;">סגור</button>
+            </div>
+        </div>
+
+        <!-- [חדש] מודאל תצוגה מקדימה לתמונות גדולה -->
+        <div id="image-preview-modal" class="news-modal" style="display:none;">
+            <div class="modal-content" style="max-width: 90vw; padding: 10px;">
+                <span id="close-preview-modal" class="modal-close">&times;</span>
+                <img id="preview-large-img" src="" style="width:100%; height:auto; border-radius: 8px;">
             </div>
         </div>
 
@@ -92,6 +100,13 @@
                     <div class="card-content">
                         <h3>הודעות מהאתר</h3>
                         <p>צפייה בהודעות שנשלחו דרך טופס צור קשר</p>
+                    </div>
+                </div>
+                <div id="nav-site-btn" class="dashboard-card">
+                    <div class="card-icon"><i class="fas fa-cogs"></i></div>
+                    <div class="card-content">
+                        <h3>עריכת האתר</h3>
+                        <p>שינוי ערכת נושא, עיצוב וטקסטים באתר</p>
                     </div>
                 </div>
             </div>
@@ -190,6 +205,52 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section id="site-section" style="display:none;">
+            <div class="section-header">
+                <button class="back-to-dashboard-btn premium-btn small"><i class="fas fa-arrow-right"></i> חזרה ללוח
+                    הבקרה</button>
+                <h2>עריכת האתר והגדרות</h2>
+            </div>
+
+            <div class="admin-card">
+                <h3>עיצוב וערכת נושא</h3>
+                <div class="site-settings-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="input-group">
+                        <label>ערכת נושא:</label>
+                        <select id="site-theme-select">
+                            <option value="light">בהיר (דיפולט)</option>
+                            <option value="dark">כהה</option>
+                            <option value="gold">זהב (יוקרתי)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>צבע ראשי:</label>
+                        <input type="color" id="site-primary-color" value="#1a4b84">
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h3>עריכת טקסטים (תצוגה מקדימה)</h3>
+                <p>בחר טקסט מהרשימה לעריכה:</p>
+                <div id="editable-texts-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    <!-- יתמלא ע"י JS -->
+                </div>
+                <div id="text-edit-area"
+                    style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+                    <h4 id="editing-label">עורך:</h4>
+                    <textarea id="site-text-editor" rows="4"></textarea>
+                    <div class="form-actions" style="margin-top:10px;">
+                        <button id="save-site-text" class="premium-btn small">עדכן טקסט זמנית</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="save-all-site-settings" class="premium-btn" style="margin-top:20px;">
+                <i class="fas fa-save"></i> שמור את כל שינויי העיצוב ב-GitHub
+            </button>
         </section>
 
     </main>

@@ -269,8 +269,8 @@ export function initGalleryEvents() {
     // [חדש] טיפול בכפתורי המקלדת
     document.addEventListener('keydown', (e) => {
         if (lightbox && lightbox.classList.contains('active')) {
-            if (e.key === 'ArrowRight') showNextImage();
-            else if (e.key === 'ArrowLeft') showPrevImage();
+            if (e.key === 'ArrowRight') showPrevImage(); // [שינוי] הפוך ל-RTL
+            else if (e.key === 'ArrowLeft') showNextImage(); // [שינוי] הפוך ל-RTL
             else if (e.key === 'Escape') closeLightbox();
         }
     });

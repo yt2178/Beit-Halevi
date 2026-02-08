@@ -12,7 +12,8 @@ export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
-import { loadAndRenderGallery } from './admin-gallery.js';
+import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
+const SITE_CONFIG_PATH = 'data/site-config.json';
 
 const ADMIN_USER_CODES = {
     "12589": "YT",      // שם משתמש GitHub: Avner-Halevi
@@ -39,7 +40,7 @@ const GITHUB_USERNAME_KEY = 'admin_github_username';
 // ============================================================
 export let GITHUB_TOKEN = localStorage.getItem(GITHUB_TOKEN_KEY);
 export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
-export let simplemde;
+export let easyMDE;
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
@@ -109,6 +110,7 @@ export function initGoogleLogin() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GOOGLE_SCOPES,
+        prompt: 'consent', // [חדש] מאלץ הסכמה לקבלת scope
         callback: (tokenResponse) => {
             console.log("Access Token Received:", tokenResponse.access_token);
         },
@@ -540,7 +542,7 @@ function getIconForType(type) {
     }
 }
 
-// [חדש] טעינה ורינדור של הודעות (מתוך Google Sheets)
+// [חדש] טעינה ורינדור של הודעות (מתוך Google Sheets) - תומך במחיקה מקומית
 async function loadAndRenderMessages() {
     const container = document.getElementById('messages-list-container');
     if (!container) return;
@@ -551,25 +553,41 @@ async function loadAndRenderMessages() {
     }
 
     try {
+        // [שינוי] טעינת רשימת הודעות שנמחקו מ-GitHub
+        let deletedMessages = [];
+        try {
+            const delRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/deleted_messages.json`, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            if (delRes.ok) {
+                const delData = await delRes.json();
+                deletedMessages = JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
+            }
+        } catch (e) { console.log("No deleted_messages.json yet"); }
+
         const response = await fetch(MESSAGES_SHEET_URL);
         if (!response.ok) throw new Error('Failed to load messages sheet');
 
         const csvData = await response.text();
-        const rows = parseCSV(csvData); // פונקציית עזר לפענוח CSV
+        const rows = parseCSV(csvData);
 
         container.innerHTML = '';
-        if (rows.length <= 1) { // רק כותרות או ריק
+        if (rows.length <= 1) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
             return;
         }
 
-        // דלוג על שורת הכותרת והצגת ההודעות (מהחדשה לישנה - אם האקסל מסודר כך)
-        // בדרך כלל גוגל מוסיף שורות למטה, אז נהפוך את הסדר
         const messages = rows.slice(1).reverse();
+        let visibleCount = 0;
 
-        messages.forEach(row => {
-            if (row.length < 4) return; // וודאות שיש מספיק עמודות
+        messages.forEach((row, index) => {
+            if (row.length < 4) return;
             const [timestamp, name, email, body] = row;
+            const messageId = `${timestamp}-${email}`;
+
+            // סינון הודעות שנמחקו
+            if (deletedMessages.includes(messageId)) return;
+            visibleCount++;
 
             const div = document.createElement('div');
             div.className = 'message-card';
@@ -580,13 +598,71 @@ async function loadAndRenderMessages() {
                         <p>${email}</p>
                     </div>
                     <div class="message-date">${timestamp}</div>
+                    <button class="delete-msg-btn premium-btn small danger" data-id="${messageId}">
+                        <i class="fas fa-trash-alt"></i> מחק
+                    </button>
                 </div>
                 <div class="message-body">${body}</div>
             `;
             container.appendChild(div);
         });
+
+        if (visibleCount === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+        }
     } catch (err) {
         container.innerHTML = `<p style="color:red; text-align:center;">שגיאה בטעינת הודעות: ${err.message}</p>`;
+    }
+}
+
+async function handleDeleteMessage(messageId) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק הודעה זו מהתצוגה?')) return;
+
+    showStatus('מוחק הודעה...', 50);
+    const FILE_PATH = 'data/deleted_messages.json';
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+    try {
+        let deletedMessages = [];
+        let sha = null;
+
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            sha = data.sha;
+            deletedMessages = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
+        }
+
+        if (!deletedMessages.includes(messageId)) {
+            deletedMessages.push(messageId);
+        }
+
+        const putRes = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Delete message: ${messageId}`,
+                content: encodeToBase64(JSON.stringify(deletedMessages, null, 2)),
+                sha: sha,
+                branch: 'main'
+            })
+        });
+
+        if (putRes.ok) {
+            showStatus('ההודעה נמחקה מהתצוגה', 100);
+            setTimeout(hideStatus, 1000);
+            loadAndRenderMessages();
+        } else {
+            throw new Error('Failed to update deleted_messages.json');
+        }
+    } catch (err) {
+        handleApiError(err);
     }
 }
 
@@ -637,7 +713,7 @@ async function handleEditNews(slug) {
 
         document.getElementById('news-title').value = newsItem.data.title;
         document.getElementById('news-date').value = newsItem.data.date;
-        simplemde.value(newsItem.data.body);
+        easyMDE.value(newsItem.data.body);
 
         editingNewsSlug = slug;
         editingNewsSHA = fileData.sha;
@@ -650,9 +726,98 @@ async function handleEditNews(slug) {
     }
 }
 
+// [חדש] פונקציות לעריכת האתר
+export async function loadSiteConfig() {
+    try {
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
+        const res = await fetch(API_URL);
+        if (res.ok) {
+            const data = await res.json();
+            const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
+
+            // עדכון השדות ב-UI
+            document.getElementById('site-theme-select').value = config.theme || 'light';
+            document.getElementById('site-primary-color').value = config.primaryColor || '#1a4b84';
+
+            renderEditableTextsList(config.texts || {});
+            return { config, sha: data.sha };
+        }
+    } catch (e) { console.error("Error loading site config:", e); }
+    return { config: { texts: {} }, sha: null };
+}
+
+let currentSiteConfig = { texts: {} };
+let siteConfigSHA = null;
+
+function renderEditableTextsList(texts) {
+    const container = document.getElementById('editable-texts-list');
+    container.innerHTML = '';
+
+    // רשימת טקסטים שניתן לערוך (כדאי להגדיר מראש או לקחת מ-index.html)
+    const editableKeys = [
+        { key: 'about_title', label: 'כותרת אודות' },
+        { key: 'about_body', label: 'תוכן אודות' },
+        { key: 'donation_title', label: 'כותרת תרומות' },
+        { key: 'donation_body', label: 'תוכן תרומות' }
+    ];
+
+    editableKeys.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'premium-btn small secondary';
+        btn.textContent = item.label;
+        btn.onclick = () => {
+            document.getElementById('text-edit-area').style.display = 'block';
+            document.getElementById('editing-label').textContent = `עורך: ${item.label}`;
+            document.getElementById('site-text-editor').value = texts[item.key] || "";
+            document.getElementById('save-site-text').onclick = () => {
+                currentSiteConfig.texts[item.key] = document.getElementById('site-text-editor').value;
+                alert("הטקסט עודכן זמנית במערכת. אל תשכח לשמור ב-GitHub בסוף!");
+            };
+        };
+        container.appendChild(btn);
+    });
+}
+
+async function saveAllSiteSettings() {
+    showStatus('שומר הגדרות אתר ב-GitHub...', 50);
+
+    currentSiteConfig.theme = document.getElementById('site-theme-select').value;
+    currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
+
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
+
+    try {
+        const updateResponse = await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Update site configuration`,
+                content: encodeToBase64(JSON.stringify(currentSiteConfig, null, 2)),
+                sha: siteConfigSHA,
+                branch: 'main'
+            })
+        });
+
+        if (updateResponse.ok) {
+            showStatus('הגדרות האתר נשמרו בהצלחה!', 100);
+            setTimeout(hideStatus, 1500);
+            logEvent(`עדכן הגדרות אתר`, 'general');
+            const data = await updateResponse.json();
+            siteConfigSHA = data.content.sha;
+        } else {
+            throw new Error('Save failed on GitHub');
+        }
+    } catch (err) {
+        handleApiError(err);
+    }
+}
+
 export function resetNewsForm() {
     addNewsForm.reset();
-    simplemde.value('');
+    easyMDE.value('');
     editingNewsSlug = null;
     editingNewsSHA = null;
     addNewsForm.querySelector('button[type="submit"]').textContent = 'פרסם ידיעה';
@@ -666,7 +831,7 @@ async function handleSaveNews(e) {
 
     const title = document.getElementById('news-title').value;
     const date = document.getElementById('news-date').value;
-    const body = simplemde.value();
+    const body = easyMDE.value();
 
     if (!title || !date || !body) {
         showStatus('נא למלא את כל השדות', null, true);
@@ -741,10 +906,16 @@ async function handleSaveNews(e) {
 // אתחול הדף
 document.addEventListener('DOMContentLoaded', async () => {
     // אתחול עורך Markdown
-    simplemde = new SimpleMDE({
+    easyMDE = new EasyMDE({
         element: document.getElementById("news-body"),
         status: false,
-        spellChecker: false
+        spellChecker: false,
+        direction: 'rtl', // [חדש] תמיכה ב-RTL
+        autosave: {
+            enabled: true,
+            uniqueId: "news-editor",
+            delay: 1000,
+        },
     });
 
     // מחכים שהספריות של גוגל יטענו (אם הן async)
@@ -755,14 +926,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     showAdminPanel();
 
     // ניווט
-    document.getElementById('nav-news-btn').addEventListener('click', () => navigateTo('news-section'));
-    document.getElementById('nav-gallery-btn').addEventListener('click', () => navigateTo('gallery-section'));
-    document.getElementById('nav-history-btn').addEventListener('click', () => navigateTo('history-section'));
     document.getElementById('nav-messages-btn').addEventListener('click', () => navigateTo('messages-section'));
+    document.getElementById('nav-site-btn').addEventListener('click', async () => {
+        navigateTo('site-section');
+        const { config, sha } = await loadSiteConfig();
+        currentSiteConfig = config;
+        siteConfigSHA = sha;
+    });
+    document.getElementById('save-all-site-settings').addEventListener('click', saveAllSiteSettings);
+
     document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => {
         btn.addEventListener('click', () => navigateTo('dashboard-section'));
     });
     closeStatusBtn.addEventListener('click', hideStatus);
+
+    // [חדש] מודאל תצוגה מקדימה לתמונות
+    const imgModal = document.getElementById('image-preview-modal');
+    const closeImgModal = document.getElementById('close-preview-modal');
+    if (closeImgModal) {
+        closeImgModal.onclick = () => imgModal.style.display = 'none';
+    }
+    window.onclick = (e) => { if (e.target === imgModal) imgModal.style.display = 'none'; };
+
+    initGalleryAdminEvents();
 
     // [חדש] מאזין לכפתורי "עין" להצגת/הסתרת סיסמה
     document.querySelectorAll('.toggle-password').forEach(icon => {
@@ -795,6 +981,11 @@ document.addEventListener('click', (e) => {
         handleEditNews(editBtn.dataset.slug);
     } else if (deleteBtn) {
         handleDeleteNews(deleteBtn.dataset.slug);
+    }
+
+    const deleteMsgBtn = e.target.closest('.delete-msg-btn');
+    if (deleteMsgBtn) {
+        handleDeleteMessage(deleteMsgBtn.dataset.id);
     }
 });
 

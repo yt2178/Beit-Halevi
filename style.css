@@ -18,14 +18,32 @@ html {
     --text-color: #2c3e50;
     --border-radius: 8px;
     --transition-speed: 0.3s;
+    --header-bg: #003366;
+    --nav-bg: #333;
 
-    /* משתנים חדשים למצב כהה */
-    --dark-background: #1a1a1a;
-    --dark-text: #e0e0e0;
-    --dark-primary: #2d6baf;
-    --dark-secondary: #235d8c;
-    --dark-accent: #b37609;
-    --dark-surface: #2d2d2d;
+    /* ערכות נושא */
+    --gold-primary: #8e6d13;
+    --gold-secondary: #c3a676;
+    --gold-accent: #d4af37;
+}
+
+/* ערכת זהב */
+body.theme-gold {
+    --primary-color: var(--gold-primary);
+    --secondary-color: var(--gold-secondary);
+    --accent-color: var(--gold-accent);
+    --header-bg: #4a3708;
+    --nav-bg: #2c2205;
+}
+
+/* מצב כהה מובנה */
+body.dark-mode {
+    --background-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --primary-color: #2d6baf;
+    --secondary-color: #235d8c;
+    --header-bg: #0a1f3d;
+    --nav-bg: #0d0d0d;
 }
 
 /* --- תיקון: הגדרות מצב כהה חסרות --- */
@@ -437,32 +455,57 @@ body {
 @media (max-width: 768px) {
     nav {
         justify-content: space-between;
-        /* העבר את הלוגו והכפתור לקצוות */
     }
 
     .menu-toggle {
         display: block;
-        /* [תיקון] הצג את כפתור ההמבורגר רק במובייל */
     }
 
     .nav-links {
         display: none;
-        /* [תיקון] הסתר את רשימת הקישורים הרגילה */
         position: absolute;
         top: 100%;
         left: 0;
         width: 100%;
-        background-color: #333;
-        flex-direction: row;
+        background-color: var(--nav-bg);
+        flex-direction: column;
     }
 
     .nav-links.active {
         display: flex;
-        /* הצג את התפריט כשהוא פעיל */
     }
 
     nav a {
-        border-bottom: 1px solid #444;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        padding: 15px;
+    }
+}
+
+/* התאמה למסכים קטנים מאוד */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    section h2 {
+        font-size: 1.5em;
+    }
+
+    .news-item {
+        padding: 1rem;
+    }
+}
+
+/* התאמה למסכים מרובעים */
+@media (max-aspect-ratio: 1/1) and (max-width: 1024px) {
+    .contact-container {
+        flex-direction: column;
+    }
+
+    .form-column,
+    .contact-info {
+        min-width: 100%;
     }
 }
 
@@ -626,7 +669,7 @@ body.dark-mode .loading-thumbnail,
 }
 
 header {
-    background-color: #003366;
+    background-color: var(--header-bg);
     color: white;
     padding: 20px 0;
     text-align: center;
@@ -638,18 +681,15 @@ header h1 {
 }
 
 nav {
-    background-color: #333;
+    background-color: var(--nav-bg);
     padding: 10px;
     text-align: center;
     position: sticky;
     top: 0;
     z-index: 1000;
     display: flex;
-    /* שינוי חשוב */
     justify-content: center;
-    /* שינוי חשוב */
     align-items: center;
-    /* שינוי חשוב */
 }
 
 .nav-links {
