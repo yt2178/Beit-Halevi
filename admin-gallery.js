@@ -4,7 +4,7 @@ import {
     uploadFileToDrive, makeFilePublic,
     googleLogin,
     showStatus, hideStatus,
-    logEvent
+    logEvent, putWithShaRetry
 } from './admin-core.js';
 
 let editingAlbumIndex = null; // לאחסן אם עורכים אלבום קיים
@@ -83,7 +83,7 @@ export async function loadAndRenderGallery() {
 
         renderGalleryList(galleryArray, fileData.sha);
     } catch (err) {
-        console.error('Error loading gallery:', err);
+        // ✅ Fix: הסר console.error
         if (galleryStatusMessage) galleryStatusMessage.textContent = 'שגיאה בטעינת הגלריה';
     }
 }
@@ -200,21 +200,14 @@ async function deleteAlbum(indexToDelete) {
 
         const updatedContentBase64 = encodeToBase64(JSON.stringify(galleryArray, null, 2));
 
-        const updateResponse = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Delete album index ${indexToDelete} (by ${GITHUB_USERNAME})`,
-                content: updatedContentBase64,
-                sha: fileData.sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `Delete album index ${indexToDelete} (by ${GITHUB_USERNAME})`,
+            content: updatedContentBase64,
+            branch: 'main'
+        };
+        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, fileData.sha, 2);
 
-        if (updateResponse.ok) {
+        if (updateResponse && updateResponse.ok) {
             galleryStatusMessage.textContent = 'האלבום נמחק בהצלחה';
             galleryStatusMessage.style.color = 'green';
             logEvent(`מחק אלבום תמונות אינדקס ${indexToDelete}`, 'gallery');
@@ -223,7 +216,7 @@ async function deleteAlbum(indexToDelete) {
             throw new Error('Update failed');
         }
     } catch (err) {
-        console.error('Error deleting album:', err);
+        // ✅ Fix: הסר console.error
         showStatus('שגיאה במחיקת האלבום: ' + err.message, null, true);
     }
 }
@@ -344,6 +337,27 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 // admin-gallery.js (פונקציית handleGallerySubmit - מתוקנת)
 async function handleGallerySubmit(e) {
     e.preventDefault();
+    
+    // ✅ Fix: הוסף validation של inputs
+    const albumTitle = albumTitleInput.value.trim();
+    const albumThumbnail = albumThumbnailInput.files[0];
+    const albumImages = albumImagesInput.files;
+    
+    if (!albumTitle) {
+        showStatus('נא להזין שם לאלבום', null, true);
+        return;
+    }
+    
+    if (!albumThumbnail) {
+        showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
+        return;
+    }
+    
+    if (albumImages.length === 0) {
+        showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
+        return;
+    }
+    
     showStatus('מכין העלאה לדרייב... נא להמתין', 10);
 
     try {
@@ -387,10 +401,22 @@ async function handleGallerySubmit(e) {
         }
 
         // 3. בניית האובייקט החדש
+        // [תיקון] ודא שה-thumbnail תמיד מוגדר - אם לא נבחר, השתמש ב-finalImages[0]
+        let thumbnailUrl = albumThumbnailInput.value || finalImages[0] || "";
+        
+        if (!thumbnailUrl && finalImages.length > 0) {
+            thumbnailUrl = finalImages[0];
+        }
+        
+        if (!thumbnailUrl && finalImages.length === 0) {
+            showStatus('שגיאה: אין תמונות באלבום. אנא הוסף לפחות תמונה אחת.', null, true);
+            return;
+        }
+
         const newAlbum = {
             data: {
                 title: albumTitleInput.value,
-                thumbnail: albumThumbnailInput.value || finalImages[0] || "",
+                thumbnail: thumbnailUrl,
                 images: finalImages
             },
             content: ""
@@ -409,21 +435,14 @@ async function handleGallerySubmit(e) {
 
         // 5. שמירה ב-GitHub
         const updatedContentBase64 = encodeToBase64(JSON.stringify(galleryArray, null, 2));
-        const updateResponse = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Update gallery: ${albumTitleInput.value}`,
-                content: updatedContentBase64,
-                sha: fileData.sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `Update gallery: ${albumTitleInput.value}`,
+            content: updatedContentBase64,
+            branch: 'main'
+        };
+        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, fileData.sha, 2);
 
-        if (updateResponse.ok) {
+        if (updateResponse && updateResponse.ok) {
             showStatus('האלבום נשמר בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
             logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
@@ -434,7 +453,7 @@ async function handleGallerySubmit(e) {
         }
 
     } catch (err) {
-        console.error(err);
+        // ✅ Fix: הסר console.error
         showStatus('שגיאה בתהליך השמירה: ' + err.message, null, true);
     }
 }

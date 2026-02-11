@@ -4,24 +4,168 @@
 
 import {
     REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH, SITE_CONFIG_PATH,
+    MESSAGES_SHEET_URL,
     GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, googleLogin, logEvent,
     GOOGLE_CLIENT_ID, GOOGLE_SCOPES
 } from './admin-core.js';
+import { putWithShaRetry } from './admin-core.js';
 
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
+import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
+// ✅ Fix: יש לשמור codes אלה בenv var או בקונפיג בטוח (לא בקוד)
+// זה קוד בעיה אבל פעילות עכשיו. בעתיד - העבר ל-env vars
 const ADMIN_USER_CODES = {
-    "12589": "yt2178",      // שם משתמש GitHub: Avner-Halevi
-    "112233": "Admin-Test",    // שם משתמש GitHub: Admin-Test
+    "12589": "Yedidya",      // TODO: העבר ל-environment variable
+    "112233": "Admin-New",    // TODO: העבר ל-environment variable
 };
 
 const GITHUB_TOKEN_KEY = 'admin_github_token';
 const USER_CODE_KEY = 'admin_user_code';
 const GITHUB_USERNAME_KEY = 'admin_github_username';
 
+// Theme & Drafts keys
+const DRAFT_KEY = 'news_draft_v1';
+const THEME_KEY = 'admin_theme';
+
 export let easyMDE;
+
+// Theme functions
+function applyTheme(theme) {
+    try {
+        if (theme === 'dark') document.body.classList.add('dark-theme');
+        else document.body.classList.remove('dark-theme');
+        const btn = document.getElementById('theme-toggle-btn');
+        if (btn) btn.textContent = theme === 'dark' ? '☀️ מצב בהיר' : '🌙 מצב כהה';
+        localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {
+        // ignore localStorage issues
+    }
+}
+
+function toggleTheme() {
+    const current = localStorage.getItem(THEME_KEY) || 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Draft functions
+function saveNewsDraft(showFeedback = false) {
+    try {
+        const title = document.getElementById('news-title').value || '';
+        const date = document.getElementById('news-date').value || '';
+        const body = easyMDE ? easyMDE.value() : document.getElementById('news-body').value || '';
+        const draft = { title, date, body, savedAt: new Date().toISOString() };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        // Only show toast if manual button click (not autosave)
+        if (showFeedback) {
+            showToast('✅ טיוטה נשמרה בהצלחה', 1500, 'success');
+        }
+    } catch (e) {
+        if (showFeedback) showToast('❌ שגיאה בשמירה', 1500, 'error');
+    }
+}
+
+function loadNewsDraft(showFeedback = true) {
+    try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) { 
+            if (showFeedback) showToast('⚠️ אין טיוטה שמורה', 1500);
+            return; 
+        }
+        const draft = JSON.parse(raw);
+        if (draft.title) document.getElementById('news-title').value = draft.title;
+        if (draft.date) document.getElementById('news-date').value = draft.date;
+        if (easyMDE && typeof easyMDE.value === 'function') easyMDE.value(draft.body || '');
+        else document.getElementById('news-body').value = draft.body || '';
+        if (showFeedback) showToast('✅ טיוטה הוטענה', 1500, 'success');
+    } catch (e) {
+        if (showFeedback) showToast('❌ שגיאה בטעינה', 1500, 'error');
+    }
+}
+
+function clearNewsDraft() {
+    try {
+        localStorage.removeItem(DRAFT_KEY);
+        showToast('✅ טיוטה נמחקה', 1500, 'success');
+    } catch (e) {
+        // ignore
+    }
+}
+
+function debounce(fn, wait) {
+    let t;
+    return function (...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), wait);
+    };
+}
+
+// Toast notification (non-blocking side notification)
+function showToast(message, duration = 1500, type = 'success') {
+    try {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            // Create container if it doesn't exist
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => {
+                try { toast.remove(); } catch (e) { }
+            }, 300);
+        }, duration);
+    } catch (e) {
+        // silent fail
+    }
+}
+
+function initDraftAutosave() {
+    try {
+        const titleEl = document.getElementById('news-title');
+        const dateEl = document.getElementById('news-date');
+        if (titleEl) titleEl.addEventListener('input', debounce(saveNewsDraft, 1000));
+        if (dateEl) dateEl.addEventListener('input', debounce(saveNewsDraft, 1000));
+        if (easyMDE && easyMDE.codemirror) {
+            easyMDE.codemirror.on('change', debounce(saveNewsDraft, 1000));
+        } else {
+            const bodyEl = document.getElementById('news-body');
+            if (bodyEl) bodyEl.addEventListener('input', debounce(saveNewsDraft, 1000));
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
+function undoEditor() {
+    try { if (easyMDE && easyMDE.codemirror) easyMDE.codemirror.undo(); } catch (e) { }
+}
+function redoEditor() {
+    try { if (easyMDE && easyMDE.codemirror) easyMDE.codemirror.redo(); } catch (e) { }
+}
+
+// Set default news date to today
+function setDefaultNewsDate() {
+    try {
+        const dateInput = document.getElementById('news-date');
+        if (dateInput && !dateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
@@ -43,7 +187,7 @@ const logoutBtn = document.getElementById('logout-btn');
 const closeStatusBtn = document.getElementById('close-status-btn');
 
 function handleApiError(err) {
-    console.error(err);
+    // ✅ Fix: בצע logging בעיקול בלבד לא בproduction
     let msg = "שגיאה לא צפויה";
     if (err.message.includes("404")) msg = "הקובץ לא נמצא ב-GitHub";
     if (err.message.includes("401")) msg = "טוקן לא בתוקף או חסר הרשאות";
@@ -111,6 +255,10 @@ function navigateTo(sectionId) {
 
     if (sectionId === 'history-section') loadAndRenderHistory();
     if (sectionId === 'messages-section') loadAndRenderMessages();
+    if (sectionId === 'news-section') {
+        setDefaultNewsDate();
+        initDraftAutosave();
+    }
 }
 // [חדש] פונקציה למציאת או יצירת תיקיית הגלריה בדרייב
 async function getFolderId(token) {
@@ -150,7 +298,7 @@ async function getFolderId(token) {
 
         return createData.id;
     } catch (err) {
-        console.error("Error in getFolderId:", err);
+        // ✅ Fix: הסר debug logging של שגiאות
         return "root"; // fallback לתיקיית השורש
     }
 }
@@ -205,6 +353,9 @@ export async function makeFilePublic(fileId, Token) {
 // ============================================================
 // יציאה מהמערכת
 function logout() {
+    // ✅ Fix: הוסף confirmation כדי לא לצאת כן בטעות
+    if (!confirm('האם אתה בטוח שברצונך להיכנס מהמערכת?')) return;
+    
     showStatus('מתנתק מהמערכת... להתראות!', 100);
     setTimeout(() => {
         localStorage.removeItem(GITHUB_TOKEN_KEY);
@@ -222,14 +373,19 @@ async function verifyGitHubToken(token) {
                 'Authorization': `token ${token}`
             }
         });
+        
         if (response.ok) {
             const userData = await response.json();
             return userData.login; // מחזיר את שם המשתמש האמיתי
+        } else {
+            const errorData = await response.json();
+            // ✅ Fix: הסר debug logs חשופים של שגיאות
+            return null;
         }
     } catch (error) {
-        console.error("Token verification failed:", error);
+        // ✅ Fix: הסר console.error של שגיאות
+        return null;
     }
-    return null;
 }
 
 // רינדור רשימת הידיעות
@@ -255,23 +411,46 @@ function renderNewsList(newsArray) {
         newsDiv.className = 'news-item-admin';
         newsDiv.dataset.slug = slug;
 
-        newsDiv.innerHTML = `
-            <div class="item-details">
-                <i class="fas fa-file-alt item-icon"></i>
-                <div>
-                    <h3>${item.data.title}</h3>
-                    <p>פורסם ב: ${item.data.date}</p>
-                </div>
-            </div>
-            <div class="item-actions">
-                <button class="edit-news-btn premium-btn small" data-slug="${slug}">
-                    <i class="fas fa-edit"></i> ערוך
-                </button>
-                <button class="delete-news-btn premium-btn small danger" data-slug="${slug}">
-                    <i class="fas fa-trash-alt"></i> מחק
-                </button>
-            </div>
-        `;
+        // ✅ Fix XSS: תוכן דינמי מנוקה דרך textContent
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'item-details';
+        
+        const titleH3 = document.createElement('h3');
+        titleH3.textContent = item.data.title;  // Safe!
+        
+        const dateP = document.createElement('p');
+        dateP.textContent = 'פורסם ב: ' + item.data.date;  // Safe!
+        
+        const iconI = document.createElement('i');
+        iconI.className = 'fas fa-file-alt item-icon';
+        
+        detailsDiv.appendChild(iconI);
+        const contentDiv = document.createElement('div');
+        contentDiv.appendChild(titleH3);
+        contentDiv.appendChild(dateP);
+        detailsDiv.appendChild(contentDiv);
+        newsDiv.appendChild(detailsDiv);
+        
+        // ✅ Fix XSS: בנה את כפתורים בעדכות בטוח
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'item-actions';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-news-btn premium-btn small';
+        editBtn.dataset.slug = slug;
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+        editBtn.addEventListener('click', () => handleEditNews(slug));
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-news-btn premium-btn small danger';
+        deleteBtn.dataset.slug = slug;
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+        deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
+        
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+        newsDiv.appendChild(actionsDiv);
+        
         container.appendChild(newsDiv);
     });
 }
@@ -299,21 +478,14 @@ async function handleDeleteNews(slug) {
 
         const updatedContentBase64 = encodeToBase64(JSON.stringify(updatedContent, null, 2));
 
-        const updateResponse = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Delete news item: ${slug}`,
-                content: updatedContentBase64,
-                sha: fileData.sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `Delete news item: ${slug}`,
+            content: updatedContentBase64,
+            branch: 'main'
+        };
+        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, fileData.sha, 2);
 
-        if (updateResponse.ok) {
+        if (updateResponse && updateResponse.ok) {
             showStatus('הידיעה נמחקה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
             logEvent(`מחק ידיעה: ${slug}`, 'news');
@@ -342,7 +514,8 @@ async function loadAndRenderNewsList() {
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
         renderNewsList(existingContent);
     } catch (error) {
-        console.error('Error loading news list:', error);
+        // ✅ Fix: הסר debug error logging
+        showStatus('שגיאה בטעינת רשימת הידיעות', null, true);
     }
 }
 
@@ -416,7 +589,7 @@ async function loadAndRenderMessages() {
                 const delData = await delRes.json();
                 deletedMessages = JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
             }
-        } catch (e) { console.log("No deleted_messages.json yet"); }
+        } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
 
         const response = await fetch(MESSAGES_SHEET_URL);
         if (!response.ok) throw new Error('Failed to load messages sheet');
@@ -444,19 +617,40 @@ async function loadAndRenderMessages() {
 
             const div = document.createElement('div');
             div.className = 'message-card';
-            div.innerHTML = `
-                <div class="message-header">
-                    <div class="message-info">
-                        <h4>${name}</h4>
-                        <p>${email}</p>
-                    </div>
-                    <div class="message-date">${timestamp}</div>
-                    <button class="delete-msg-btn premium-btn small danger" data-id="${messageId}">
-                        <i class="fas fa-trash-alt"></i> מחק
-                    </button>
-                </div>
-                <div class="message-body">${body}</div>
-            `;
+            
+            // ✅ Fix XSS: בנה DOM elements בטוח במקום innerHTML
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'message-header';
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'message-info';
+            const nameH4 = document.createElement('h4');
+            nameH4.textContent = name;
+            const emailP = document.createElement('p');
+            emailP.textContent = email;
+            infoDiv.appendChild(nameH4);
+            infoDiv.appendChild(emailP);
+            
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'message-date';
+            dateDiv.textContent = timestamp;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-msg-btn premium-btn small danger';
+            deleteBtn.dataset.id = messageId;
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+            deleteBtn.addEventListener('click', () => handleDeleteMessage(messageId));
+            
+            headerDiv.appendChild(infoDiv);
+            headerDiv.appendChild(dateDiv);
+            headerDiv.appendChild(deleteBtn);
+            
+            const bodyDiv = document.createElement('div');
+            bodyDiv.className = 'message-body';
+            bodyDiv.textContent = body;
+            
+            div.appendChild(headerDiv);
+            div.appendChild(bodyDiv);
             container.appendChild(div);
         });
 
@@ -493,21 +687,14 @@ async function handleDeleteMessage(messageId) {
             deletedMessages.push(messageId);
         }
 
-        const putRes = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Delete message: ${messageId}`,
-                content: encodeToBase64(JSON.stringify(deletedMessages, null, 2)),
-                sha: sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `Delete message: ${messageId}`,
+            content: encodeToBase64(JSON.stringify(deletedMessages, null, 2)),
+            branch: 'main'
+        };
+        const putRes = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 2);
 
-        if (putRes.ok) {
+        if (putRes && putRes.ok) {
             showStatus('ההודעה נמחקה מהתצוגה', 100);
             setTimeout(hideStatus, 1000);
             loadAndRenderMessages();
@@ -579,95 +766,6 @@ async function handleEditNews(slug) {
     }
 }
 
-// [חדש] פונקציות לעריכת האתר
-export async function loadSiteConfig() {
-    try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
-        const res = await fetch(API_URL);
-        if (res.ok) {
-            const data = await res.json();
-            const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
-
-            // עדכון השדות ב-UI
-            document.getElementById('site-theme-select').value = config.theme || 'light';
-            document.getElementById('site-primary-color').value = config.primaryColor || '#1a4b84';
-
-            renderEditableTextsList(config.texts || {});
-            return { config, sha: data.sha };
-        }
-    } catch (e) { console.error("Error loading site config:", e); }
-    return { config: { texts: {} }, sha: null };
-}
-
-let currentSiteConfig = { texts: {} };
-let siteConfigSHA = null;
-
-function renderEditableTextsList(texts) {
-    const container = document.getElementById('editable-texts-list');
-    container.innerHTML = '';
-
-    // רשימת טקסטים שניתן לערוך (כדאי להגדיר מראש או לקחת מ-index.html)
-    const editableKeys = [
-        { key: 'about_title', label: 'כותרת אודות' },
-        { key: 'about_body', label: 'תוכן אודות' },
-        { key: 'donation_title', label: 'כותרת תרומות' },
-        { key: 'donation_body', label: 'תוכן תרומות' }
-    ];
-
-    editableKeys.forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'premium-btn small secondary';
-        btn.textContent = item.label;
-        btn.onclick = () => {
-            document.getElementById('text-edit-area').style.display = 'block';
-            document.getElementById('editing-label').textContent = `עורך: ${item.label}`;
-            document.getElementById('site-text-editor').value = texts[item.key] || "";
-            document.getElementById('save-site-text').onclick = () => {
-                currentSiteConfig.texts[item.key] = document.getElementById('site-text-editor').value;
-                alert("הטקסט עודכן זמנית במערכת. אל תשכח לשמור ב-GitHub בסוף!");
-            };
-        };
-        container.appendChild(btn);
-    });
-}
-
-async function saveAllSiteSettings() {
-    showStatus('שומר הגדרות אתר ב-GitHub...', 50);
-
-    currentSiteConfig.theme = document.getElementById('site-theme-select').value;
-    currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
-
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
-
-    try {
-        const updateResponse = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `Update site configuration`,
-                content: encodeToBase64(JSON.stringify(currentSiteConfig, null, 2)),
-                sha: siteConfigSHA,
-                branch: 'main'
-            })
-        });
-
-        if (updateResponse.ok) {
-            showStatus('הגדרות האתר נשמרו בהצלחה!', 100);
-            setTimeout(hideStatus, 1500);
-            logEvent(`עדכן הגדרות אתר`, 'general');
-            const data = await updateResponse.json();
-            siteConfigSHA = data.content.sha;
-        } else {
-            throw new Error('Save failed on GitHub');
-        }
-    } catch (err) {
-        handleApiError(err);
-    }
-}
-
 export function resetNewsForm() {
     addNewsForm.reset();
     easyMDE.value('');
@@ -682,12 +780,20 @@ async function handleSaveNews(e) {
     e.preventDefault();
     showStatus('מבצע גישה ל-GitHub... נא להמתין', 20);
 
-    const title = document.getElementById('news-title').value;
-    const date = document.getElementById('news-date').value;
-    const body = easyMDE.value();
+    const title = document.getElementById('news-title').value.trim();
+    const date = document.getElementById('news-date').value.trim();
+    const body = easyMDE.value().trim();
 
+    // ✅ Fix: הוסף validation לתאריך
     if (!title || !date || !body) {
         showStatus('נא למלא את כל השדות', null, true);
+        return;
+    }
+    
+    // בדוק שהתאריך בפורמט תקין (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+        showStatus('תאריך לא תקין. השתמש בפורמט: YYYY-MM-DD', null, true);
         return;
     }
 
@@ -723,29 +829,23 @@ async function handleSaveNews(e) {
 
         const updatedContentBase64 = encodeToBase64(JSON.stringify(existingContent, null, 2));
 
-        const updateResponse = await fetch(API_URL, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
-                content: updatedContentBase64,
-                sha: sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
+            content: updatedContentBase64,
+            branch: 'main'
+        };
+        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 2);
 
-        if (updateResponse.ok) {
+        if (updateResponse && updateResponse.ok) {
+            clearNewsDraft();
             showStatus('הידיעה פורסמה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
             logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
             resetNewsForm();
             await loadAndRenderNewsList();
         } else {
-            const errorData = await updateResponse.json();
-            throw new Error(errorData.message);
+            const errorData = updateResponse ? await updateResponse.json().catch(() => ({})) : {};
+            throw new Error(errorData.message || 'Unknown error saving news');
         }
     } catch (err) {
         handleApiError(err);
@@ -772,7 +872,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
         });
     } catch (e) {
-        console.error("EasyMDE failed to initialize:", e);
+        // ✅ Fix: הסר EasyMDE עירעור צעדי
+        showStatus('שגיאה בטעינת עורך הטקסט', null, true);
     }
 
     // מחכים שהספריות של גוגל יטענו (אם הן async)
@@ -789,9 +890,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nav-messages-btn').addEventListener('click', () => navigateTo('messages-section'));
     document.getElementById('nav-site-btn').addEventListener('click', async () => {
         navigateTo('site-section');
-        const { config, sha } = await loadSiteConfig();
-        currentSiteConfig = config;
-        siteConfigSHA = sha;
+        await loadSiteConfig();
     });
     document.getElementById('save-all-site-settings').addEventListener('click', saveAllSiteSettings);
 
@@ -809,6 +908,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.onclick = (e) => { if (e.target === imgModal) imgModal.style.display = 'none'; };
 
     initGalleryAdminEvents();
+
+    // Theme initialization
+    try {
+        const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+        applyTheme(savedTheme);
+        const themeBtn = document.getElementById('theme-toggle-btn');
+        if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+    } catch (e) { /* ignore */ }
+
+    // Draft & editor controls
+    const undoBtn = document.getElementById('undo-news-btn');
+    const redoBtn = document.getElementById('redo-news-btn');
+    const saveDraftBtn = document.getElementById('save-draft-btn');
+    const loadDraftBtn = document.getElementById('load-draft-btn');
+    const clearDraftBtn = document.getElementById('clear-draft-btn');
+
+    if (undoBtn) undoBtn.addEventListener('click', undoEditor);
+    if (redoBtn) redoBtn.addEventListener('click', redoEditor);
+    if (saveDraftBtn) saveDraftBtn.addEventListener('click', () => saveNewsDraft(true));
+    if (loadDraftBtn) loadDraftBtn.addEventListener('click', () => loadNewsDraft(true));
+    if (clearDraftBtn) clearDraftBtn.addEventListener('click', clearNewsDraft);
+
+    // Start autosave for drafts (only after navigating to news section)
+    // initDraftAutosave() will be called when user navigates to news-section
+    // to avoid loading stale drafts on page load
 
     // [חדש] מאזין לכפתורי "עין" להצגת/הסתרת סיסמה
     document.querySelectorAll('.toggle-password').forEach(icon => {
@@ -855,16 +979,28 @@ loginForm.addEventListener('submit', async (e) => {
     const userCodeInput = document.getElementById('admin-usercode').value;
     const tokenInput = document.getElementById('github-token').value.trim();
 
+    // ✅ Fix: הסר debug logs חשופים שמכילים קוד משתמש!
+    // console.log('=== Login Attempt ===');
+    // console.log('User Code:', userCodeInput);
+    // console.log('Token length:', tokenInput.length);
+    // console.log('Valid codes:', Object.keys(ADMIN_USER_CODES));
+
     showStatus('מבצע אימות מול GitHub...', 40);
 
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
+        // ✅ Fix: הסר debug logs
+        // console.log('✓ קוד משתמש תקין');
         if (tokenInput) {
+            // console.log('✓ טוקן קיים');
             const verifiedLogin = await verifyGitHubToken(tokenInput);
+            // console.log('Verification result:', verifiedLogin);
 
             if (verifiedLogin) {
-                updateGithubAuth(tokenInput, verifiedLogin);
+                // שמור שם המנהל מ-ADMIN_USER_CODES (לא GitHub username)
+                const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
+                updateGithubAuth(tokenInput, adminDisplayName);
 
-                localStorage.setItem(GITHUB_USERNAME_KEY, verifiedLogin);
+                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
                 localStorage.setItem(USER_CODE_KEY, userCodeInput);
 

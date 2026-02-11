@@ -483,12 +483,13 @@ textarea:focus {
 /* Gallery Admin Grid */
 .album-preview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 15px;
     margin: 25px 0;
     background: #f1f5f9;
     padding: 20px;
     border-radius: 16px;
+    max-width: 100%;
 }
 
 .album-preview-item {
@@ -714,4 +715,135 @@ textarea:focus {
     white-space: pre-wrap;
 }
 
-/* END OF FILE admin.css */
+/* Dark theme overrides (applied on body.dark-theme) */
+body.dark-theme {
+    --bg-color: #0b1220;
+    --card-bg: #0f1724;
+    --text-main: #e6eef8;
+    --text-muted: #9aa9bf;
+    --primary-gradient: linear-gradient(135deg, #0f1724 0%, #1e293b 100%);
+    --secondary-color: #60a5fa;
+    --glass-bg: rgba(255,255,255,0.04);
+}
+
+body.dark-theme header {
+    background: linear-gradient(135deg,#0b1220 0%, #1f2937 100%);
+}
+
+body.dark-theme .admin-card,
+body.dark-theme .login-card,
+body.dark-theme .dashboard-card,
+body.dark-theme .section-header {
+    background: var(--card-bg);
+    border-color: rgba(255,255,255,0.03);
+    color: var(--text-main);
+}
+
+body.dark-theme .dashboard-header,
+body.dark-theme .dashboard-header h2,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme h4,
+body.dark-theme p {
+    color: var(--text-main);
+}
+
+body.dark-theme input,
+body.dark-theme textarea {
+    background: #0b1220;
+    color: var(--text-main);
+    border-color: rgba(255,255,255,0.03);
+}
+
+.premium-btn.small {
+    padding: 8px 12px;
+}
+
+/* Small layout tweak for draft buttons */
+.form-actions > div {
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+/* Local draft note style */
+.local-draft-note {
+    background: linear-gradient(90deg, rgba(255,249,238,0.6), rgba(255,255,255,0.02));
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+body.dark-theme .local-draft-note {
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-muted);
+}
+
+/* Toast notification styles (discrete corner notification) */
+#toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 5000;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(26, 75, 132, 0.9);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideInLeft 0.3s ease-out;
+    pointer-events: auto;
+    line-height: 1.4;
+    max-width: 220px;
+    word-wrap: break-word;
+}
+
+.toast.success {
+    background: rgba(39, 174, 96, 0.9);
+}
+
+.toast.error {
+    background: rgba(231, 76, 60, 0.9);
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-150px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-150px);
+        opacity: 0;
+    }
+}
+
+.toast.hide {
+    animation: slideOutLeft 0.3s ease-out forwards;
+}
+
+body.dark-theme .toast {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+ 
+ /* END OF FILE admin.css */

@@ -132,13 +132,18 @@
         </section>
 
         <!-- [חדש] אזור הרשמה להתראות -->
-        <section id="notifications-section" class="donation-section"
-            style="background-color: var(--nav-bg); color: white;">
-            <h2>הישאר מעודכן</h2>
-            <p>הירשם לקבלת עדכונים על חדשות ואלבומים חדשים ישירות לדפדפן.</p>
-            <button id="subscribe-btn" class="donation-button" style="background-color: var(--accent-color);">
-                <i class="fas fa-bell"></i> הרשמה להתראות
-            </button>
+        <section id="notifications-section" class="notifications-section">
+            <div class="notification-card">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h2>🔔 הישאר מעודכן</h2>
+                <p class="notification-subtitle">קבל עדכונים בזמן אמת</p>
+                <p class="notification-text">הירשם לקבלת התראות על חדשות חדשות, אלבומים וחדשויות מהישיבה ישירות לדפדפן שלך.</p>
+                <button id="subscribe-btn" class="notification-button">
+                    <i class="fas fa-bell"></i> הרשם להתראות
+                </button>
+            </div>
         </section>
     </main>
 
@@ -171,8 +176,8 @@
 
     <div class="lightbox" id="lightbox">
         <span class="lightbox-close">&times;</span>
-        <a class="lightbox-prev">&#10095;</a>
-        <a class="lightbox-next">&#10094;</a>
+        <a class="lightbox-prev">&#10094;</a>
+        <a class="lightbox-next">&#10095;</a>
 
 
         <div class="lightbox-controls">

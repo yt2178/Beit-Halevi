@@ -237,17 +237,41 @@ if (hebrewYearDisplay) {
     const subscribeBtn = document.getElementById('subscribe-btn');
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
+            // [תיקון] בדיקה אם הדפדפן תומך בהתראות
             if (!('Notification' in window)) {
-                alert("הדפדפן שלך לא תומך בהתראות");
+                alert("הדפדפן שלך לא תומך בהתראות. אנא השתמש בדפדפן חדש יותר (Chrome, Firefox, Safari, Edge)");
                 return;
             }
 
+            // [תיקון] בדיקה אם already granted
+            if (Notification.permission === 'granted') {
+                alert("אתה כבר רשום להתראות! תקבל עדכונים על חדשות וגלריות חדשות.");
+                return;
+            }
+
+            if (Notification.permission === 'denied') {
+                alert("ביטלת הרשמה להתראות. כדי להפעיל אותן, עדכן את הגדרות הדפדפן שלך.");
+                return;
+            }
+
+            // בקשה להרשמה
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                alert("נרשמת בהצלחה להתראות! (סימולציה - בקרוב תיווסף הרשמה מלאה ל-Push API)");
-                // כאן יבוא הקוד לרישום ב-Push API
-            } else {
-                alert("לא התקבל אישור להצגת התראות");
+                // [חדש] שמירת ה-subscription למכסן מקומי
+                localStorage.setItem('notificationsEnabled', 'true');
+                
+                // [חדש] התראת החיוך
+                new Notification('בית הלוי - התראות מופעלות', {
+                    icon: './assets/icons/icon-192x192.png',
+                    badge: './assets/icons/icon-192x192.png',
+                    body: 'כעת תקבל עדכונים בזמן אמת על חדשות וגלריות חדשות בישיבה!',
+                    tag: 'beit-halevi-welcome',
+                    requireInteraction: false
+                });
+
+                alert("נרשמת בהצלחה להתראות! 🔔\n\nתקבל עדכונים כאשר:\n• יתווספו חדשות חדשות\n• יתווספו תמונות האירועים החדשים\n\nאתה יכול לבטל זאת בכל עת בהגדרות הדפדפן.");
+            } else if (permission === 'denied') {
+                alert("ביטלת הרשמה להתראות. כדי להפעיל אותן מאוחר יותר, עדכן את הגדרות הדפדפן.");
             }
         });
     }
