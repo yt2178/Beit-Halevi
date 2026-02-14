@@ -45,23 +45,28 @@ self.addEventListener('activate', (event) => {
 
 // יירוט בקשות רשת (Fetch)
 self.addEventListener('fetch', (event) => {
-    // דילוג על בקשות שאינן GET או שאינן http/https (כגון chrome-extension)
+    // דילוג על בקשות שאינן GET או שאינן http/https
     if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
         return;
     }
 
+    // אסטרטגיה: Stale-While-Revalidate עבור נכסים מוכרים
     event.respondWith(
         caches.match(event.request)
-            .then((response) => {
-                // החזרת תשובה מה-Cache אם קיימת
-                if (response) {
-                    return response;
-                }
-                // אחרת, בצע בקשת רשת רגילה
-                return fetch(event.request).then((networkResponse) => {
-                    // אופציונלי: ניתן להוסיף כאן לוגיקה לשמירה דינמית ב-Cache
+            .then((cachedResponse) => {
+                const fetchPromise = fetch(event.request).then((networkResponse) => {
+                    // שמירה דינמית של קבצי JSON ותמונות
+                    if (networkResponse.ok && (event.request.url.includes('.json') || event.request.url.includes('googleusercontent.com'))) {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, networkResponse.clone());
+                        });
+                    }
                     return networkResponse;
+                }).catch(() => {
+                    // במקרה של שגיאת רשת, אם יש cachedResponse הוא יחזור
                 });
+
+                return cachedResponse || fetchPromise;
             })
     );
 });

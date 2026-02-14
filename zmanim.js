@@ -137,8 +137,12 @@ async function loadZmanimData() {
         `).join('');
 
     } catch (error) {
-        console.error("Error loading zmanim:", error);
-        timesContainer.innerHTML = '<p class="error-msg">שגיאה בטעינת הזמנים</p>';
+        timesContainer.innerHTML = `
+            <div class="error-msg" style="grid-column: 1/-1; text-align: center; padding: 20px;">
+                <i class="fas fa-exclamation-circle"></i> 
+                אירעה שגיאה בטעינת הזמנים. 
+                <button onclick="location.reload()" style="background: none; border: underline; color: var(--primary-color); cursor: pointer;">נסה שוב</button>
+            </div>`;
     }
 }
 

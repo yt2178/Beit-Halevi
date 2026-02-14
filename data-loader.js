@@ -28,12 +28,12 @@ async function fetchAndParse(path) {
                 if (album.data && album.data.images) {
                     album.data.images = album.data.images.map(img =>
                         img.includes('drive.google.com/uc') ?
-                            img.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1000') : img
+                            img.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1200') : img
                     );
                 }
                 if (album.data && album.data.thumbnail) {
                     if (album.data.thumbnail.includes('drive.google.com/uc')) {
-                        album.data.thumbnail = album.data.thumbnail.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1000');
+                        album.data.thumbnail = album.data.thumbnail.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w800');
                     }
                 }
             });
@@ -74,7 +74,7 @@ export async function loadGallery() {
     allLoadedAlbums.forEach((albumData, index) => {
         const albumElement = document.createElement('a');
         albumElement.className = 'album-cover';
-        albumElement.innerHTML = `<img loading="lazy" src="${cleanPath(albumData.thumbnail)}" alt="${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+        albumElement.innerHTML = `<img loading="lazy" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
         albumElement.addEventListener('click', (e) => {
             e.preventDefault(); // מונע קפיצה של הדף
             // [שינוי] פותח גלריה ומעדכן את ה-URL

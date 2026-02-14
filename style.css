@@ -9,6 +9,36 @@ html {
     /* גלילה חלקה ואנימטיבית */
 }
 
+/* --- [חדש] גלילה מותאמת אישית (Scrollbar) --- */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #0f1218;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #444;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
 
 :root {
     --primary-color: #1a4b84;
@@ -16,10 +46,15 @@ html {
     --accent-color: #f39c12;
     --background-color: #f8f9fa;
     --text-color: #2c3e50;
-    --border-radius: 16px;
-    --transition-speed: 0.4s;
+    --border-radius: 12px;
+    --transition-speed: 0.3s;
     --header-bg: #003366;
-    --nav-bg: #333;
+    --nav-bg: rgba(51, 51, 51, 0.85);
+    /* For glassmorphism */
+    --surface-bg: #ffffff;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.12);
 
     /* ערכות נושא */
     --gold-primary: #8e6d13;
@@ -27,11 +62,11 @@ html {
     --gold-accent: #d4af37;
 
     /* Dark mode variables */
-    --dark-background: #0f0f0f;
-    --dark-text: #e8e8e8;
-    --dark-primary: #1a3a52;
-    --dark-secondary: #2d5a8f;
-    --dark-surface: #1a1a1a;
+    --dark-background: #0f1218;
+    --dark-text: #e2e8f0;
+    --dark-primary: #1e3a5a;
+    --dark-secondary: #2c5282;
+    --dark-surface: rgba(26, 32, 44, 0.8);
 }
 
 /* ערכת זהב */
@@ -84,8 +119,9 @@ body.dark-mode #contact {
 
 body.dark-mode .news-item {
     background-color: var(--dark-surface);
-    border: 1px solid #333;
-    border-right-color: var(--dark-primary);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 4px solid var(--dark-primary);
+    backdrop-filter: blur(10px);
 }
 
 body.dark-mode .news-item h3 {
@@ -97,17 +133,83 @@ body.dark-mode .album-cover {
 }
 
 body.dark-mode footer {
-    background-color: #0d0d0d;
+    background-color: #0b0e14;
 }
 
 /* צבעי כפתורים ודגשים */
 body.dark-mode .donation-button {
     background-color: #387638;
-    /* ירוק כהה יותר */
+    background-color: #387638;
 }
 
-body.dark-mode .donation-button:hover {
-    background-color: #4a914a;
+/* [תיקון] כפתור התראות במצב כהה */
+body.dark-mode .notification-button {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* [תיקון] קונטיינרים של הטופס והמפה במצב כהה */
+body.dark-mode .form-column,
+body.dark-mode .contact-info {
+    background-color: #232a35;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .form-column h3,
+body.dark-mode .contact-info h3 {
+    color: white;
+}
+
+/* [תיקון] טופס צור קשר במצב כהה */
+body.dark-mode #contact input,
+body.dark-mode #contact textarea {
+    background-color: #232a35;
+    color: var(--dark-text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* [תיקון] פרטי התקשרות במצב כהה */
+body.dark-mode .contact-info,
+body.dark-mode .contact-info p,
+body.dark-mode .contact-info strong,
+body.dark-mode .contact-info i {
+    color: var(--dark-text);
+}
+
+body.dark-mode .contact-info i {
+    color: var(--secondary-color);
+    /* אייקונים בצבע תכלת */
+}
+
+/* [תיקון] כפתורי אלבום וגלריה במצב כהה */
+body.dark-mode .album-controls button,
+body.dark-mode .lightbox-controls button {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .album-controls button:hover,
+body.dark-mode .lightbox-controls button:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+}
+
+body.dark-mode #contact input:focus,
+body.dark-mode #contact textarea:focus {
+    background-color: #1a202c;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* [תיקון] רקע קישורי ניווט במצב כהה - שיהיה שקוף/תואם */
+body.dark-mode .nav-links {
+    background-color: transparent;
+    /* הסרת הרקע השחור */
+    border: none;
+    box-shadow: none;
 }
 
 body {
@@ -136,12 +238,12 @@ body {
 @keyframes zoomIn {
     from {
         opacity: 0;
-        transform: scale(0.95);
+        transform: scale(0.95) translateY(10px);
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1) translateY(0);
     }
 }
 
@@ -423,26 +525,28 @@ body {
 }
 
 #contact button {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
     color: white;
     border: none;
     padding: 1.2rem 3rem;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     cursor: pointer;
     transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 600;
+    font-weight: 700;
     width: auto;
     align-self: center;
     margin-top: auto;
-    /* דוחף את הכפתור לתחתית */
     font-size: 1.1rem;
-    box-shadow: 0 4px 12px rgba(26, 75, 132, 0.2);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 #contact button:hover {
-    background-color: var(--secondary-color);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(26, 75, 132, 0.3);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    filter: brightness(1.1);
 }
 
 /* מידע ומפה */
@@ -581,31 +685,33 @@ section h2::after {
 }
 
 .news-item {
-    background: white;
-    padding: 2rem;
+    background-color: var(--surface-bg);
     border-radius: var(--border-radius);
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(0, 0, 0, 0.03);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-md);
+    border-right: 5px solid var(--primary-color);
+    transition: all var(--transition-speed);
 }
 
 .news-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateX(-5px);
+    box-shadow: var(--shadow-lg);
 }
 
 .album-cover {
-    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-speed);
+    cursor: pointer;
+    background-color: var(--surface-bg);
     border-radius: var(--border-radius);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .album-cover:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
 }
 
 /* --- כפתור חזרה למעלה משופר --- */
@@ -708,6 +814,9 @@ nav {
     display: flex;
     justify-content: center;
     align-items: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .nav-links {
@@ -1323,10 +1432,11 @@ body.dark-mode #current-city-name {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .city-modal.active {
@@ -1471,9 +1581,12 @@ body.dark-mode .city-option.active {
 }
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-20px);
     }
@@ -1494,16 +1607,27 @@ body.dark-mode .city-option.active {
 }
 
 @keyframes bellRing {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: rotateZ(0deg);
     }
-    10%, 20% {
+
+    10%,
+    20% {
         transform: rotateZ(-25deg);
     }
-    30%, 50%, 70%, 90% {
+
+    30%,
+    50%,
+    70%,
+    90% {
         transform: rotateZ(25deg);
     }
-    40%, 60%, 80% {
+
+    40%,
+    60%,
+    80% {
         transform: rotateZ(-25deg);
     }
 }
@@ -1573,12 +1697,16 @@ body.dark-mode .city-option.active {
 }
 
 @keyframes bellPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1) rotate(0deg);
     }
+
     25% {
         transform: scale(1.15) rotate(-15deg);
     }
+
     75% {
         transform: scale(1.15) rotate(15deg);
     }
@@ -1586,12 +1714,25 @@ body.dark-mode .city-option.active {
 
 /* מצב כהה */
 body.dark-mode .notification-card {
-    background: linear-gradient(135deg, #2d3561 0%, #1a1f3a 100%);
+    background: #232a35;
+    /* תואם לרקע של הטופס והמפה */
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 body.dark-mode .notification-card:hover {
-    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* [תיקון] רקע קישורי ניווט במצב כהה - שיהיה שקוף/תואם */
+body.dark-mode nav a {
+    background-color: transparent;
+    color: var(--dark-text);
+}
+
+body.dark-mode nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--secondary-color);
 }
 
 /* Dark mode text colors for all headings and content */
@@ -1717,7 +1858,275 @@ body.dark-mode a:hover {
 
 footer {
     text-align: center;
-    padding: 20px;
-    background-color: #333;
+    padding: 30px 20px;
+    background-color: #1a1a1a;
+    color: #888;
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 40px;
+}
+
+footer p {
+    margin: 0;
+}
+
+body.dark-mode footer {
+    background-color: #0b0e14;
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- התאמה למכשירים קטנים במיוחד (2.8-3.0 אינץ') --- */
+@media screen and (max-width: 480px) {
+    header h1 {
+        font-size: 1.6em;
+        margin: 0.5rem 0;
+    }
+
+    .top-bar {
+        font-size: 0.85em;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        padding: 5px 0;
+    }
+
+    section {
+        padding: 2.5rem 1rem;
+    }
+
+    section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+    }
+
+    .news-item {
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .news-item h3 {
+        font-size: 1.25rem;
+    }
+
+    #album-grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+    }
+
+    .nav-links a {
+        padding: 16px;
+        font-size: 1.1rem;
+    }
+
+    .donation-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.95rem;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .notification-card {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+    }
+
+    .notification-card h2 {
+        font-size: 1.7rem;
+    }
+
+    .notification-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* התאמה לרזולוציית 640x480 (נוף) או מסכים נמוכים מאוד */
+    @media (max-height: 480px) {
+        header {
+            padding: 10px 0;
+        }
+
+        .top-bar {
+            display: none;
+        }
+
+        section {
+            padding: 1.5rem 1rem;
+        }
+
+        section h2 {
+            margin-bottom: 1rem;
+        }
+    }
+}
+
+/* שטח מגע מינימלי לכפתורים וקישורים לתפעול נוח */
+button,
+.premium-btn,
+.donation-button,
+.load-more-button,
+nav a {
+    min-height: 44px;
+    padding: 10px 15px;
+}
+
+.menu-toggle {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+}
+
+/* --- [חדש] כפתור צף להתרעות (FAB) --- */
+.fab-subscribe {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    /* צד שמאל, נפרד מכפתור חזרה למעלה */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-size: 1.5rem;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-subscribe:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: 0 8px 25px rgba(118, 75, 162, 0.4);
+}
+
+/* אייקון פעמון רוטט */
+.fab-subscribe i {
+    animation: bellShake 3s infinite;
+}
+
+@keyframes bellShake {
+
+    0%,
+    90% {
+        transform: rotate(0);
+    }
+
+    91% {
+        transform: rotate(15deg);
+    }
+
+    93% {
+        transform: rotate(-15deg);
+    }
+
+    95% {
+        transform: rotate(10deg);
+    }
+
+    97% {
+        transform: rotate(-10deg);
+    }
+
+    100% {
+        transform: rotate(0);
+    }
+}
+
+/* --- [חדש] מודאל הרשמה --- */
+.subscribe-modal {
+    display: none;
+    /* מוסתר כברירת מחדל */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 10001;
+    /* מעל הכל */
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.subscribe-modal.active {
+    display: flex;
+    opacity: 1;
+}
+
+.subscribe-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.subscribe-modal.active .subscribe-modal-content {
+    transform: scale(1);
+}
+
+.subscribe-close {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.subscribe-close:hover {
+    color: #333;
+}
+
+.subscribe-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.subscribe-modal-content h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.subscribe-modal-content p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* מצב כהה למודאל */
+body.dark-mode .subscribe-modal-content {
+    background: #232a35;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .subscribe-modal-content h2 {
+    color: white;
+}
+
+body.dark-mode .subscribe-modal-content p {
+    color: #ccc;
+}
+
+body.dark-mode .subscribe-modal-content i {
+    color: var(--secondary-color);
 }

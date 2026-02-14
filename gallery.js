@@ -15,7 +15,7 @@ export let currentAlbumImages = [];
 export function openGridOverlay(albumData) {
     currentAlbumData = albumData; // [חדש] שמירת נתוני האלבום
 
-    thumbnailGrid.innerHTML = '';
+    thumbnailGrid.textContent = '';
     gridAlbumTitle.textContent = albumData.title;
     currentAlbumImages = (albumData.images || []).map(imgSrc => ({
         src: cleanPath(imgSrc),
@@ -25,7 +25,9 @@ export function openGridOverlay(albumData) {
     setupAlbumControls(albumData);
 
     if (currentAlbumImages.length === 0) {
-        thumbnailGrid.innerHTML = '<p style="color:white; text-align:center;">לא נמצאו תמונות באלבום זה.</p>';
+        thumbnailGrid.textContent = 'לא נמצאו תמונות באלבום זה.';
+        thumbnailGrid.style.color = 'white';
+        thumbnailGrid.style.textAlign = 'center';
     } else {
         // [שינוי] הצג Skeleton Loader מיידית
         for (let i = 0; i < 1; i++) { // הצג 12 מקומות ריקים
@@ -34,7 +36,7 @@ export function openGridOverlay(albumData) {
             thumbnailGrid.appendChild(loader);
         }
         setTimeout(() => {
-            thumbnailGrid.innerHTML = ''; // נקה את ה-Skeleton
+            thumbnailGrid.textContent = ''; // נקה את ה-Skeleton
             currentAlbumImages.forEach((imgData, index) => {
                 const thumb = document.createElement('img');
                 thumb.loading = 'lazy';

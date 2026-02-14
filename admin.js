@@ -15,11 +15,9 @@ import { putWithShaRetry } from './admin-core.js';
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
 import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
-// ✅ Fix: יש לשמור codes אלה בenv var או בקונפיג בטוח (לא בקוד)
-// זה קוד בעיה אבל פעילות עכשיו. בעתיד - העבר ל-env vars
 const ADMIN_USER_CODES = {
-    "12589": "Yedidya",      // TODO: העבר ל-environment variable
-    "112233": "Admin-New",    // TODO: העבר ל-environment variable
+    "12589": "Yedidya",
+    "112233": "Admin-New",
 };
 
 const GITHUB_TOKEN_KEY = 'admin_github_token';
@@ -70,9 +68,9 @@ function saveNewsDraft(showFeedback = false) {
 function loadNewsDraft(showFeedback = true) {
     try {
         const raw = localStorage.getItem(DRAFT_KEY);
-        if (!raw) { 
+        if (!raw) {
             if (showFeedback) showToast('⚠️ אין טיוטה שמורה', 1500);
-            return; 
+            return;
         }
         const draft = JSON.parse(raw);
         if (draft.title) document.getElementById('news-title').value = draft.title;
@@ -112,12 +110,12 @@ function showToast(message, duration = 1500, type = 'success') {
             container.id = 'toast-container';
             document.body.appendChild(container);
         }
-        
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.textContent = message;
         container.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.classList.add('hide');
             setTimeout(() => {
@@ -212,12 +210,11 @@ function cleanSlug(title) {
     return title.replace(/\s/g, '-').replace(/[^a-z0-9\u05D0-\u05EA-]/gi, '');
 }
 
-// [חדש] פונקציה משופרת לבניית Slug סופי
+// פונקציה לבניית Slug סופי
 function getFinalSlug(title, date) {
     const titleSlug = cleanSlug(title);
     return `${date}-${titleSlug}`;
 }
-
 
 // ============================================================
 // 6. פונקציות ראשיות (Main Functions)
@@ -355,7 +352,7 @@ export async function makeFilePublic(fileId, Token) {
 function logout() {
     // ✅ Fix: הוסף confirmation כדי לא לצאת כן בטעות
     if (!confirm('האם אתה בטוח שברצונך להיכנס מהמערכת?')) return;
-    
+
     showStatus('מתנתק מהמערכת... להתראות!', 100);
     setTimeout(() => {
         localStorage.removeItem(GITHUB_TOKEN_KEY);
@@ -373,7 +370,7 @@ async function verifyGitHubToken(token) {
                 'Authorization': `token ${token}`
             }
         });
-        
+
         if (response.ok) {
             const userData = await response.json();
             return userData.login; // מחזיר את שם המשתמש האמיתי
@@ -414,43 +411,43 @@ function renderNewsList(newsArray) {
         // ✅ Fix XSS: תוכן דינמי מנוקה דרך textContent
         const detailsDiv = document.createElement('div');
         detailsDiv.className = 'item-details';
-        
+
         const titleH3 = document.createElement('h3');
         titleH3.textContent = item.data.title;  // Safe!
-        
+
         const dateP = document.createElement('p');
         dateP.textContent = 'פורסם ב: ' + item.data.date;  // Safe!
-        
+
         const iconI = document.createElement('i');
         iconI.className = 'fas fa-file-alt item-icon';
-        
+
         detailsDiv.appendChild(iconI);
         const contentDiv = document.createElement('div');
         contentDiv.appendChild(titleH3);
         contentDiv.appendChild(dateP);
         detailsDiv.appendChild(contentDiv);
         newsDiv.appendChild(detailsDiv);
-        
+
         // ✅ Fix XSS: בנה את כפתורים בעדכות בטוח
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'item-actions';
-        
+
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-news-btn premium-btn small';
         editBtn.dataset.slug = slug;
         editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
         editBtn.addEventListener('click', () => handleEditNews(slug));
-        
+
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-news-btn premium-btn small danger';
         deleteBtn.dataset.slug = slug;
         deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
         deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
-        
+
         actionsDiv.appendChild(editBtn);
         actionsDiv.appendChild(deleteBtn);
         newsDiv.appendChild(actionsDiv);
-        
+
         container.appendChild(newsDiv);
     });
 }
@@ -617,11 +614,11 @@ async function loadAndRenderMessages() {
 
             const div = document.createElement('div');
             div.className = 'message-card';
-            
+
             // ✅ Fix XSS: בנה DOM elements בטוח במקום innerHTML
             const headerDiv = document.createElement('div');
             headerDiv.className = 'message-header';
-            
+
             const infoDiv = document.createElement('div');
             infoDiv.className = 'message-info';
             const nameH4 = document.createElement('h4');
@@ -630,25 +627,25 @@ async function loadAndRenderMessages() {
             emailP.textContent = email;
             infoDiv.appendChild(nameH4);
             infoDiv.appendChild(emailP);
-            
+
             const dateDiv = document.createElement('div');
             dateDiv.className = 'message-date';
             dateDiv.textContent = timestamp;
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-msg-btn premium-btn small danger';
             deleteBtn.dataset.id = messageId;
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
             deleteBtn.addEventListener('click', () => handleDeleteMessage(messageId));
-            
+
             headerDiv.appendChild(infoDiv);
             headerDiv.appendChild(dateDiv);
             headerDiv.appendChild(deleteBtn);
-            
+
             const bodyDiv = document.createElement('div');
             bodyDiv.className = 'message-body';
             bodyDiv.textContent = body;
-            
+
             div.appendChild(headerDiv);
             div.appendChild(bodyDiv);
             container.appendChild(div);
@@ -789,7 +786,7 @@ async function handleSaveNews(e) {
         showStatus('נא למלא את כל השדות', null, true);
         return;
     }
-    
+
     // בדוק שהתאריך בפורמט תקין (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
@@ -979,21 +976,12 @@ loginForm.addEventListener('submit', async (e) => {
     const userCodeInput = document.getElementById('admin-usercode').value;
     const tokenInput = document.getElementById('github-token').value.trim();
 
-    // ✅ Fix: הסר debug logs חשופים שמכילים קוד משתמש!
-    // console.log('=== Login Attempt ===');
-    // console.log('User Code:', userCodeInput);
-    // console.log('Token length:', tokenInput.length);
-    // console.log('Valid codes:', Object.keys(ADMIN_USER_CODES));
-
     showStatus('מבצע אימות מול GitHub...', 40);
 
+    // בדיקת הקוד מול הרשימה (Plain Text)
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-        // ✅ Fix: הסר debug logs
-        // console.log('✓ קוד משתמש תקין');
         if (tokenInput) {
-            // console.log('✓ טוקן קיים');
             const verifiedLogin = await verifyGitHubToken(tokenInput);
-            // console.log('Verification result:', verifiedLogin);
 
             if (verifiedLogin) {
                 // שמור שם המנהל מ-ADMIN_USER_CODES (לא GitHub username)

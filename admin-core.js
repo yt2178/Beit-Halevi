@@ -134,15 +134,15 @@ export async function googleLogin() {
         }
 
         let timeoutId;
-        
+
         console.log("Setting up token callback...");
         window.tokenClient.callback = (tokenResponse) => {
             clearTimeout(timeoutId);
             console.log("Received Token Response in googleLogin:", tokenResponse);
-            
+
             if (tokenResponse.error) {
                 console.error("Google Auth Error:", tokenResponse);
-                
+
                 // [חדש] טיפול בשגיאות ספציפיות
                 if (tokenResponse.error === 'popup_closed_by_user') {
                     reject(new Error("סגרת את חלון ההתחברות. נסה שוב."));
@@ -203,7 +203,6 @@ export async function getFolderId(token) {
         await makeFilePublic(createData.id, token);
         return createData.id;
     } catch (err) {
-        console.error("Error in getFolderId:", err);
         return "root";
     }
 }
@@ -327,5 +326,5 @@ export async function logEvent(action, type = 'general') {
                 branch: 'main'
             })
         });
-    } catch (err) { /* ✅ Fix: הסר console.error */  }
+    } catch (err) { }
 }

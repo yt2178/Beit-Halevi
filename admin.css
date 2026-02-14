@@ -717,17 +717,17 @@ textarea:focus {
 
 /* Dark theme overrides (applied on body.dark-theme) */
 body.dark-theme {
-    --bg-color: #0b1220;
-    --card-bg: #0f1724;
-    --text-main: #e6eef8;
+    --bg-color: #0f1218;
+    --card-bg: rgba(26, 32, 44, 0.8);
+    --text-main: #e2e8f0;
     --text-muted: #9aa9bf;
-    --primary-gradient: linear-gradient(135deg, #0f1724 0%, #1e293b 100%);
+    --primary-gradient: linear-gradient(135deg, #1e3a5a 0%, #2c5282 100%);
     --secondary-color: #60a5fa;
-    --glass-bg: rgba(255,255,255,0.04);
+    --glass-bg: rgba(255, 255, 255, 0.04);
 }
 
 body.dark-theme header {
-    background: linear-gradient(135deg,#0b1220 0%, #1f2937 100%);
+    background: linear-gradient(135deg, #0f1218 0%, #1e3a5a 100%);
 }
 
 body.dark-theme .admin-card,
@@ -735,8 +735,42 @@ body.dark-theme .login-card,
 body.dark-theme .dashboard-card,
 body.dark-theme .section-header {
     background: var(--card-bg);
-    border-color: rgba(255,255,255,0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+    /* [תיקון] גבול בולט יותר */
     color: var(--text-main);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* [תיקון] רשימות וכרטיסים פנימיים במצב כהה - למניעת טקסט בהיר על רקע לבן */
+body.dark-theme .news-item-admin,
+body.dark-theme .album-item-admin,
+body.dark-theme .message-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+}
+
+body.dark-theme .news-item-admin:hover,
+body.dark-theme .album-item-admin:hover,
+body.dark-theme .message-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* [תיקון] אזור העלאת קבצים במצב כהה */
+body.dark-theme .file-upload-label {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .file-upload-label:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--secondary-color);
+}
+
+body.dark-theme .item-icon {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 body.dark-theme .dashboard-header,
@@ -752,7 +786,7 @@ body.dark-theme input,
 body.dark-theme textarea {
     background: #0b1220;
     color: var(--text-main);
-    border-color: rgba(255,255,255,0.03);
+    border-color: rgba(255, 255, 255, 0.03);
 }
 
 .premium-btn.small {
@@ -760,33 +794,42 @@ body.dark-theme textarea {
 }
 
 /* Small layout tweak for draft buttons */
-.form-actions > div {
-    display:flex;
-    gap:8px;
-    align-items:center;
+.form-actions>div {
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 /* Local draft note style */
 .local-draft-note {
-    background: linear-gradient(90deg, rgba(255,249,238,0.6), rgba(255,255,255,0.02));
-    border: 1px solid rgba(0,0,0,0.06);
+    background: linear-gradient(90deg, rgba(255, 249, 238, 0.6), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(0, 0, 0, 0.06);
     padding: 10px 12px;
     border-radius: 10px;
     font-size: 0.95rem;
     color: var(--text-main);
 }
 
-body.dark-theme .local-draft-note {
-    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border: 1px solid rgba(255,255,255,0.03);
-    color: var(--text-muted);
+/* [תיקון] כותרת דאשבורד "מה תרצה לעשות היום?" במצב כהה */
+body.dark-theme .dashboard-header h2 {
+    color: #e2e8f0;
+    /* לבן/אפור בהיר */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Toast notification styles (discrete corner notification) */
-#toast-container {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
+/* [תיקון] הודעות טעינה ומצב ריק במצב כהה */
+body.dark-theme .empty-state,
+body.dark-theme .empty-state p,
+body.dark-theme .empty-state i {
+    color: #cbd5e1;
+    /* אפור בהיר */
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Local draft note style */
+.local-draft-note {
+    background: linear-gradient(90deg, rgba(255, 249, 238, 0.6), rgba(255, 255, 255, 0.02));
     z-index: 5000;
     pointer-events: none;
 }
@@ -820,6 +863,7 @@ body.dark-theme .local-draft-note {
         transform: translateX(-150px);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -831,6 +875,7 @@ body.dark-theme .local-draft-note {
         transform: translateX(0);
         opacity: 1;
     }
+
     to {
         transform: translateX(-150px);
         opacity: 0;
@@ -845,5 +890,5 @@ body.dark-theme .toast {
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
- 
- /* END OF FILE admin.css */
+
+/* END OF FILE admin.css */

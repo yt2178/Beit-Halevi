@@ -233,8 +233,36 @@ if (hebrewYearDisplay) {
         }
     } catch (e) { console.log("No site-config.json found yet"); }
 
-    // [חדש] לוגיקת הרשמה להתראות
+    // [חדש] לוגיקת הרשמה להתראות (FAB ומודאל)
+    const fabSubscribeBtn = document.getElementById('fab-subscribe-btn');
+    const subscribeModal = document.getElementById('subscribe-modal');
+    const subscribeCloseBtn = document.querySelector('.subscribe-close');
     const subscribeBtn = document.getElementById('subscribe-btn');
+
+    // פתיחת המודאל
+    if (fabSubscribeBtn && subscribeModal) {
+        fabSubscribeBtn.addEventListener('click', () => {
+            subscribeModal.classList.add('active');
+        });
+    }
+
+    // סגירת המודאל
+    if (subscribeCloseBtn && subscribeModal) {
+        subscribeCloseBtn.addEventListener('click', () => {
+            subscribeModal.classList.remove('active');
+        });
+    }
+
+    // סגירה בלחיצה מחוץ למודאל
+    if (subscribeModal) {
+        window.addEventListener('click', (e) => {
+            if (e.target === subscribeModal) {
+                subscribeModal.classList.remove('active');
+            }
+        });
+    }
+
+    // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
             // [תיקון] בדיקה אם הדפדפן תומך בהתראות
@@ -259,7 +287,7 @@ if (hebrewYearDisplay) {
             if (permission === 'granted') {
                 // [חדש] שמירת ה-subscription למכסן מקומי
                 localStorage.setItem('notificationsEnabled', 'true');
-                
+
                 // [חדש] התראת החיוך
                 new Notification('בית הלוי - התראות מופעלות', {
                     icon: './assets/icons/icon-192x192.png',

@@ -83,8 +83,7 @@ export async function loadAndRenderGallery() {
 
         renderGalleryList(galleryArray, fileData.sha);
     } catch (err) {
-        // ✅ Fix: הסר console.error
-        if (galleryStatusMessage) galleryStatusMessage.textContent = 'שגיאה בטעינת הגלריה';
+        showStatus('שגיאה בטעינת הגלריה', null, true);
     }
 }
 // חשיפת הפונקציה לחלון כדי ש-admin.js יוכל לקרוא לה
@@ -107,27 +106,50 @@ function renderGalleryList(galleryArray, sha) {
     galleryArray.forEach((album, index) => {
         const div = document.createElement('div');
         div.className = 'album-item-admin';
-        div.innerHTML = `
-            <div class="item-details">
-                <img src="${album.data.thumbnail}" alt="${album.data.title}" class="item-thumb-admin">
-                <div>
-                    <h3>${album.data.title}</h3>
-                    <p>${album.data.images ? album.data.images.length : 0} תמונות</p>
-                </div>
-            </div>
-            <div class="item-actions">
-                <button class="edit-album-btn premium-btn small" data-index="${index}">
-                    <i class="fas fa-edit"></i> ערוך
-                </button>
-                <button class="delete-album-btn premium-btn small danger" data-index="${index}">
-                    <i class="fas fa-trash-alt"></i> מחק
-                </button>
-            </div>
-        `;
-        galleryListContainer.appendChild(div);
 
-        div.querySelector('.edit-album-btn').addEventListener('click', () => editAlbum(album, index));
-        div.querySelector('.delete-album-btn').addEventListener('click', () => deleteAlbum(index));
+        // Item Details
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'item-details';
+
+        const img = document.createElement('img');
+        img.src = album.data.thumbnail;
+        img.alt = album.data.title;
+        img.className = 'item-thumb-admin';
+
+        const infoDiv = document.createElement('div');
+        const h3 = document.createElement('h3');
+        h3.textContent = album.data.title; // Safe XSS
+        const p = document.createElement('p');
+        p.textContent = (album.data.images ? album.data.images.length : 0) + ' תמונות';
+
+        infoDiv.appendChild(h3);
+        infoDiv.appendChild(p);
+        detailsDiv.appendChild(img);
+        detailsDiv.appendChild(infoDiv);
+
+        // Item Actions
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'item-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-album-btn premium-btn small';
+        editBtn.dataset.index = index;
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+        editBtn.addEventListener('click', () => editAlbum(album, index));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-album-btn premium-btn small danger';
+        deleteBtn.dataset.index = index;
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+        deleteBtn.addEventListener('click', () => deleteAlbum(index));
+
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+
+        div.appendChild(detailsDiv);
+        div.appendChild(actionsDiv);
+
+        galleryListContainer.appendChild(div);
     });
 
     galleryListContainer.dataset.sha = sha;
@@ -337,27 +359,27 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 // admin-gallery.js (פונקציית handleGallerySubmit - מתוקנת)
 async function handleGallerySubmit(e) {
     e.preventDefault();
-    
+
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
     const albumThumbnail = albumThumbnailInput.files[0];
     const albumImages = albumImagesInput.files;
-    
+
     if (!albumTitle) {
         showStatus('נא להזין שם לאלבום', null, true);
         return;
     }
-    
+
     if (!albumThumbnail) {
         showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
         return;
     }
-    
+
     if (albumImages.length === 0) {
         showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
         return;
     }
-    
+
     showStatus('מכין העלאה לדרייב... נא להמתין', 10);
 
     try {
@@ -403,11 +425,11 @@ async function handleGallerySubmit(e) {
         // 3. בניית האובייקט החדש
         // [תיקון] ודא שה-thumbnail תמיד מוגדר - אם לא נבחר, השתמש ב-finalImages[0]
         let thumbnailUrl = albumThumbnailInput.value || finalImages[0] || "";
-        
+
         if (!thumbnailUrl && finalImages.length > 0) {
             thumbnailUrl = finalImages[0];
         }
-        
+
         if (!thumbnailUrl && finalImages.length === 0) {
             showStatus('שגיאה: אין תמונות באלבום. אנא הוסף לפחות תמונה אחת.', null, true);
             return;
