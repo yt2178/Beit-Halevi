@@ -230,6 +230,28 @@ if (hebrewYearDisplay) {
                 if (config.texts.donation_title) document.querySelector('#donations h2').textContent = config.texts.donation_title;
                 if (config.texts.donation_body) document.querySelector('#donations p').textContent = config.texts.donation_body;
             }
+
+            // [חדש] אתחול OneSignal אם מוגדר
+            if (config.oneSignalAppId) {
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                window.OneSignalDeferred.push(function (OneSignal) {
+                    OneSignal.init({
+                        appId: config.oneSignalAppId,
+                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
+                        notifyButton: {
+                            enable: false, // נשתמש בכפתור שלנו
+                        },
+                        allowLocalhostAsSecureOrigin: true,
+                    });
+                });
+
+                // טעינת הסקריפט של OneSignal
+                const script = document.createElement('script');
+                script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
         }
     } catch (e) { console.log("No site-config.json found yet"); }
 
@@ -265,11 +287,22 @@ if (hebrewYearDisplay) {
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
-            // [תיקון] בדיקה אם הדפדפן תומך בהתראות
-            if (!('Notification' in window)) {
-                alert("הדפדפן שלך לא תומך בהתראות. אנא השתמש בדפדפן חדש יותר (Chrome, Firefox, Safari, Edge)");
+            // אם OneSignal נטען
+            if (window.OneSignalDeferred) {
+                window.OneSignalDeferred.push(async function (OneSignal) {
+                    await OneSignal.User.PushSubscription.optIn();
+                    alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים.");
+                    if (subscribeModal) subscribeModal.classList.remove('active');
+                });
                 return;
             }
+
+            // [גיבוי] בדיקה אם הדפדפן תומך בהתראות (ללא OneSignal)
+            if (!('Notification' in window)) {
+                alert("הדפדפן שלך לא תומך בהתראות.");
+                return;
+            }
+            // ... (שאר הקוד הישן נשאר כגיבוי)
 
             // [תיקון] בדיקה אם already granted
             if (Notification.permission === 'granted') {

@@ -11,7 +11,8 @@ import { putWithShaRetry } from './admin-core.js';
 let currentSiteConfig = {
     texts: {},
     theme: 'light',
-    primaryColor: '#1a4b84'
+    primaryColor: '#1a4b84',
+    oneSignalAppId: ''
 };
 let siteConfigSHA = null;
 
@@ -45,6 +46,9 @@ export async function loadSiteConfig() {
             // עדכון ה-UI
             document.getElementById('site-theme-select').value = currentSiteConfig.theme;
             document.getElementById('site-primary-color').value = currentSiteConfig.primaryColor;
+            if (document.getElementById('site-onesignal-id')) {
+                document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
+            }
 
             renderEditableTextsList(currentSiteConfig.texts);
             renderSitePreview(currentSiteConfig);
@@ -177,6 +181,7 @@ export async function saveAllSiteSettings() {
 
     currentSiteConfig.theme = document.getElementById('site-theme-select').value;
     currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
+    currentSiteConfig.oneSignalAppId = document.getElementById('site-onesignal-id').value.trim();
 
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
 
