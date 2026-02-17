@@ -246,6 +246,7 @@ if (hebrewYearDisplay) {
                         },
                         allowLocalhostAsSecureOrigin: true,
                         serviceWorkerPath: "OneSignalSDKWorker.js",
+                        serviceWorkerParam: { scope: rootPath }, // [Fix] הגדרת Scope מפורשת
                         path: rootPath, // נתיב יחסי למיקום ה-SDK
                     });
                 });

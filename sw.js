@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-v2';
+const CACHE_NAME = 'beit-halevi-v3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
