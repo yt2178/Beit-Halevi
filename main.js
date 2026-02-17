@@ -237,11 +237,15 @@ if (hebrewYearDisplay) {
                 window.OneSignalDeferred.push(function (OneSignal) {
                     OneSignal.init({
                         appId: config.oneSignalAppId,
-                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
+                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
                         notifyButton: {
-                            enable: false, // נשתמש בכפתור שלנו
+                            enable: false,
                         },
                         allowLocalhostAsSecureOrigin: true,
+                        // [Fix] הגדרת נתיב עבור GitHub Pages (תת-תיקייה)
+                        serviceWorkerPath: "OneSignalSDKWorker.js",
+                        serviceWorkerParam: { scope: "/Beit-Halevi/" },
+                        path: "/Beit-Halevi/",
                     });
                 });
 
