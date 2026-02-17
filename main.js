@@ -235,6 +235,9 @@ if (hebrewYearDisplay) {
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 window.OneSignalDeferred.push(function (OneSignal) {
+                    // [Fix] חישוב הנתיב היחסי (למשל /Beit-Halevi/ או /)
+                    const rootPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
                     OneSignal.init({
                         appId: config.oneSignalAppId,
                         safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
@@ -243,6 +246,7 @@ if (hebrewYearDisplay) {
                         },
                         allowLocalhostAsSecureOrigin: true,
                         serviceWorkerPath: "OneSignalSDKWorker.js",
+                        path: rootPath, // נתיב יחסי למיקום ה-SDK
                     });
                 });
 
