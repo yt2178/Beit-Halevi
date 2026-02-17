@@ -235,9 +235,6 @@ if (hebrewYearDisplay) {
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 window.OneSignalDeferred.push(function (OneSignal) {
-                    // [Fix] הגדרת נתיב אבסולוטי דינמי עבור GitHub Pages
-                    const basePath = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-
                     OneSignal.init({
                         appId: config.oneSignalAppId,
                         safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
@@ -246,8 +243,6 @@ if (hebrewYearDisplay) {
                         },
                         allowLocalhostAsSecureOrigin: true,
                         serviceWorkerPath: "OneSignalSDKWorker.js",
-                        serviceWorkerParam: { scope: basePath },
-                        path: basePath,
                     });
                 });
 
@@ -293,12 +288,20 @@ if (hebrewYearDisplay) {
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
-            // אם OneSignal נטען
-            if (window.OneSignalDeferred) {
+            console.log('Subscribe button clicked');
+
+            // בדיקה אם OneSignal זמין ונטען
+            if (typeof window.OneSignalDeferred !== 'undefined' && window.OneSignalDeferred) {
+                console.log('OneSignal is available, requesting subscription');
                 window.OneSignalDeferred.push(async function (OneSignal) {
-                    await OneSignal.User.PushSubscription.optIn();
-                    alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים.");
-                    if (subscribeModal) subscribeModal.classList.remove('active');
+                    try {
+                        await OneSignal.User.PushSubscription.optIn();
+                        alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים.");
+                        if (subscribeModal) subscribeModal.classList.remove('active');
+                    } catch (error) {
+                        console.error('OneSignal subscription error:', error);
+                        alert("אירעה שגיאה בהרשמה. אנא נסה שנית.");
+                    }
                 });
                 return;
             }
