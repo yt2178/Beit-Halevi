@@ -242,8 +242,9 @@ if (hebrewYearDisplay) {
                             enable: false,
                         },
                         allowLocalhostAsSecureOrigin: true,
-                        // [Fix] הגדרת נתיב עבור GitHub Pages (תת-תיקייה)
-                        serviceWorkerPath: "OneSignalSDKWorker.js",
+                        // [Fix] הגדרת נתיב אבסולוטי ומדויק עבור GitHub Pages
+                        // זה פותר את שגיאת "Invalid URL" ב-Dialog.ts
+                        serviceWorkerPath: "https://yt2178.github.io/Beit-Halevi/OneSignalSDKWorker.js",
                         serviceWorkerParam: { scope: "/Beit-Halevi/" },
                         path: "/Beit-Halevi/",
                     });
