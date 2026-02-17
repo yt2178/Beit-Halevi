@@ -235,6 +235,9 @@ if (hebrewYearDisplay) {
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 window.OneSignalDeferred.push(function (OneSignal) {
+                    // [Fix] הגדרת נתיב אבסולוטי דינמי עבור GitHub Pages
+                    const basePath = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
                     OneSignal.init({
                         appId: config.oneSignalAppId,
                         safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
@@ -242,11 +245,9 @@ if (hebrewYearDisplay) {
                             enable: false,
                         },
                         allowLocalhostAsSecureOrigin: true,
-                        // [Fix] הגדרת נתיב אבסולוטי ומדויק עבור GitHub Pages
-                        // זה פותר את שגיאת "Invalid URL" ב-Dialog.ts
-                        serviceWorkerPath: "https://yt2178.github.io/Beit-Halevi/OneSignalSDKWorker.js",
-                        serviceWorkerParam: { scope: "/Beit-Halevi/" },
-                        path: "/Beit-Halevi/",
+                        serviceWorkerPath: "OneSignalSDKWorker.js",
+                        serviceWorkerParam: { scope: basePath },
+                        path: basePath,
                     });
                 });
 
