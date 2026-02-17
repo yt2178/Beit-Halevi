@@ -362,20 +362,18 @@ async function handleGallerySubmit(e) {
 
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
-    const albumThumbnail = albumThumbnailInput.files[0];
     const albumImages = albumImagesInput.files;
+    
+    // [תיקון] קבלת תמונת לוגו (אם הוזנה כ-URL ידני או נבחרה מתוך הרשימה)
+    // הערה: בקוד הנוכחי albumThumbnailInput הוא input type="text" שמקבל URL
+    let albumThumbnail = albumThumbnailInput.value.trim();
 
     if (!albumTitle) {
         showStatus('נא להזין שם לאלבום', null, true);
         return;
     }
 
-    if (!albumThumbnail) {
-        showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
-        return;
-    }
-
-    if (albumImages.length === 0) {
+    if (albumImages.length === 0 && !editingAlbumIndex) {
         showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
         return;
     }
