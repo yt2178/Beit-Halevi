@@ -480,25 +480,37 @@ textarea:focus {
     border-bottom: none !important;
 }
 
-/* Gallery Admin Grid */
+/* Gallery Admin Grid — same layout as user's thumbnail-grid */
 .album-preview-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    margin: 25px 0;
-    background: #f1f5f9;
-    padding: 20px;
+    gap: 10px;
+    margin: 20px 0;
+    background: #1a1a2e;          /* רקע כהה כמו overlay הגלריה */
+    padding: 16px;
     border-radius: 16px;
     max-width: 100%;
 }
 
+/* תווית "תצוגה מקדימה כמו שמשתמש רואה" */
+.album-preview-grid::before {
+    content: '👁 תצוגה מקדימה — כך יראה המשתמש';
+    display: block;
+    grid-column: 1 / -1;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 .album-preview-item {
     position: relative;
-    border-radius: 12px;
+    border-radius: 5px;
     overflow: hidden;
-    aspect-ratio: 1;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border: 3px solid white;
+    height: 120px;              /* גובה כמו .thumbnail-grid img */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+    border: 2px solid transparent;
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -508,12 +520,16 @@ textarea:focus {
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: opacity 0.3s;
+}
+
+.album-preview-item:hover img {
+    opacity: 0.8;
 }
 
 .album-preview-item.is-thumbnail {
     border-color: #f1c40f;
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
-    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(241, 196, 15, 0.7);
     z-index: 2;
 }
 
