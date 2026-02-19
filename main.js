@@ -238,10 +238,9 @@ if (hebrewYearDisplay) {
                 window._oneSignalReady = false;
 
                 window.OneSignalDeferred.push(async function (OneSignal) {
-                    // [Fix] בניית URL מלא לעובד השירות (OneSignal v16 דורש URL מלא, לא נתיב יחסי)
-                    const swUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) + 'OneSignalSDKWorker.js';
-                    const swScope = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                    console.log('[OneSignal] swUrl:', swUrl, '| swScope:', swScope);
+                    // [Fix] OneSignal v16 דורש נתיבים יחסיים, לא URL מלא
+                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    console.log('[OneSignal] basePath:', basePath);
 
                     try {
                         await OneSignal.init({
@@ -249,8 +248,9 @@ if (hebrewYearDisplay) {
                             safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
                             notifyButton: { enable: false },
                             allowLocalhostAsSecureOrigin: true,
-                            serviceWorkerPath: swUrl,
-                            serviceWorkerParam: { scope: swScope },
+                            // נתיב יחסי — לא URL מלא!
+                            serviceWorkerPath: basePath + "OneSignalSDKWorker.js",
+                            serviceWorkerParam: { scope: basePath },
                         });
                         window._oneSignalReady = true;
                         console.log('[OneSignal] initialized successfully ✓');
