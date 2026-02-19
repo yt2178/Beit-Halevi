@@ -260,16 +260,30 @@ if (hebrewYearDisplay) {
             }
         }
     } catch (e) { console.log("No site-config.json found yet"); }
+})();
 
-    // [חדש] לוגיקת הרשמה להתראות (FAB ומודאל)
+// [תיקון] לוגיקת הרשמה להתראות - מחוץ ל-IIFE כדי להבטיח שתמיד תרוץ
+// זה מבטיח שה-event listener יירשם גם אם site-config.json לא נטען
+(function initSubscriptionButton() {
+    'use strict';
+    console.log('Initializing subscription button...');
+
     const fabSubscribeBtn = document.getElementById('fab-subscribe-btn');
     const subscribeModal = document.getElementById('subscribe-modal');
     const subscribeCloseBtn = document.querySelector('.subscribe-close');
     const subscribeBtn = document.getElementById('subscribe-btn');
 
+    console.log('Subscribe button elements:', {
+        fabBtn: !!fabSubscribeBtn,
+        modal: !!subscribeModal,
+        closeBtn: !!subscribeCloseBtn,
+        subscribeBtn: !!subscribeBtn
+    });
+
     // פתיחת המודאל
     if (fabSubscribeBtn && subscribeModal) {
         fabSubscribeBtn.addEventListener('click', () => {
+            console.log('FAB button clicked, opening modal');
             subscribeModal.classList.add('active');
         });
     }
@@ -277,6 +291,7 @@ if (hebrewYearDisplay) {
     // סגירת המודאל
     if (subscribeCloseBtn && subscribeModal) {
         subscribeCloseBtn.addEventListener('click', () => {
+            console.log('Close button clicked, closing modal');
             subscribeModal.classList.remove('active');
         });
     }
@@ -285,6 +300,7 @@ if (hebrewYearDisplay) {
     if (subscribeModal) {
         window.addEventListener('click', (e) => {
             if (e.target === subscribeModal) {
+                console.log('Clicked outside modal, closing');
                 subscribeModal.classList.remove('active');
             }
         });
@@ -292,15 +308,18 @@ if (hebrewYearDisplay) {
 
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
+        console.log('Registering click event on subscribe button');
         subscribeBtn.addEventListener('click', async () => {
-            console.log('Subscribe button clicked');
+            console.log('Subscribe button clicked!');
 
             // בדיקה אם OneSignal זמין ונטען
             if (typeof window.OneSignalDeferred !== 'undefined' && window.OneSignalDeferred) {
                 console.log('OneSignal is available, requesting subscription');
                 window.OneSignalDeferred.push(async function (OneSignal) {
                     try {
+                        console.log('Calling OneSignal.User.PushSubscription.optIn()');
                         await OneSignal.User.PushSubscription.optIn();
+                        console.log('OneSignal subscription successful!');
                         alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים.");
                         if (subscribeModal) subscribeModal.classList.remove('active');
                     } catch (error) {
@@ -311,26 +330,36 @@ if (hebrewYearDisplay) {
                 return;
             }
 
+            console.log('OneSignal not available, using fallback Notification API');
+
             // [גיבוי] בדיקה אם הדפדפן תומך בהתראות (ללא OneSignal)
             if (!('Notification' in window)) {
+                console.warn('Browser does not support notifications');
                 alert("הדפדפן שלך לא תומך בהתראות.");
                 return;
             }
-            // ... (שאר הקוד הישן נשאר כגיבוי)
+
+            console.log('Current notification permission:', Notification.permission);
 
             // [תיקון] בדיקה אם already granted
             if (Notification.permission === 'granted') {
+                console.log('Notification permission already granted');
                 alert("אתה כבר רשום להתראות! תקבל עדכונים על חדשות וגלריות חדשות.");
+                if (subscribeModal) subscribeModal.classList.remove('active');
                 return;
             }
 
             if (Notification.permission === 'denied') {
+                console.log('Notification permission denied');
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן, עדכן את הגדרות הדפדפן שלך.");
                 return;
             }
 
             // בקשה להרשמה
+            console.log('Requesting notification permission...');
             const permission = await Notification.requestPermission();
+            console.log('Permission result:', permission);
+
             if (permission === 'granted') {
                 // [חדש] שמירת ה-subscription למכסן מקומי
                 localStorage.setItem('notificationsEnabled', 'true');
@@ -345,9 +374,13 @@ if (hebrewYearDisplay) {
                 });
 
                 alert("נרשמת בהצלחה להתראות! 🔔\n\nתקבל עדכונים כאשר:\n• יתווספו חדשות חדשות\n• יתווספו תמונות האירועים החדשים\n\nאתה יכול לבטל זאת בכל עת בהגדרות הדפדפן.");
+                if (subscribeModal) subscribeModal.classList.remove('active');
             } else if (permission === 'denied') {
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן מאוחר יותר, עדכן את הגדרות הדפדפן.");
             }
         });
+        console.log('Subscribe button event listener registered successfully');
+    } else {
+        console.error('Subscribe button not found! Check HTML for element with id="subscribe-btn"');
     }
 })();
