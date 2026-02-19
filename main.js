@@ -234,21 +234,30 @@ if (hebrewYearDisplay) {
             // [חדש] אתחול OneSignal אם מוגדר
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
-                window.OneSignalDeferred.push(function (OneSignal) {
-                    // [Fix] חישוב הנתיב היחסי (למשל /Beit-Halevi/ או /)
-                    const rootPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                // [Fix] דגל שיסמן אם OneSignal אותחל בהצלחה
+                window._oneSignalReady = false;
 
-                    OneSignal.init({
-                        appId: config.oneSignalAppId,
-                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
-                        notifyButton: {
-                            enable: false,
-                        },
-                        allowLocalhostAsSecureOrigin: true,
-                        serviceWorkerPath: "OneSignalSDKWorker.js",
-                        serviceWorkerParam: { scope: rootPath }, // [Fix] הגדרת Scope מפורשת
-                        path: rootPath, // נתיב יחסי למיקום ה-SDK
-                    });
+                window.OneSignalDeferred.push(async function (OneSignal) {
+                    // [Fix] בניית URL מלא לעובד השירות (OneSignal v16 דורש URL מלא, לא נתיב יחסי)
+                    const swUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) + 'OneSignalSDKWorker.js';
+                    const swScope = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                    console.log('[OneSignal] swUrl:', swUrl, '| swScope:', swScope);
+
+                    try {
+                        await OneSignal.init({
+                            appId: config.oneSignalAppId,
+                            safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
+                            notifyButton: { enable: false },
+                            allowLocalhostAsSecureOrigin: true,
+                            serviceWorkerPath: swUrl,
+                            serviceWorkerParam: { scope: swScope },
+                        });
+                        window._oneSignalReady = true;
+                        console.log('[OneSignal] initialized successfully ✓');
+                    } catch (initErr) {
+                        window._oneSignalReady = false;
+                        console.warn('[OneSignal] init failed, will use native Notification API:', initErr.message);
+                    }
                 });
 
                 // טעינת הסקריפט של OneSignal
@@ -312,9 +321,9 @@ if (hebrewYearDisplay) {
         subscribeBtn.addEventListener('click', async () => {
             console.log('Subscribe button clicked!');
 
-            // בדיקה אם OneSignal זמין ונטען
-            if (typeof window.OneSignalDeferred !== 'undefined' && window.OneSignalDeferred) {
-                console.log('OneSignal is available, requesting subscription');
+            // בדיקה אם OneSignal אותחל בהצלחה (הדגל מוגדר ל-true רק אחרי init מוצלח)
+            if (window._oneSignalReady === true) {
+                console.log('OneSignal is ready, requesting subscription via OneSignal');
                 window.OneSignalDeferred.push(async function (OneSignal) {
                     try {
                         console.log('Calling OneSignal.User.PushSubscription.optIn()');
@@ -329,6 +338,8 @@ if (hebrewYearDisplay) {
                 });
                 return;
             }
+
+            console.log('OneSignal not ready (init failed or not loaded), using native Notification API');
 
             console.log('OneSignal not available, using fallback Notification API');
 
