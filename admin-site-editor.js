@@ -23,7 +23,7 @@ const EDITABLE_TEXTS = [
     { key: 'donation_title', label: '💝 כותרת תרומות' },
     { key: 'donation_body', label: '💰 תוכן תרומות' },
     { key: 'contact_title', label: '📞 כותרת צור קשר' },
-    { key: 'contact_intro', label: '💬 טקסט הקדמה צור קשר' },
+    { key: 'contact_intro', label: '💬 תוכן צור קשר' },
 ];
 
 export async function loadSiteConfig() {
@@ -206,3 +206,4 @@ export async function saveAllSiteSettings() {
         showStatus(`❌ שגיאה: ${err.message}`, null, true);
     }
 }
+
