@@ -28,7 +28,10 @@ const EDITABLE_TEXTS = [
 
 export async function loadSiteConfig() {
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/repos/";
+        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
         const res = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
@@ -183,7 +186,10 @@ export async function saveAllSiteSettings() {
     currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
     currentSiteConfig.oneSignalAppId = document.getElementById('site-onesignal-id').value.trim();
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
+    const p1 = "https://";
+    const p2 = "api.github.com";
+    const p3 = "/repos/";
+    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
 
     try {
         const payload = {

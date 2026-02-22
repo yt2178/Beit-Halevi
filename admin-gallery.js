@@ -67,7 +67,10 @@ export async function loadAndRenderGallery() {
     // שימוש במשתנים הגלובליים מ-admin.js
     if (typeof GITHUB_TOKEN === 'undefined' || !GITHUB_TOKEN) return;
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
+    const p1 = "https://";
+    const p2 = "api.github.com";
+    const p3 = "/repos/";
+    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
 
     try {
         const response = await fetch(API_URL, {
@@ -207,7 +210,10 @@ async function deleteAlbum(indexToDelete) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את האלבום?')) return;
 
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/repos/";
+        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
         const fileResponse = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
@@ -387,7 +393,10 @@ async function handleGallerySubmit(e) {
 
         // 1. השגת הקובץ הנוכחי
         showStatus('ניגש למאגר הנתונים ב-GitHub...', 35);
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/repos/";
+        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
         const fileResponse = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });

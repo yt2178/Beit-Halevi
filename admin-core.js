@@ -186,8 +186,13 @@ export async function googleLogin() {
 
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
-    // Avoid template literals to prevent hidden character issues
-    const baseUrl = "https://www.googleapis.com/drive/v3/files";
+
+    // Using split strings and trim to bulletproof against hidden characters
+    const p1 = "https://";
+    const p2 = "www.googleapis.com";
+    const p3 = "/drive/v3/files";
+    const baseUrl = (p1 + p2 + p3).trim();
+
     const query = "name='" + encodeURIComponent(FOLDER_NAME) + "' and mimeType='application/vnd.google-apps.folder' and trashed=false";
     const searchUrl = baseUrl + "?q=" + query;
 
@@ -316,20 +321,27 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
 }
 
 export async function makeFilePublic(fileId, token) {
-    const url = "https://www.googleapis.com/drive/v3/files/" + fileId + "/permissions";
+    const p1 = "https://";
+    const p2 = "www.googleapis.com";
+    const p3 = "/drive/v3/files/";
+    const url = (p1 + p2 + p3).trim() + fileId + "/permissions";
+
     await fetch(url, {
         method: "POST",
         headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify({ role: "reader", type: "anyone" })
     });
-    return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1000";
+    return "https://" + "drive.google.com" + "/thumbnail?id=" + fileId + "&sz=w1000";
 }
 
 // Logging helper
 export async function logEvent(action, type = 'general') {
     if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
     try {
-        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/repos/";
+        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
         let historyArray = [];
         let sha = null;
 

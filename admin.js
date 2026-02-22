@@ -371,7 +371,10 @@ async function handleDeleteNews(slug) {
     if (!confirm('האם אתה בטוח שברצונך למחוק ידיעה זו? הפעולה אינה ניתנת לביטול.')) return;
 
     showStatus('מוחק ידיעה...', 50);
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const p1 = "https://";
+    const p2 = "api.github.com";
+    const p3 = "/repos/";
+    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
         const fileResponse = await fetch(API_URL, {
@@ -412,7 +415,10 @@ async function handleDeleteNews(slug) {
 async function loadAndRenderNewsList() {
     if (!GITHUB_TOKEN) return;
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const p1 = "https://";
+    const p2 = "api.github.com";
+    const p3 = "/repos/";
+    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
         const fileResponse = await fetch(API_URL, {
@@ -436,7 +442,10 @@ async function loadAndRenderHistory() {
     if (!container) return;
 
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/repos/";
+        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
         const response = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
@@ -493,7 +502,11 @@ async function loadAndRenderMessages() {
         // [שינוי] טעינת רשימת הודעות שנמחקו מ-GitHub
         let deletedMessages = [];
         try {
-            const delRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/deleted_messages.json`, {
+            const p1 = "https://";
+            const p2 = "api.github.com";
+            const p3 = "/repos/";
+            const delUrl = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/data/deleted_messages.json";
+            const delRes = await fetch(delUrl, {
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
             });
             if (delRes.ok) {
@@ -578,7 +591,10 @@ async function handleDeleteMessage(messageId) {
 
     showStatus('מוחק הודעה...', 50);
     const FILE_PATH = 'data/deleted_messages.json';
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    const p1 = "https://";
+    const p2 = "api.github.com";
+    const p3 = "/repos/";
+    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + FILE_PATH;
 
     try {
         let deletedMessages = [];
