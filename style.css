@@ -101,6 +101,23 @@ body.dark-mode nav {
     background-color: var(--dark-primary);
 }
 
+/* [חדש] תיקון בס"ד וסרגל עליון במצב כהה */
+body.dark-mode .bsd {
+    color: #aaa;
+}
+
+body.dark-mode .top-bar {
+    background-color: var(--dark-primary);
+    color: var(--dark-text);
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+/* [חדש] תיקון כותרות סשן במצב כהה */
+body.dark-mode section h2 {
+    color: var(--secondary-color);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
 /* שדרוג: מעבר מהיר בין מצבי תצוגה */
 body {
     transition: background-color var(--transition-speed), color var(--transition-speed);
@@ -992,6 +1009,10 @@ body.dark-mode #album-download-btn {
     margin-bottom: 20px;
 }
 
+body.dark-mode .news-modal #modal-date {
+    color: #aaa;
+}
+
 .news-modal #modal-body p {
     margin-bottom: 15px;
 }
@@ -1092,6 +1113,11 @@ body.dark-mode #news-next-btn {
 body.dark-mode .news-modal .modal-content {
     background-color: var(--dark-surface);
     color: var(--dark-text);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .news-modal .modal-controls {
+    border-top-color: rgba(255, 255, 255, 0.1);
 }
 
 body.dark-mode .news-modal .modal-close {
@@ -1309,10 +1335,12 @@ section h2 {
 
 .parasha-tag {
     background-color: var(--accent-color);
-    color: white;
+    color: #2d3e50;
+    /* Darker text for better contrast on orange */
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.85em;
+    font-weight: 600;
 }
 
 .location-box {

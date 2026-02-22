@@ -16,7 +16,7 @@ function showLargePreview(src) {
     const img = document.getElementById('preview-large-img');
     if (modal && img) {
         img.src = src;
-        modal.style.display = 'flex';
+        modal.classList.add('active'); // משתמש במחלקה של ה-Lightbox
     }
 }
 
@@ -26,7 +26,7 @@ export function initGalleryAdminEvents() {
     if (closeBtn) {
         closeBtn.onclick = () => {
             const modal = document.getElementById('image-preview-modal');
-            if (modal) modal.style.display = 'none';
+            if (modal) modal.classList.remove('active');
         };
     }
 }
@@ -363,7 +363,7 @@ async function handleGallerySubmit(e) {
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
     const albumImages = albumImagesInput.files;
-    
+
     // [תיקון] קבלת תמונת לוגו (אם הוזנה כ-URL ידני או נבחרה מתוך הרשימה)
     // הערה: בקוד הנוכחי albumThumbnailInput הוא input type="text" שמקבל URL
     let albumThumbnail = albumThumbnailInput.value.trim();

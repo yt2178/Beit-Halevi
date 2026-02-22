@@ -12,6 +12,17 @@
     --secondary-color: #3498db;
 }
 
+/* [תיקון] התאמת ה-Lightbox של האתר לשימוש בפאנל הניהול */
+#image-preview-modal.lightbox {
+    z-index: 11000;
+    /* וודא שזה מעל הכל בניהול */
+}
+
+#image-preview-modal .lightbox-content img {
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
 body {
     background-color: var(--bg-color);
     font-family: 'Assistant', 'Segoe UI', sans-serif;
@@ -298,6 +309,12 @@ textarea:focus {
     animation: slideUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
+body.dark-theme .status-content {
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(50px);
@@ -480,13 +497,21 @@ textarea:focus {
     border-bottom: none !important;
 }
 
+body.dark-theme .CodeMirror,
+body.dark-theme .editor-toolbar {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: #0b1220;
+    color: var(--text-main);
+}
+
 /* Gallery Admin Grid — same layout as user's thumbnail-grid */
 .album-preview-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px;
     margin: 20px 0;
-    background: #1a1a2e;          /* רקע כהה כמו overlay הגלריה */
+    background: #1a1a2e;
+    /* רקע כהה כמו overlay הגלריה */
     padding: 16px;
     border-radius: 16px;
     max-width: 100%;
@@ -498,7 +523,7 @@ textarea:focus {
     display: block;
     grid-column: 1 / -1;
     font-size: 0.78rem;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 4px;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -508,7 +533,8 @@ textarea:focus {
     position: relative;
     border-radius: 5px;
     overflow: hidden;
-    height: 120px;              /* גובה כמו .thumbnail-grid img */
+    height: 120px;
+    /* גובה כמו .thumbnail-grid img */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
     border: 2px solid transparent;
     transition: all 0.3s ease;
@@ -746,6 +772,11 @@ body.dark-theme header {
     background: linear-gradient(135deg, #0f1218 0%, #1e3a5a 100%);
 }
 
+body.dark-theme .admin-main {
+    background-color: transparent;
+    box-shadow: none;
+}
+
 body.dark-theme .admin-card,
 body.dark-theme .login-card,
 body.dark-theme .dashboard-card,
@@ -824,6 +855,11 @@ body.dark-theme textarea {
     border-radius: 10px;
     font-size: 0.95rem;
     color: var(--text-main);
+}
+
+body.dark-theme .local-draft-note {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 256, 0.1);
 }
 
 /* [תיקון] כותרת דאשבורד "מה תרצה לעשות היום?" במצב כהה */
