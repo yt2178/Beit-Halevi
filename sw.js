@@ -50,6 +50,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // [שיפור] אל תיירט קריאות ל-API של גוגל או גיטהאב - הן צריכות ללכת ישירות לרשת
+    const url = event.request.url;
+    if (url.includes('googleapis.com') || url.includes('github.com') || url.includes('google.com')) {
+        return;
+    }
+
     // אסטרטגיה: Stale-While-Revalidate עבור נכסים מוכרים
     event.respondWith(
         caches.match(event.request)
@@ -57,8 +63,9 @@ self.addEventListener('fetch', (event) => {
                 const fetchPromise = fetch(event.request).then((networkResponse) => {
                     // שמירה דינמית של קבצי JSON ותמונות
                     if (networkResponse.ok && (event.request.url.includes('.json') || event.request.url.includes('googleusercontent.com'))) {
+                        const responseToCache = networkResponse.clone(); // היפוך: שיבוט מיידי לפני שהגוף נצרך
                         caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, networkResponse.clone());
+                            cache.put(event.request, responseToCache);
                         });
                     }
                     return networkResponse;
