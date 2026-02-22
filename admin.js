@@ -16,8 +16,8 @@ import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js
 import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
 const ADMIN_USER_CODES = {
-    "12589": "Yedidya",
-    "112233": "Admin-New",
+    "12589": "ידידיה",
+    "112233": "הרב סאו",
 };
 
 const GITHUB_TOKEN_KEY = 'admin_github_token';
@@ -257,94 +257,8 @@ function navigateTo(sectionId) {
         initDraftAutosave();
     }
 }
-// [חדש] פונקציה למציאת או יצירת תיקיית הגלריה בדרייב
-async function getFolderId(token) {
-    const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
+// Redundant functions removed as they are imported from admin-core.js
 
-    try {
-        // 1. חיפוש תיקייה קיימת עם השם הזה
-        const searchRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            { headers: { "Authorization": "Bearer " + token } }
-        );
-        const searchData = await searchRes.json();
-
-        if (searchData.files && searchData.files.length > 0) {
-            return searchData.files[0].id;
-        }
-
-        // 2. אם לא נמצאה - יצירת תיקייה חדשה
-        const createRes = await fetch(
-            "https://www.googleapis.com/drive/v3/files",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: FOLDER_NAME,
-                    mimeType: "application/vnd.google-apps.folder"
-                })
-            }
-        );
-        const createData = await createRes.json();
-
-        // הפיכת התיקייה לציבורית (כדי שהתמונות בתוכה יוכלו להיות ציבוריות בקלות)
-        await makeFilePublic(createData.id, token);
-
-        return createData.id;
-    } catch (err) {
-        // ✅ Fix: הסר debug logging של שגiאות
-        return "root"; // fallback לתיקיית השורש
-    }
-}
-
-export async function uploadFileToDrive(file, Token) {
-    const token = Token;
-    const folderId = await getFolderId(token); // [שינוי] מציאת/יצירת התיקייה הייעודית
-
-    const metadata = {
-        name: file.name,
-        parents: [folderId] // [שינוי] העלאה לתוך התיקייה שנמצאה
-    };
-
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", file);
-
-    const res = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token },
-            body: form
-        }
-    );
-
-    const data = await res.json();
-    return data.id;
-}
-export async function makeFilePublic(fileId, Token) {
-    const token = Token;
-
-    await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
-        {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`, // [שינוי] שימוש ב-Token
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                role: "reader",
-                type: "anyone"
-            })
-        }
-    );
-
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-}
 // ============================================================
 // 7. פונקציות GitHub (GitHub Functions)
 // ============================================================

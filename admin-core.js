@@ -186,23 +186,46 @@ export async function googleLogin() {
 
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
+    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(FOLDER_NAME)}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+
     try {
-        const searchRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            { headers: { "Authorization": "Bearer " + token } }
-        );
+        console.log("Drive Search URL:", searchUrl);
+        const searchRes = await fetch(searchUrl, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!searchRes.ok) {
+            const errText = await searchRes.text().catch(() => '');
+            console.error(`Drive Search failed: ${searchRes.status}`, errText);
+            return "root";
+        }
+
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
+        console.log("Folder not found, creating new folder...");
         const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
             method: "POST",
-            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-            body: JSON.stringify({ name: FOLDER_NAME, mimeType: "application/vnd.google-apps.folder" })
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: FOLDER_NAME,
+                mimeType: "application/vnd.google-apps.folder"
+            })
         });
+
+        if (!createRes.ok) {
+            const errText = await createRes.text().catch(() => '');
+            throw new Error(`Folder creation failed: ${createRes.status} ${errText}`);
+        }
+
         const createData = await createRes.json();
         await makeFilePublic(createData.id, token);
         return createData.id;
     } catch (err) {
+        console.error("getFolderId error:", err);
         return "root";
     }
 }
@@ -214,13 +237,15 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    // Retry + timeout support for Drive uploads
     const uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     const maxAttempts = 2;
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased to 60s
+
         try {
+            console.log(`Attempt ${attempt}: Uploading ${file.name} to Drive...`);
             const res = await fetch(uploadUrl, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
@@ -228,19 +253,22 @@ export async function uploadFileToDrive(file, token) {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
+
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
+                console.error(`Drive upload attempt ${attempt} failed: ${res.status}`, text);
                 if (attempt === maxAttempts) throw new Error(`Drive upload failed: ${res.status} ${text}`);
-                // otherwise retry
                 continue;
             }
+
             const data = await res.json();
+            console.log("Upload successful, File ID:", data.id);
             return data.id;
         } catch (err) {
             clearTimeout(timeoutId);
+            console.error(`Attempt ${attempt} error:`, err);
             if (attempt === maxAttempts) throw err;
-            // small backoff
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 1000));
         }
     }
 }
