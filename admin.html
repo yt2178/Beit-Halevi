@@ -47,10 +47,11 @@
         <div id="toast-container"></div>
 
         <!-- [חדש] מודאל תצוגה מקדימה לתמונות גדולה -->
-        <div id="image-preview-modal" class="news-modal" style="display:none;">
-            <div class="modal-content" style="max-width: 90vw; padding: 10px;">
-                <span id="close-preview-modal" class="modal-close">&times;</span>
-                <img id="preview-large-img" src="" style="width:100%; height:auto; border-radius: 8px;">
+        <!-- [תיקון] מודאל תצוגה מקדימה לתמונות - משתמש במחלקות של ה-Lightbox של האתר -->
+        <div id="image-preview-modal" class="lightbox">
+            <span id="close-preview-modal" class="lightbox-close">&times;</span>
+            <div class="lightbox-content">
+                <img id="preview-large-img" src="">
             </div>
         </div>
 
