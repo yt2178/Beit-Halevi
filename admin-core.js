@@ -186,7 +186,10 @@ export async function googleLogin() {
 
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
-    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(FOLDER_NAME)}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+    // Avoid template literals to prevent hidden character issues
+    const baseUrl = "https://www.googleapis.com/drive/v3/files";
+    const query = "name='" + encodeURIComponent(FOLDER_NAME) + "' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+    const searchUrl = baseUrl + "?q=" + query;
 
     try {
         console.log("Drive Search URL:", searchUrl);
@@ -196,7 +199,7 @@ export async function getFolderId(token) {
 
         if (!searchRes.ok) {
             const errText = await searchRes.text().catch(() => '');
-            console.error(`Drive Search failed: ${searchRes.status}`, errText);
+            console.error("Drive Search failed: " + searchRes.status, errText);
             return "root";
         }
 
@@ -204,7 +207,7 @@ export async function getFolderId(token) {
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
         console.log("Folder not found, creating new folder...");
-        const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+        const createRes = await fetch(baseUrl, {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + token,
@@ -218,7 +221,7 @@ export async function getFolderId(token) {
 
         if (!createRes.ok) {
             const errText = await createRes.text().catch(() => '');
-            throw new Error(`Folder creation failed: ${createRes.status} ${errText}`);
+            throw new Error("Folder creation failed: " + createRes.status + " " + errText);
         }
 
         const createData = await createRes.json();
@@ -237,15 +240,15 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    const uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+    const uploadUrl = "https://" + "www.googleapis.com" + "/upload/drive/v3/files?uploadType=multipart";
     const maxAttempts = 2;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased to 60s
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         try {
-            console.log(`Attempt ${attempt}: Uploading ${file.name} to Drive...`);
+            console.log("Attempt " + attempt + ": Uploading " + file.name + " to Drive...");
             const res = await fetch(uploadUrl, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
@@ -256,17 +259,17 @@ export async function uploadFileToDrive(file, token) {
 
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
-                console.error(`Drive upload attempt ${attempt} failed: ${res.status}`, text);
-                if (attempt === maxAttempts) throw new Error(`Drive upload failed: ${res.status} ${text}`);
+                console.error("Drive upload attempt " + attempt + " failed: " + res.status, text);
+                if (attempt === maxAttempts) throw new Error("Drive upload failed: " + res.status + " " + text);
                 continue;
             }
 
             const data = await res.json();
-            console.log("Upload successful, File ID:", data.id);
+            console.log("Upload successful, File ID: " + data.id);
             return data.id;
         } catch (err) {
             clearTimeout(timeoutId);
-            console.error(`Attempt ${attempt} error:`, err);
+            console.error("Attempt " + attempt + " error:", err);
             if (attempt === maxAttempts) throw err;
             await new Promise(r => setTimeout(r, 1000));
         }
@@ -313,19 +316,20 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
 }
 
 export async function makeFilePublic(fileId, token) {
-    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    const url = "https://www.googleapis.com/drive/v3/files/" + fileId + "/permissions";
+    await fetch(url, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify({ role: "reader", type: "anyone" })
     });
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+    return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1000";
 }
 
 // Logging helper
 export async function logEvent(action, type = 'general') {
     if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
         let historyArray = [];
         let sha = null;
 
