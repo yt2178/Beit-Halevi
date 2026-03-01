@@ -29,6 +29,7 @@ const DRAFT_KEY = 'news_draft_v1';
 const THEME_KEY = 'admin_theme';
 
 export let easyMDE;
+export let allLoadedNews = []; // Cache for news items to avoid re-fetching
 
 // Theme functions
 function applyTheme(theme) {
@@ -437,6 +438,15 @@ async function loadAndRenderNewsList() {
 
         const fileData = await fileResponse.json();
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+
+        // Populate cache for editing
+        allLoadedNews = existingContent.map(item => ({
+            slug: generateSlug(item.data.title, item.data.date),
+            title: item.data.title,
+            date: item.data.date,
+            body: item.data.body
+        }));
+
         renderNewsList(existingContent);
     } catch (error) {
         // ✅ Fix: הסר debug error logging
@@ -699,6 +709,7 @@ export function resetNewsForm() {
 // שמירת ידיעה (חדשה או עריכה)
 async function handleSaveNews(e) {
     e.preventDefault();
+    const isUpdate = !!editingNewsSlug;
     showStatus('מבצע גישה ל-GitHub... נא להמתין', 20);
 
     const title = document.getElementById('news-title').value.trim();
@@ -743,7 +754,8 @@ async function handleSaveNews(e) {
             if (index !== -1) existingContent[index] = newItem;
             editingNewsSlug = null;
             editingNewsSHA = null;
-            addNewsForm.querySelector('button').textContent = 'פרסם ידיעה';
+            addNewsForm.querySelector('button[type="submit"]').textContent = 'פרסם ידיעה';
+            if (cancelNewsBtn) cancelNewsBtn.style.display = 'none';
         } else {
             existingContent.unshift(newItem);
         }
@@ -766,7 +778,6 @@ async function handleSaveNews(e) {
             await loadAndRenderNewsList();
 
             // [חדש] שליחת התראה
-            const isUpdate = !!editingNewsSlug;
             const msg = isUpdate ? `עודכן: ${title}` : `חדש: ${title}`;
             const { sendPushNotification } = await import('./admin-core.js');
             sendPushNotification("חדשות ועדכונים", msg, `#news/${getFinalSlug(title, date)}`);
