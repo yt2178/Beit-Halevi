@@ -23,7 +23,6 @@ export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
 export const GITHUB_TOKEN_KEY = 'admin_github_token';
 export const USER_CODE_KEY = 'admin_user_code';
 export const GITHUB_USERNAME_KEY = 'admin_github_username';
-export const ONESIGNAL_REST_KEY = 'admin_onesignal_rest_key';
 
 // ============================================================
 // 2. Global State
@@ -32,12 +31,9 @@ export let GITHUB_TOKEN = localStorage.getItem(GITHUB_TOKEN_KEY);
 export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
 window.tokenClient = null;
 
-export function updateGithubAuth(token, username, onesignalKey = null) {
+export function updateGithubAuth(token, username) {
     GITHUB_TOKEN = token;
     GITHUB_USERNAME = username;
-    if (onesignalKey) {
-        localStorage.setItem(ONESIGNAL_REST_KEY, onesignalKey);
-    }
 }
 
 // ============================================================
@@ -377,46 +373,3 @@ export async function logEvent(action, type = 'general') {
     } catch (err) { }
 }
 
-// [חדש] שליחת התראת Push דרך OneSignal
-export async function sendPushNotification(title, message, urlPath = '') {
-    const restKey = localStorage.getItem(ONESIGNAL_REST_KEY);
-    const appId = "797cabf1-0a4b-45dc-a0d6-769d0c388882"; // OneSignal App ID
-
-    if (!restKey) {
-        console.warn("OneSignal REST API Key missing. Notification not sent.");
-        return;
-    }
-
-    // בניית URL מלא (GitHub Pages support)
-    const baseUrl = window.location.origin + (window.location.hostname.endsWith('github.io') ? '/Beit-Halevi' : '');
-    const fullUrl = baseUrl + (urlPath.startsWith('/') ? urlPath : '/' + urlPath);
-
-    try {
-        const response = await fetch("https://onesignal.com/api/v1/notifications", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json; charset=utf-8",
-                "Authorization": "Basic " + restKey
-            },
-            body: JSON.stringify({
-                app_id: appId,
-                headings: { "en": title, "he": title },
-                contents: { "en": message, "he": message },
-                url: fullUrl,
-                included_segments: ["All"]
-            })
-        });
-
-        if (response.ok) {
-            console.log("Push notification sent successfully.");
-            return true;
-        } else {
-            const errData = await response.json();
-            console.error("OneSignal API Error:", errData);
-            return false;
-        }
-    } catch (err) {
-        console.error("Failed to send notification:", err);
-        return false;
-    }
-}

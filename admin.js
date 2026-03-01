@@ -690,7 +690,7 @@ async function handleEditNews(slug) {
         cancelNewsBtn.style.display = 'inline-block';
         addNewsForm.querySelector('button[type="submit"]').textContent = 'שמור שינויים';
 
-        navigateTo('news-editor-section');
+        navigateTo('news-section');
         hideStatus();
     } catch (err) {
         handleApiError(err);
@@ -777,10 +777,9 @@ async function handleSaveNews(e) {
             resetNewsForm();
             await loadAndRenderNewsList();
 
-            // [חדש] שליחת התראה
-            const msg = isUpdate ? `עודכן: ${title}` : `חדש: ${title}`;
-            const { sendPushNotification } = await import('./admin-core.js');
-            sendPushNotification("חדשות ועדכונים", msg, `#news/${getFinalSlug(title, date)}`);
+            logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
+            resetNewsForm();
+            await loadAndRenderNewsList();
         } else {
             const errorData = updateResponse ? await updateResponse.json().catch(() => ({})) : {};
             throw new Error(errorData.message || 'Unknown error saving news');
@@ -802,6 +801,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             element: document.getElementById("news-body"),
             status: false,
             spellChecker: false,
+            autoDownloadFontAwesome: false, // [חדש] מניעת הורדה חיצונית שעוברת על ה-CSP
             direction: 'rtl', // [חדש] תמיכה ב-RTL
             autosave: {
                 enabled: true,
@@ -916,22 +916,16 @@ loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const userCodeInput = document.getElementById('admin-usercode').value.trim();
     const tokenInput = document.getElementById('github-token').value.trim();
-    const onesignalKeyInput = document.getElementById('onesignal-rest-key').value.trim();
-
-    if (!onesignalKeyInput) {
-        showStatus('נא להזין OneSignal REST API Key', null, true);
-        return;
-    }
 
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-        showStatus('מאמת טוקנים של GitHub ו-OneSignal...', 30);
+        showStatus('מאמת טוקן GitHub...', 30);
         const username = await verifyGitHubToken(tokenInput);
 
         if (username) {
             localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
             localStorage.setItem(GITHUB_USERNAME_KEY, username);
             localStorage.setItem(USER_CODE_KEY, userCodeInput);
-            updateGithubAuth(tokenInput, username, onesignalKeyInput);
+            updateGithubAuth(tokenInput, username);
 
             showStatus('התחברות הצליחה! ברוך הבא.', 100);
             logEvent('התחבר למערכת', 'login');
