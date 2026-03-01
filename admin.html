@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https://identity.netlify.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://api.github.com https://onesignal.com https://*.onesignal.com https://*.googleapis.com https://www.hebcal.com https://identity.netlify.com https://docs.google.com; frame-src 'self' https://www.google.com https://accounts.google.com; worker-src 'self' blob:;">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- [חדש] Favicons לדף הניהול -->
@@ -71,6 +73,13 @@
                         <input type="password" id="github-token" placeholder="GitHub Personal Access Token" required
                             autocomplete="current-password">
                         <i class="fas fa-eye toggle-password" data-target="github-token" style="cursor:pointer;"></i>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-bell input-icon"></i>
+                        <input type="password" id="onesignal-rest-key" placeholder="OneSignal REST API Key" required
+                            autocomplete="current-password">
+                        <i class="fas fa-eye toggle-password" data-target="onesignal-rest-key"
+                            style="cursor:pointer;"></i>
                     </div>
                     <button type="submit" class="premium-btn">
                         <i class="fas fa-sign-in-alt"></i> כניסה והתחברות
