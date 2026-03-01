@@ -943,4 +943,72 @@ body.dark-theme .toast {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Toast Redesign */
+.toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 12000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.premium-toast {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-right: 5px solid var(--secondary-color);
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    color: var(--text-main);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 250px;
+    transform: translateX(-120%);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.premium-toast.active {
+    transform: translateX(0);
+}
+
+.premium-toast.success {
+    border-right-color: var(--accent-success);
+}
+
+.premium-toast.error {
+    border-right-color: var(--accent-danger);
+}
+
+.premium-toast.info {
+    border-right-color: var(--secondary-color);
+}
+
+.premium-toast i {
+    font-size: 1.2rem;
+}
+
+.premium-toast.success i {
+    color: var(--accent-success);
+}
+
+.premium-toast.error i {
+    color: var(--accent-danger);
+}
+
+.premium-toast.info i {
+    color: var(--secondary-color);
+}
+
+body.dark-theme .premium-toast {
+    background: rgba(30, 41, 59, 0.95);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* END OF FILE admin.css */

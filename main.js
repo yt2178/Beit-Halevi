@@ -238,9 +238,9 @@ if (hebrewYearDisplay) {
                 window._oneSignalReady = false;
 
                 window.OneSignalDeferred.push(async function (OneSignal) {
-                    // [Fix] OneSignal v16 דורש נתיבים יחסיים, לא URL מלא
-                    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                    console.log('[OneSignal] basePath:', basePath);
+                    const isGitHubPages = window.location.hostname.includes('github.io');
+                    const basePath = isGitHubPages ? '/Beit-Halevi/' : '/';
+                    console.log('[OneSignal] Initialization with basePath:', basePath);
 
                     try {
                         await OneSignal.init({
@@ -248,7 +248,7 @@ if (hebrewYearDisplay) {
                             safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
                             notifyButton: { enable: false },
                             allowLocalhostAsSecureOrigin: true,
-                            // נתיב יחסי — לא URL מלא!
+                            // [תיקון] נתיב מלא למניעת שגיאת Invalid URL
                             serviceWorkerPath: basePath + "OneSignalSDKWorker.js",
                             serviceWorkerParam: { scope: basePath },
                         });
@@ -256,7 +256,7 @@ if (hebrewYearDisplay) {
                         console.log('[OneSignal] initialized successfully ✓');
                     } catch (initErr) {
                         window._oneSignalReady = false;
-                        console.warn('[OneSignal] init failed, will use native Notification API:', initErr.message);
+                        console.error('[OneSignal] init failed:', initErr);
                     }
                 });
 

@@ -42,7 +42,8 @@ export async function loadSiteConfig() {
             currentSiteConfig = {
                 texts: config.texts || {},
                 theme: config.theme || 'light',
-                primaryColor: config.primaryColor || '#1a4b84'
+                primaryColor: config.primaryColor || '#1a4b84',
+                oneSignalAppId: config.oneSignalAppId || ''
             };
             siteConfigSHA = data.sha;
 

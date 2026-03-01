@@ -477,6 +477,11 @@ async function handleGallerySubmit(e) {
             logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
             resetGalleryForm();
             loadAndRenderGallery();
+
+            // [חדש] שליחת התראה
+            const msg = isUpdate ? `אלבום עודכן: ${albumTitle}` : `אלבום חדש: ${albumTitle}`;
+            const { sendPushNotification } = await import('./admin-core.js');
+            sendPushNotification("גלריית תמונות", msg, `#gallery/${albumTitle.replace(/\s/g, '-').replace(/[^א-תa-zA-Z0-9-]/g, '')}`);
         } else {
             throw new Error('Save to GitHub failed');
         }

@@ -101,30 +101,34 @@ function debounce(fn, wait) {
 }
 
 // Toast notification (non-blocking side notification)
-function showToast(message, duration = 1500, type = 'success') {
-    try {
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            // Create container if it doesn't exist
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('hide');
-            setTimeout(() => {
-                try { toast.remove(); } catch (e) { }
-            }, 300);
-        }, duration);
-    } catch (e) {
-        // silent fail
+export function showToast(message, duration = 3000, type = 'success') {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
     }
+
+    const toast = document.createElement('div');
+    toast.className = `premium-toast ${type}`;
+
+    const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('active'), 10);
+
+    // Remove toast
+    setTimeout(() => {
+        toast.classList.remove('active');
+        setTimeout(() => toast.remove(), 500);
+    }, duration);
 }
 
 function initDraftAutosave() {
@@ -279,7 +283,11 @@ function logout() {
 // [חדש] פונקציה לאימות הטוקן מול GitHub
 async function verifyGitHubToken(token) {
     try {
-        const response = await fetch('https://api.github.com/user', {
+        const p1 = "https://";
+        const p2 = "api.github.com";
+        const p3 = "/user";
+        const url = (p1 + p2 + p3).trim();
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `token ${token}`
             }
@@ -657,39 +665,25 @@ function parseCSV(text) {
 // עריכת ידיעה קיימת
 async function handleEditNews(slug) {
     showStatus('טוען ידיעה לעריכה...', 30);
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
-
     try {
-        const fileResponse = await fetch(API_URL, {
-            headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        const item = allLoadedNews.find(n => n.slug === slug);
+        if (!item) throw new Error('News item not found');
 
-        if (!fileResponse.ok) throw new Error('Failed to fetch news item');
-
-        const fileData = await fileResponse.json();
-        const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
-
-        const newsItem = existingContent.find(item =>
-            generateSlug(item.data.title, item.data.date) === slug
-        );
-
-        if (!newsItem) throw new Error('News item not found');
-
-        document.getElementById('news-title').value = newsItem.data.title;
-        document.getElementById('news-date').value = newsItem.data.date;
-        easyMDE.value(newsItem.data.body);
+        // השהייה קלה לחווית משתמש טובה יותר כפי שביקש המשתמש
+        await new Promise(r => setTimeout(r, 600));
 
         editingNewsSlug = slug;
-        editingNewsSHA = fileData.sha;
+        document.getElementById('news-title').value = item.title;
+        document.getElementById('news-date').value = item.date;
+        easyMDE.value(item.body);
 
         cancelNewsBtn.style.display = 'inline-block';
         addNewsForm.querySelector('button[type="submit"]').textContent = 'שמור שינויים';
+
+        navigateTo('news-editor-section');
         hideStatus();
-    } catch (error) {
-        handleApiError(error);
+    } catch (err) {
+        handleApiError(err);
     }
 }
 
@@ -770,6 +764,12 @@ async function handleSaveNews(e) {
             logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
             resetNewsForm();
             await loadAndRenderNewsList();
+
+            // [חדש] שליחת התראה
+            const isUpdate = !!editingNewsSlug;
+            const msg = isUpdate ? `עודכן: ${title}` : `חדש: ${title}`;
+            const { sendPushNotification } = await import('./admin-core.js');
+            sendPushNotification("חדשות ועדכונים", msg, `#news/${getFinalSlug(title, date)}`);
         } else {
             const errorData = updateResponse ? await updateResponse.json().catch(() => ({})) : {};
             throw new Error(errorData.message || 'Unknown error saving news');
@@ -903,39 +903,36 @@ document.addEventListener('click', (e) => {
 // טופס התחברות
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const userCodeInput = document.getElementById('admin-usercode').value;
+    const userCodeInput = document.getElementById('admin-usercode').value.trim();
     const tokenInput = document.getElementById('github-token').value.trim();
+    const onesignalKeyInput = document.getElementById('onesignal-rest-key').value.trim();
 
-    showStatus('מבצע אימות מול GitHub...', 40);
+    if (!onesignalKeyInput) {
+        showStatus('נא להזין OneSignal REST API Key', null, true);
+        return;
+    }
 
-    // בדיקת הקוד מול הרשימה (Plain Text)
     if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-        if (tokenInput) {
-            const verifiedLogin = await verifyGitHubToken(tokenInput);
+        showStatus('מאמת טוקנים של GitHub ו-OneSignal...', 30);
+        const username = await verifyGitHubToken(tokenInput);
 
-            if (verifiedLogin) {
-                // שמור שם המנהל מ-ADMIN_USER_CODES (לא GitHub username)
-                const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
-                updateGithubAuth(tokenInput, adminDisplayName);
+        if (username) {
+            localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
+            localStorage.setItem(GITHUB_USERNAME_KEY, username);
+            localStorage.setItem(USER_CODE_KEY, userCodeInput);
+            updateGithubAuth(tokenInput, username, onesignalKeyInput);
 
-                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
-                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
-                localStorage.setItem(USER_CODE_KEY, userCodeInput);
-
-                showStatus('התחברות הצליחה! ברוך הבא.', 100);
-                logEvent('התחבר למערכת', 'login');
-                setTimeout(() => {
-                    hideStatus();
-                    showAdminPanel();
-                }, 1000);
-            } else {
-                showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
-            }
+            showStatus('התחברות הצליחה! ברוך הבא.', 100);
+            logEvent('התחבר למערכת', 'login');
+            setTimeout(() => {
+                hideStatus();
+                showAdminPanel();
+            }, 1000);
         } else {
-            showStatus('נדרש Token כדי להמשיך.', null, true);
+            showStatus('טוקן GitHub לא תקין', null, true);
         }
     } else {
-        showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
+        showStatus('קוד משתמש לא תקין', null, true);
     }
 });
 
