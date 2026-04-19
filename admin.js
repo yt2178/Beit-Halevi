@@ -777,7 +777,7 @@ async function handleSaveNews(e) {
 // ============================================================
 
 // אתחול הדף
-document.addEventListener('DOMContentLoaded', async () => {
+async function initAdmin() {
     // אתחול עורך Markdown
     try {
         easyMDE = new EasyMDE({
@@ -851,11 +851,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         icon.addEventListener('click', () => {
             const targetId = icon.getAttribute('data-target');
             const input = document.getElementById(targetId);
-            if (input.type === 'password') {
+            if (input && input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
-            } else {
+            } else if (input) {
                 input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
@@ -872,7 +872,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('bnav-gallery')?.addEventListener('click', () => navigateTo('gallery-section'));
     document.getElementById('bnav-messages')?.addEventListener('click', () => navigateTo('messages-section'));
     document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo('site-section'));
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdmin);
+} else {
+    initAdmin();
+}
 
 // Delegated events
 document.addEventListener('click', (e) => {
