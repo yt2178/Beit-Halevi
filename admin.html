@@ -20,7 +20,7 @@
 </head>
 
 <body>
-    <a href="#dashboard-section" class="skip-link">דלג לתוכן הניהול</a>
+    <a href="#dashboard-section" class="skip-link" style="display:none;">דלג לתוכן הניהול</a>
     <header>
         <h1>פאנל ניהול תוכן - ישיבת בית הלוי</h1>
         <div style="display:flex; gap:8px; align-items:center;">
@@ -144,17 +144,14 @@
                     <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
                     <input type="date" id="news-date" required>
                     <textarea id="news-body"></textarea>
-                    <div class="form-actions" style="align-items:center;">
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <button type="button" id="undo-news-btn" class="premium-btn small">Undo</button>
-                            <button type="button" id="redo-news-btn" class="premium-btn small">Redo</button>
+                    <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:20px;">
+                        <button type="submit" class="premium-btn" style="flex:1; min-width:140px;">פרסם ידיעה</button>
+                        <button type="button" id="save-draft-btn" class="premium-btn small secondary" title="שמור טיוטה בצורה מקומית"><i class="fas fa-save"></i> שמור טיוטה</button>
+                        <div style="display:flex; gap:5px; margin-right:auto;">
+                            <button type="button" id="undo-news-btn" class="premium-btn small secondary" title="בטל"><i class="fas fa-undo"></i></button>
+                            <button type="button" id="redo-news-btn" class="premium-btn small secondary" title="בצע שוב"><i class="fas fa-redo"></i></button>
                         </div>
-                        <div style="display:flex; gap:8px; margin-left:auto; align-items:center;">
-                            <button type="button" id="save-draft-btn" class="premium-btn small secondary">שמור טיוטה</button>
-                            <button type="submit" class="premium-btn">פרסם ידיעה</button>
-                            <button type="button" id="cancel-news-edit" class="premium-btn secondary"
-                                style="display:none;">ביטול עריכה</button>
-                        </div>
+                        <button type="button" id="cancel-news-edit" class="premium-btn secondary" style="display:none; width:100%;">ביטול עריכה</button>
                     </div>
                 </form>
             </div>
