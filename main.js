@@ -251,6 +251,7 @@ if (hebrewYearDisplay) {
                         const isSubscribed = OneSignal.User.PushSubscription.optedIn;
                         const subBtn = document.getElementById('subscribe-btn');
                         const modalP = document.querySelector('#subscribe-modal p');
+                        const fabBtn = document.getElementById('fab-subscribe-btn');
 
                         if (isSubscribed) {
                             if (subBtn) {
@@ -258,12 +259,14 @@ if (hebrewYearDisplay) {
                                 subBtn.style.backgroundColor = '#e74c3c'; // צבע אדום
                             }
                             if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! לחץ למטה אם ברצונך לבטל.";
+                            if (fabBtn) fabBtn.style.display = 'none'; // הסתר את הכפתור המעצבן
                         } else {
                             if (subBtn) {
                                 subBtn.innerHTML = '<i class="fas fa-bell"></i> הרשם עכשיו';
                                 subBtn.style.backgroundColor = ''; // חזור לצבע המקורי
                             }
                             if (modalP) modalP.textContent = "קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.";
+                            if (fabBtn) fabBtn.style.display = 'flex';
                         }
                     }
 
@@ -290,9 +293,24 @@ if (hebrewYearDisplay) {
     const subscribeCloseBtn = document.querySelector('.subscribe-close');
     const subscribeBtn = document.getElementById('subscribe-btn');
 
+    // סגירת הכפתור הצף באופן אוטומטי אם כבר אושר בדפדפן (ללא קשר ל-OneSignal)
+    if ('Notification' in window && Notification.permission === 'granted') {
+        if (fabSubscribeBtn) {
+            fabSubscribeBtn.style.display = 'none';
+        }
+    }
+
     // פתיחת המודאל
     if (fabSubscribeBtn && subscribeModal) {
         fabSubscribeBtn.addEventListener('click', () => {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                 const modalP = document.querySelector('#subscribe-modal p');
+                 if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! (ביטול מתבצע דרך הגדרות הדפדפן)";
+                 if (subscribeBtn) {
+                     subscribeBtn.innerHTML = '<i class="fas fa-check"></i> רשום לאתר';
+                     subscribeBtn.style.backgroundColor = '#2ecc71';
+                 }
+            }
             subscribeModal.classList.add('active');
         });
     }
@@ -354,10 +372,9 @@ if (hebrewYearDisplay) {
             // בקשה להרשמה
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                // [חדש] שמירת ה-subscription למכסן מקומי
                 localStorage.setItem('notificationsEnabled', 'true');
+                if (fabSubscribeBtn) fabSubscribeBtn.style.display = 'none';
 
-                // [חדש] התראת החיוך
                 new Notification('בית הלוי - התראות מופעלות', {
                     icon: './assets/icons/icon-192x192.png',
                     badge: './assets/icons/icon-192x192.png',
@@ -367,6 +384,7 @@ if (hebrewYearDisplay) {
                 });
 
                 alert("נרשמת בהצלחה להתראות! 🔔\n\nתקבל עדכונים כאשר:\n• יתווספו חדשות חדשות\n• יתווספו תמונות האירועים החדשים\n\nאתה יכול לבטל זאת בכל עת בהגדרות הדפדפן.");
+                if (subscribeModal) subscribeModal.classList.remove('active');
             } else if (permission === 'denied') {
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן מאוחר יותר, עדכן את הגדרות הדפדפן.");
             }
