@@ -269,7 +269,6 @@ function showAdminPanel() {
         logoutBtn.style.display = 'none';
 
         // [חדש] עדכון תצוגת תפריט תחתון
-        window.dispatchEvent(new Event('admin-login-success'));
     }
 }
 
