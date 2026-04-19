@@ -286,6 +286,26 @@ export async function makeFilePublic(fileId, token) {
     return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
 }
 
+// [חדש] פונקציה לאימות הטוקן מול GitHub
+export async function verifyGitHubToken(token) {
+    try {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const userData = await response.json();
+            return userData.login; // מחזיר את שם המשתמש האמיתי
+        } else {
+            return null;
+        }
+    } catch (error) {
+        return null;
+    }
+}
+
 // Logging helper
 export async function logEvent(action, type = 'general') {
     if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
