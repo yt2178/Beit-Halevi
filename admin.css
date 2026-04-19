@@ -58,6 +58,25 @@ header h1 {
     font-weight: 700;
 }
 
+@media screen and (max-width: 768px) {
+    header {
+        flex-direction: column !important;
+        padding: 10px 15px !important;
+        gap: 15px !important;
+    }
+    header h1 {
+        font-size: 1.3rem !important;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+    header .header-actions, header div {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        gap: 10px;
+    }
+}
+
 #logout-btn {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
