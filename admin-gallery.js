@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     galleryStatusMessage = document.getElementById('gallery-status-message');
     galleryListContainer = document.getElementById('gallery-list-container');
     albumPreview = document.getElementById('albumPreview');
+    const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
     if (albumImagesInput) albumImagesInput.addEventListener('change', handleFileSelect); // <--- הקוד הזה נכון!
 
 
@@ -200,8 +201,9 @@ function renderGalleryList(galleryArray, sha) {
     galleryListContainer.dataset.sha = sha;
 }
 function editAlbum(album, index) {
+    const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
     albumTitleInput.value = album.data.title || '';
-    albumThumbnailInput.value = album.data.thumbnail || '';
+    if (albumThumbnailUrlInput) albumThumbnailUrlInput.value = album.data.thumbnail || '';
 
     albumPreview.innerHTML = '';
     selectedFiles = []; // איפוס בחירות חדשות
@@ -240,7 +242,10 @@ export function resetGalleryForm() {
     // ניקוי תצוגה מקדימה
     if (albumPreview) albumPreview.innerHTML = '';
     selectedFiles = [];
+    selectedFiles = [];
     editingAlbumIndex = null;
+    const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
+    if (albumThumbnailUrlInput) albumThumbnailUrlInput.value = '';
 
     const submitBtn = galleryForm.querySelector('button[type="submit"]');
     if (submitBtn) submitBtn.textContent = 'שמור אלבום';
@@ -333,7 +338,8 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     thumbBtn.innerHTML = '⭐';
 
     const setAsThumbnail = () => {
-        albumThumbnailInput.value = src;
+        const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
+        if (albumThumbnailUrlInput) albumThumbnailUrlInput.value = src;
 
         // עדכון ויזואלי של כל הפריטים
         Array.from(albumPreview.querySelectorAll('.album-preview-item')).forEach(el => {
@@ -376,8 +382,9 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
             }
         }
 
-        if (albumThumbnailInput.value === url) {
-            albumThumbnailInput.value = '';
+        const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
+        if (albumThumbnailUrlInput && albumThumbnailUrlInput.value === url) {
+            albumThumbnailUrlInput.value = '';
         }
 
         wrapper.remove();
@@ -408,8 +415,9 @@ async function handleGallerySubmit(e) {
 
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
+    const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
     // בדיקה בטוחה של קבצים כדי למנוע קריסה
-    const albumThumbnail = (albumThumbnailInput.files && albumThumbnailInput.files.length > 0) ? albumThumbnailInput.files[0] : null;
+    const albumThumbnailFile = (albumThumbnailInput.files && albumThumbnailInput.files.length > 0) ? albumThumbnailInput.files[0] : null;
     const albumImages = albumImagesInput.files;
 
     if (!albumTitle) {
@@ -417,7 +425,7 @@ async function handleGallerySubmit(e) {
         return;
     }
 
-    if (!albumThumbnail) {
+    if (!albumThumbnailFile && !albumThumbnailUrlInput?.value) {
         showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
         return;
     }
@@ -484,7 +492,7 @@ async function handleGallerySubmit(e) {
 
         // 3. בניית האובייקט החדש
         // [תיקון] ודא שה-thumbnail תמיד מוגדר - אם לא נבחר, השתמש ב-finalImages[0]
-        let thumbnailUrl = albumThumbnailInput.value || finalImages[0] || "";
+        let thumbnailUrl = albumThumbnailUrlInput?.value || finalImages[0] || "";
 
         if (!thumbnailUrl && finalImages.length > 0) {
             thumbnailUrl = finalImages[0];

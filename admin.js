@@ -19,7 +19,7 @@ import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 const ADMIN_USER_CODES = {
     "12589": "ידידיה תפילין",
     "112233": "Admin-New",
-    "11223344": "הרב יוסף חיים סאו"
+    "11223344": "הרב יוסף חיים סנו"
 };
 
 const GITHUB_TOKEN_KEY = 'admin_github_token';
@@ -190,7 +190,7 @@ export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
-// אלמנטי DOM
+// אלמנטים DOM
 const loginSection = document.getElementById('login-section');
 const newsSection = document.getElementById('news-section');
 const dashboardSection = document.getElementById('dashboard-section');
@@ -204,11 +204,11 @@ const addNewsForm = document.getElementById('add-news-form');
 const loginMessage = document.getElementById('login-message');
 const logoutBtn = document.getElementById('logout-btn');
 
-// אלמנטי סטטוס
+// אלמנטים סטטוס
 const closeStatusBtn = document.getElementById('close-status-btn');
 
 function handleApiError(err) {
-    // ✅ Fix: בצע logging בעיקול בלבד לא בproduction
+    // ✅ Fix: בצע logging בעיכול בלבד לא בproduction
     let msg = "שגיאה לא צפויה";
     if (err.message.includes("404")) msg = "הקובץ לא נמצא ב-GitHub";
     if (err.message.includes("401")) msg = "טוקן לא בתוקף או חסר הרשאות";
@@ -254,7 +254,8 @@ function showAdminPanel() {
             if (s) s.style.display = 'none';
         });
 
-        logoutBtn.style.display = 'inline-block';
+        const lBtn = document.getElementById('logout-btn');
+        if (lBtn) lBtn.style.display = 'inline-block';
 
         loadAndRenderNewsList();
         loadAndRenderGallery();
@@ -266,7 +267,8 @@ function showAdminPanel() {
             if (s) s.style.display = 'none';
         });
         loginSection.style.display = 'block';
-        logoutBtn.style.display = 'none';
+        const lBtn = document.getElementById('logout-btn');
+        if (lBtn) lBtn.style.display = 'none';
 
         // [חדש] עדכון תצוגת תפריט תחתון
     }
@@ -325,7 +327,7 @@ async function getFolderId(token) {
 
         return createData.id;
     } catch (err) {
-        // ✅ Fix: הסר debug logging של שגiאות
+        // ✅ Fix: הסר debug logging של שגיאות
         return "root"; // fallback לתיקיית השורש
     }
 }
@@ -458,7 +460,7 @@ function renderNewsList(newsArray) {
         detailsDiv.appendChild(contentDiv);
         newsDiv.appendChild(detailsDiv);
 
-        // ✅ Fix XSS: בנה את כפתורים בעדכות בטוח
+        // ✅ Fix XSS: בנה את כפתורי בעדכונים בטוח
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'item-actions';
 
@@ -669,7 +671,7 @@ async function loadAndRenderMessages() {
             deleteBtn.className = 'delete-msg-btn premium-btn small danger';
             deleteBtn.dataset.id = messageId;
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
-            deleteBtn.addEventListener('click', () => handleDeleteMessage(messageId));
+            // Listener removed - handled by delegated listener
 
             const replyBtn = document.createElement('a');
             replyBtn.className = 'premium-btn small secondary reply-btn';
@@ -802,7 +804,8 @@ async function handleEditNews(slug) {
         editingNewsSlug = slug;
         editingNewsSHA = fileData.sha;
 
-        cancelNewsBtn.style.display = 'inline-block';
+        const cBtn = document.getElementById('cancel-news-edit');
+        if (cBtn) cBtn.style.display = 'inline-block';
         addNewsForm.querySelector('button[type="submit"]').textContent = 'שמור שינויים';
         hideStatus();
     } catch (error) {
@@ -816,7 +819,8 @@ export function resetNewsForm() {
     editingNewsSlug = null;
     editingNewsSHA = null;
     addNewsForm.querySelector('button[type="submit"]').textContent = 'פרסם ידיעה';
-    if (cancelNewsBtn) cancelNewsBtn.style.display = 'none';
+    const cBtn = document.getElementById('cancel-news-edit');
+    if (cBtn) cBtn.style.display = 'none';
 }
 
 // שמירת ידיעה (חדשה או עריכה)
@@ -828,16 +832,8 @@ async function handleSaveNews(e) {
     const date = document.getElementById('news-date').value.trim();
     const body = easyMDE.value().trim();
 
-    // ✅ Fix: הוסף validation לתאריך
     if (!title || !date || !body) {
         showStatus('נא למלא את כל השדות', null, true);
-        return;
-    }
-
-    // בדוק שהתאריך בפורמט תקין (YYYY-MM-DD)
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-        showStatus('תאריך לא תקין. השתמש בפורמט: YYYY-MM-DD', null, true);
         return;
     }
 
@@ -887,9 +883,8 @@ async function handleSaveNews(e) {
             setTimeout(hideStatus, 1500);
             logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
 
-            // [חדש] הפעלת פוש רק כשמעלים אירוע חדש (לא בעריכה)
             if (!editingNewsSlug) {
-                sendPushNotification(title, "ידיעה חדשה התפרסמה באתר ישיבת בית הלוי! כנסו לקרוא.");
+                sendPushNotification(title, "ידיעה חדשה התפרסמה באתר ישיבת בית הלוי! ככנסו לקרוא.");
             }
 
             resetNewsForm();
@@ -915,7 +910,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             element: document.getElementById("news-body"),
             status: false,
             spellChecker: false,
-            direction: 'rtl', // [חדש] תמיכה ב-RTL
+            direction: 'rtl',
             autosave: {
                 enabled: true,
                 uniqueId: "news-editor",
@@ -923,11 +918,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
         });
     } catch (e) {
-        // ✅ Fix: הסר EasyMDE עירעור צעדי
         showStatus('שגיאה בטעינת עורך הטקסט', null, true);
     }
 
-    // מחכים שהספריות של גוגל יטענו (אם הן async)
     if (typeof google !== 'undefined') {
         initGoogleLogin();
     }
@@ -935,62 +928,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     showAdminPanel();
 
     // ניווט
-    document.getElementById('nav-news-btn').addEventListener('click', () => navigateTo('news-section'));
-    document.getElementById('nav-gallery-btn').addEventListener('click', () => navigateTo('gallery-section'));
-    document.getElementById('nav-history-btn').addEventListener('click', () => navigateTo('history-section'));
-    document.getElementById('nav-messages-btn').addEventListener('click', () => navigateTo('messages-section'));
-    document.getElementById('nav-site-btn').addEventListener('click', async () => {
+    document.getElementById('nav-news-btn')?.addEventListener('click', () => navigateTo('news-section'));
+    document.getElementById('nav-gallery-btn')?.addEventListener('click', () => navigateTo('gallery-section'));
+    document.getElementById('nav-history-btn')?.addEventListener('click', () => navigateTo('history-section'));
+    document.getElementById('nav-messages-btn')?.addEventListener('click', () => navigateTo('messages-section'));
+    document.getElementById('nav-tasks-btn')?.addEventListener('click', () => navigateTo('tasks-section'));
+    document.getElementById('nav-site-btn')?.addEventListener('click', async () => {
         navigateTo('site-section');
         await loadSiteConfig();
     });
-    document.getElementById('save-all-site-settings').addEventListener('click', saveAllSiteSettings);
+    document.getElementById('save-all-site-settings')?.addEventListener('click', saveAllSiteSettings);
 
     document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => {
         btn.addEventListener('click', () => navigateTo('dashboard-section'));
     });
-    closeStatusBtn.addEventListener('click', hideStatus);
+    document.getElementById('close-status-btn')?.addEventListener('click', hideStatus);
 
-    // [חדש] מודאל תצוגה מקדימה לתמונות
-    const imgModal = document.getElementById('image-preview-modal');
-    const closeImgModal = document.getElementById('close-preview-modal');
-    if (closeImgModal) {
-        closeImgModal.onclick = () => imgModal.style.display = 'none';
-    }
-    window.onclick = (e) => { if (e.target === imgModal) imgModal.style.display = 'none'; };
+    // Logout and Theme listeners
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
+    document.getElementById('logout-btn-mobile')?.addEventListener('click', logout);
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
+    document.getElementById('theme-toggle-btn-mobile')?.addEventListener('click', toggleTheme);
 
     initGalleryAdminEvents();
 
-    // Theme initialization
     try {
         const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
         applyTheme(savedTheme);
-        const themeBtn = document.getElementById('theme-toggle-btn');
-        if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
-    } catch (e) { /* ignore */ }
+    } catch (e) { }
 
     // Draft & editor controls
-    const undoBtn = document.getElementById('undo-news-btn');
-    const redoBtn = document.getElementById('redo-news-btn');
-    const saveDraftBtn = document.getElementById('save-draft-btn');
-    const loadDraftBtn = document.getElementById('load-draft-btn');
-    const clearDraftBtn = document.getElementById('clear-draft-btn');
+    document.getElementById('undo-news-btn')?.addEventListener('click', undoEditor);
+    document.getElementById('redo-news-btn')?.addEventListener('click', redoEditor);
+    document.getElementById('save-draft-btn')?.addEventListener('click', () => saveNewsDraft(true));
+    document.getElementById('load-draft-btn')?.addEventListener('click', () => loadNewsDraft(true));
+    document.getElementById('clear-draft-btn')?.addEventListener('click', clearNewsDraft);
 
-    const bannerLoadDraftBtn = document.getElementById('banner-load-draft');
-    const bannerClearDraftBtn = document.getElementById('banner-clear-draft');
+    document.getElementById('banner-load-draft')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadNewsDraft(true);
+    });
+    document.getElementById('banner-clear-draft')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (confirm('האם אתה בטוח שברצונך למחוק את הטיוטה?')) clearNewsDraft();
+    });
 
-    if (undoBtn) undoBtn.addEventListener('click', undoEditor);
-    if (redoBtn) redoBtn.addEventListener('click', redoEditor);
-    if (saveDraftBtn) saveDraftBtn.addEventListener('click', () => saveNewsDraft(true));
-    if (loadDraftBtn) loadDraftBtn.addEventListener('click', () => loadNewsDraft(true));
-    if (clearDraftBtn) clearDraftBtn.addEventListener('click', clearNewsDraft);
-    if (bannerLoadDraftBtn) bannerLoadDraftBtn.addEventListener('click', (e) => { e.preventDefault(); loadNewsDraft(true); });
-    if (bannerClearDraftBtn) bannerClearDraftBtn.addEventListener('click', (e) => { e.preventDefault(); clearNewsDraft(); });
-
-    // Start autosave for drafts (only after navigating to news section)
-    // initDraftAutosave() will be called when user navigates to news-section
-    // to avoid loading stale drafts on page load
-
-    // [חדש] מאזין לכפתורי "עין" להצגת/הסתרת סיסמה
     document.querySelectorAll('.toggle-password').forEach(icon => {
         icon.addEventListener('click', () => {
             const targetId = icon.getAttribute('data-target');
@@ -1007,77 +989,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    if (cancelNewsBtn) {
-        cancelNewsBtn.addEventListener('click', resetNewsForm);
-    }
+    document.getElementById('cancel-news-edit')?.addEventListener('click', resetNewsForm);
 
-    // ============================================================
-    // [חדש] מערכת ניווט בסוויפ (Swipe Navigation) למובייל
-    // ============================================================
-    (function initAdminSwipe() {
-        let touchstartX = 0;
-        let touchendX = 0;
-
-        const sectionsOrder = [
-            'dashboard-section',
-            'news-section',
-            'tasks-section',
-            'gallery-section',
-            'messages-section',
-            'site-section'
-        ];
-
-        function handleGesture() {
-            const swipeDistance = touchendX - touchstartX;
-            const threshold = 100; // רגישות הסריקה בפיקסלים
-
-            if (Math.abs(swipeDistance) < threshold) return;
-
-            // מצא את הסקשן הנוכחי שמוצג
-            const currentSectionId = sectionsOrder.find(id => {
-                const el = document.getElementById(id);
-                return el && (el.style.display === 'block' || window.getComputedStyle(el).display === 'block');
-            });
-
-            if (!currentSectionId) return;
-            const currentIndex = sectionsOrder.indexOf(currentSectionId);
-
-            if (swipeDistance < 0) {
-                // סוויפ שמאלה -> הבא (מזרח למערב)
-                if (currentIndex < sectionsOrder.length - 1) {
-                    const nextSectionId = sectionsOrder[currentIndex + 1];
-                    const nextBtnId = 'bnav-' + nextSectionId.replace('-section', '');
-                    const btn = document.getElementById(nextBtnId);
-                    if (btn) btn.click();
-                    else navigateTo(nextSectionId);
-                }
-            } else {
-                // סוויפ ימינה -> הקודם (מערב למזרח)
-                if (currentIndex > 0) {
-                    const prevSectionId = sectionsOrder[currentIndex - 1];
-                    const prevBtnId = 'bnav-' + prevSectionId.replace('-section', '');
-                    const btn = document.getElementById(prevBtnId);
-                    if (btn) btn.click();
-                    else navigateTo(prevSectionId);
-                }
-            }
-        }
-
-        document.addEventListener('touchstart', e => {
-            // התעלם מסוויפ אם המשתמש בתוך עורך הטקסט או טבלה
-            if (e.target.closest('.EasyMDEContainer') || e.target.closest('table') || e.target.closest('form')) return;
-            touchstartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        document.addEventListener('touchend', e => {
-            if (e.target.closest('.EasyMDEContainer') || e.target.closest('table') || e.target.closest('form')) return;
-            touchendX = e.changedTouches[0].screenX;
-            handleGesture();
-        }, { passive: true });
-    })();
+    // Bottom nav
+    document.getElementById('bnav-dashboard')?.addEventListener('click', () => navigateTo('dashboard-section'));
+    document.getElementById('bnav-news')?.addEventListener('click', () => navigateTo('news-section'));
+    document.getElementById('bnav-tasks')?.addEventListener('click', () => navigateTo('tasks-section'));
+    document.getElementById('bnav-gallery')?.addEventListener('click', () => navigateTo('gallery-section'));
+    document.getElementById('bnav-messages')?.addEventListener('click', () => navigateTo('messages-section'));
+    document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo('site-section'));
 });
 
-// כפתור עריכה ומחיקה - delegated event
+// Delegated events
 document.addEventListener('click', (e) => {
     const editBtn = e.target.closest('.edit-news-btn');
     const deleteBtn = e.target.closest('.delete-news-btn');
@@ -1094,78 +1017,44 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// טופס התחברות
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const userCodeInput = document.getElementById('admin-usercode').value;
-    const tokenInput = document.getElementById('github-token').value.trim();
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userCodeInput = document.getElementById('admin-usercode').value;
+        const tokenInput = document.getElementById('github-token').value.trim();
 
-    showStatus('מבצע אימות מול GitHub...', 40);
+        showStatus('מבצע אימות מול GitHub...', 40);
 
-    // בדיקת הקוד מול הרשימה (Plain Text)
-    if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-        if (tokenInput) {
-            const verifiedLogin = await verifyGitHubToken(tokenInput);
+        if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
+            if (tokenInput) {
+                const verifiedLogin = await verifyGitHubToken(tokenInput);
 
-            if (verifiedLogin) {
-                // שמור שם המנהל מ-ADMIN_USER_CODES (לא GitHub username)
-                const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
-                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
-                updateGithubAuth(tokenInput, adminDisplayName);
+                if (verifiedLogin) {
+                    const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
+                    localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
+                    updateGithubAuth(tokenInput, adminDisplayName);
 
-                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
-                localStorage.setItem(USER_CODE_KEY, userCodeInput);
+                    localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
+                    localStorage.setItem(USER_CODE_KEY, userCodeInput);
 
-                showStatus('התחברות הצליחה! ברוך הבא.', 100);
-                logEvent('התחבר למערכת', 'login');
-                setTimeout(() => {
-                    hideStatus();
-                    showAdminPanel();
-                }, 1000);
+                    showStatus('התחברות הצליחה! ברוך הבא.', 100);
+                    logEvent('התחבר למערכת', 'login');
+                    setTimeout(() => {
+                        hideStatus();
+                        showAdminPanel();
+                    }, 1000);
+                } else {
+                    showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
+                }
             } else {
-                showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
+                showStatus('נדרש Token כדי להמשיך.', null, true);
             }
         } else {
-            showStatus('נדרש Token כדי להמשיך.', null, true);
+            showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
         }
-    } else {
-        showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
-    }
-});
+    });
+}
 
-// טופס הוספת/עריכת חדשות
-addNewsForm.addEventListener('submit', handleSaveNews);
-
-// [חדש] מאזינים לניווט תחתון
-document.getElementById('bnav-dashboard')?.addEventListener('click', () => navigateTo('dashboard-section'));
-document.getElementById('bnav-news')?.addEventListener('click', () => navigateTo('news-section'));
-document.getElementById('bnav-tasks')?.addEventListener('click', () => navigateTo('tasks-section'));
-document.getElementById('bnav-gallery')?.addEventListener('click', () => navigateTo('gallery-section'));
-document.getElementById('bnav-messages')?.addEventListener('click', () => navigateTo('messages-section'));
-document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo('site-section'));
-
-// כפתור יציאה
-document.getElementById('logout-btn')?.addEventListener('click', logout);
-
-// --- [חדש] כפתורים זהים אבל מותאמים לנייד ---
-document.getElementById('logout-btn-mobile')?.addEventListener('click', logout);
-document.getElementById('theme-toggle-btn-mobile')?.addEventListener('click', toggleTheme);
-// [?????] ??????? ????? ???????
-document.addEventListener('DOMContentLoaded', () => {
-    const bannerLoadDraftBtn = document.getElementById('banner-load-draft');
-    const bannerClearDraftBtn = document.getElementById('banner-clear-draft');
-    if (bannerLoadDraftBtn) {
-        bannerLoadDraftBtn.onclick = (e) => {
-            e.preventDefault();
-            loadNewsDraft(true);
-        };
-    }
-    if (bannerClearDraftBtn) {
-        bannerClearDraftBtn.onclick = (e) => {
-            e.preventDefault();
-            if (confirm('??? ??? ???? ??????? ????? ?? ???????')) {
-                clearNewsDraft();
-            }
-        };
-    }
-});
+if (addNewsForm) {
+    addNewsForm.addEventListener('submit', handleSaveNews);
+}

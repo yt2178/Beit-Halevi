@@ -113,6 +113,14 @@
                         <p>צפייה בהודעות שנשלחו דרך טופס צור קשר</p>
                     </div>
                 </div>
+                <!-- [שוחזר] קטגוריית משימות -->
+                <div id="nav-tasks-btn" class="dashboard-card">
+                    <div class="card-icon"><i class="fas fa-list-check"></i></div>
+                    <div class="card-content">
+                        <h3>משימות מנהלים</h3>
+                        <p>ניהול משימות לביצוע וסנכרון בין המנהלים</p>
+                    </div>
+                </div>
                 <div id="nav-site-btn" class="dashboard-card">
                     <div class="card-icon"><i class="fas fa-cogs"></i></div>
                     <div class="card-content">
@@ -135,10 +143,15 @@
                 <div class="local-draft-note" style="margin-bottom:12px;">
                     <strong>הערה:</strong> הטיוטות נשמרות רק במחשב זה (localStorage) — לא מועלות ל‑GitHub עד לפרסום.
                 </div>
-                <div id="draft-banner" class="local-draft-note" style="display:none;">
-                    <strong><i class="fas fa-exclamation-circle"></i> זוהתה טיוטה שלא נשמרה!</strong> 
-                    <a href="#" id="banner-load-draft">לשחזור הטיוטה</a> | 
-                    <a href="#" id="banner-clear-draft">למחיקת הטיוטה</a>
+                <div id="draft-banner" class="local-draft-note" style="display:none; align-items: center; justify-content: space-between; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-edit" style="font-size: 1.2rem;"></i>
+                        <span>נראה שיש לך עבודה שלא נשמרה מהפעם האחרונה.</span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="banner-load-draft" class="premium-btn small" style="background: #27ae60; padding: 5px 12px;">שחזר עבודה</button>
+                        <button type="button" id="banner-clear-draft" class="premium-btn small secondary" style="background: transparent; color: #856404; border-color: #856404; padding: 5px 12px;">מחק טיוטה</button>
+                    </div>
                 </div>
                 <form id="add-news-form">
                     <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
@@ -174,8 +187,12 @@
                 <form id="add-album-form">
                     <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
                     <div class="thumbnail-input-group">
-                        <label>📸 בחר תמונת שער לאלבום:</label>
-                        <input type="file" id="albumThumbnailInput" accept="image/*" required>
+                        <label for="albumThumbnailInput" class="file-upload-label cover-label" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #f8f9fa; border: 2px dashed #cbd5e1; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-image" style="font-size: 1.5rem; color: #3498db;"></i>
+                            <span style="font-weight: 600;">בחר תמונת שער לאלבום (יוצג בדף הבית)</span>
+                            <input type="file" id="albumThumbnailInput" accept="image/*" style="display:none;">
+                            <input type="hidden" id="albumThumbnailUrl">
+                        </label>
                     </div>
                     <div class="file-upload-wrapper">
                         <label for="albumImagesInput" class="file-upload-label">

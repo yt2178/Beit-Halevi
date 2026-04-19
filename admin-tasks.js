@@ -152,11 +152,16 @@ async function saveTasks(message) {
 }
 
 // מאזינים
-if (addTaskBtn) {
-    addTaskBtn.addEventListener('click', addTask);
-}
-if (newTaskInput) {
-    newTaskInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addTask();
-    });
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const newTaskInput = document.getElementById('new-task-input');
+
+    if (addTaskBtn) {
+        addTaskBtn.addEventListener('click', addTask);
+    }
+    if (newTaskInput) {
+        newTaskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+    }
+});
