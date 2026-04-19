@@ -19,7 +19,7 @@ import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
 const ADMIN_USER_CODES = {
     "12589": "ידידיה תפילין",
-    "112233": "Admin-New",
+    "112233": "הרב יאיר חלבי",
     "11223344": "הרב יוסף חיים סנו"
 };
 
