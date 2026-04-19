@@ -173,8 +173,9 @@
                 <h3>הוספת אלבום חדש</h3>
                 <form id="add-album-form">
                     <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
-                    <div class="thumbnail-input-group" style="display:none;">
-                        <input type="text" id="albumThumbnailInput" placeholder="קישור לתמונת שער">
+                    <div class="thumbnail-input-group">
+                        <label>📸 בחר תמונת שער לאלבום:</label>
+                        <input type="file" id="albumThumbnailInput" accept="image/*" required>
                     </div>
                     <div class="file-upload-wrapper">
                         <label for="albumImagesInput" class="file-upload-label">

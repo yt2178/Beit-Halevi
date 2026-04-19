@@ -408,7 +408,8 @@ async function handleGallerySubmit(e) {
 
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
-    const albumThumbnail = albumThumbnailInput.files[0];
+    // בדיקה בטוחה של קבצים כדי למנוע קריסה
+    const albumThumbnail = (albumThumbnailInput.files && albumThumbnailInput.files.length > 0) ? albumThumbnailInput.files[0] : null;
     const albumImages = albumImagesInput.files;
 
     if (!albumTitle) {

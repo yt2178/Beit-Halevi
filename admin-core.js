@@ -283,7 +283,7 @@ export async function makeFilePublic(fileId, token) {
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ role: "reader", type: "anyone" })
     });
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+    return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
 }
 
 // Logging helper

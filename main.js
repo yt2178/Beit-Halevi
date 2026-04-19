@@ -247,7 +247,7 @@ if (hebrewYearDisplay) {
                         allowLocalhostAsSecureOrigin: true,
                         // [תיקון] הגדרות נתיב עבור GitHub Pages
                         serviceWorkerParam: { scope: '/Beit-Halevi/' },
-                        serviceWorkerPath: 'OneSignalSDKWorker.js',
+                        serviceWorkerPath: '/Beit-Halevi/OneSignalSDKWorker.js',
                     });
 
                     // [חדש] פונקציה לעדכון מצב הכפתור
