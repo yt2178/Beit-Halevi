@@ -1289,3 +1289,76 @@ html, body {
 }
 
 /* END OF FILE admin.css */
+/* --- ?????? ???? ????? (UI Refinements) --- */
+
+/* ????? ????? ???? - ??? ????? ?? ?? ????? ????? */
+@media screen and (min-width: 769px) {
+    .back-to-dashboard-btn, .premium-btn.small {
+        width: auto;
+    }
+}
+
+/* ????? ???? ?????? */
+#draft-banner {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+#draft-banner a {
+    text-decoration: none;
+    padding: 5px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+#banner-load-draft {
+    background: #fff;
+    color: #1a4b84;
+    border: 1px solid #1a4b84;
+}
+
+#banner-load-draft:hover {
+    background: #1a4b84;
+    color: white;
+}
+
+#banner-clear-draft {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+#banner-clear-draft:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* ????? ??????? ???? ???????? (?????? ??????) */
+.delete-msg-btn, .reply-btn, .premium-btn.small {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    min-height: auto;
+}
+
+/* ????? ?????? ????? ??????? */
+@media screen and (max-width: 768px) {
+    .preview-btn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
+    }
+    .album-preview-item {
+        width: 80px !important;
+        height: 80px !important;
+    }
+}
+
+/* ????? ????? ?????? */
+.message-card .premium-btn {
+    width: auto;
+    padding: 5px 12px;
+}

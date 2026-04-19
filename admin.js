@@ -73,7 +73,7 @@ function checkDraftStatus() {
         const raw = localStorage.getItem(DRAFT_KEY);
         const banner = document.getElementById('draft-banner');
         if (banner) {
-            banner.style.display = raw ? 'block' : 'none';
+            banner.style.display = raw ? 'flex' : 'none';
         }
     } catch (e) { }
 }
@@ -667,8 +667,10 @@ async function loadAndRenderMessages() {
             deleteBtn.addEventListener('click', () => handleDeleteMessage(messageId));
 
             const replyBtn = document.createElement('a');
-            replyBtn.className = 'premium-btn small secondary';
-            replyBtn.href = `mailto:${email}?subject=תגובה לפנייתך באתר ישיבת בית הלוי`;
+            replyBtn.className = 'premium-btn small secondary reply-btn';
+            const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
+            const body = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
+            replyBtn.href = `mailto:${email}?subject=${subject}&body=${body}`;
             replyBtn.style.textDecoration = 'none';
             replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
             replyBtn.style.marginLeft = '8px';
