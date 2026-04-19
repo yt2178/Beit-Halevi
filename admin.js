@@ -669,8 +669,8 @@ async function loadAndRenderMessages() {
             const replyBtn = document.createElement('a');
             replyBtn.className = 'premium-btn small secondary reply-btn';
             const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
-            const body = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
-            replyBtn.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            const mailBody = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
+            replyBtn.href = `mailto:${email}?subject=${subject}&body=${mailBody}`;
             replyBtn.style.textDecoration = 'none';
             replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
             replyBtn.style.marginLeft = '8px';
