@@ -363,10 +363,17 @@
         (function () {
             const nav = document.getElementById('admin-bottom-nav');
             function checkMobile() {
-                nav.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+                // רק אם מחוברים (יש טוקן) - נציג תפריט תחתון במובייל
+                if (window.GITHUB_TOKEN || localStorage.getItem('admin_github_token')) {
+                    nav.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+                } else {
+                    nav.style.display = 'none';
+                }
             }
             checkMobile();
             window.addEventListener('resize', checkMobile);
+            // הוספת מאזין לאירוע התחברות כדי לעדכן תצוגה
+            window.addEventListener('admin-login-success', checkMobile);
 
             // מיפוי: כפתור בתפריט התחתון → ID כפתור קיים בלוח הבקרה
             const mapping = {

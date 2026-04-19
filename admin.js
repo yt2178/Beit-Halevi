@@ -258,12 +258,18 @@ function showAdminPanel() {
 
         loadAndRenderNewsList();
         loadAndRenderGallery();
+
+        // [חדש] עדכון תצוגת תפריט תחתון
+        window.dispatchEvent(new Event('admin-login-success'));
     } else {
         [dashboardSection, newsSection, gallerySection, historySection, messagesSection, siteSection, tasksSection].forEach(s => {
             if (s) s.style.display = 'none';
         });
         loginSection.style.display = 'block';
         logoutBtn.style.display = 'none';
+
+        // [חדש] עדכון תצוגת תפריט תחתון
+        window.dispatchEvent(new Event('admin-login-success'));
     }
 }
 
