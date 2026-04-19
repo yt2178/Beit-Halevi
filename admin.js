@@ -8,7 +8,8 @@ import {
     GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, googleLogin, logEvent,
-    GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification
+    GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification,
+    uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
 import { putWithShaRetry } from './admin-core.js';
 
@@ -287,133 +288,6 @@ function navigateTo(sectionId) {
         setDefaultNewsDate();
         initDraftAutosave();
         typeof checkDraftStatus === 'function' && checkDraftStatus();
-    }
-}
-// [חדש] פונקציה למציאת או יצירת תיקיית הגלריה בדרייב
-async function getFolderId(token) {
-    const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
-
-    try {
-        // 1. חיפוש תיקייה קיימת עם השם הזה
-        const searchRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            { headers: { "Authorization": "Bearer " + token } }
-        );
-        const searchData = await searchRes.json();
-
-        if (searchData.files && searchData.files.length > 0) {
-            return searchData.files[0].id;
-        }
-
-        // 2. אם לא נמצאה - יצירת תיקייה חדשה
-        const createRes = await fetch(
-            "https://www.googleapis.com/drive/v3/files",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: FOLDER_NAME,
-                    mimeType: "application/vnd.google-apps.folder"
-                })
-            }
-        );
-        const createData = await createRes.json();
-
-        // הפיכת התיקייה לציבורית (כדי שהתמונות בתוכה יוכלו להיות ציבוריות בקלות)
-        await makeFilePublic(createData.id, token);
-
-        return createData.id;
-    } catch (err) {
-        // ✅ Fix: הסר debug logging של שגיאות
-        return "root"; // fallback לתיקיית השורש
-    }
-}
-
-export async function uploadFileToDrive(file, Token) {
-    const token = Token;
-    const folderId = await getFolderId(token); // [שינוי] מציאת/יצירת התיקייה הייעודית
-
-    const metadata = {
-        name: file.name,
-        parents: [folderId] // [שינוי] העלאה לתוך התיקייה שנמצאה
-    };
-
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", file);
-
-    const res = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token },
-            body: form
-        }
-    );
-
-    const data = await res.json();
-    return data.id;
-}
-export async function makeFilePublic(fileId, Token) {
-    const token = Token;
-
-    await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
-        {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`, // [שינוי] שימוש ב-Token
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                role: "reader",
-                type: "anyone"
-            })
-        }
-    );
-
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-}
-// ============================================================
-// 7. פונקציות GitHub (GitHub Functions)
-// ============================================================
-// יציאה מהמערכת
-function logout() {
-    // ✅ Fix: הוסף confirmation כדי לא לצאת כן בטעות
-    if (!confirm('האם אתה בטוח שברצונך לצאת מהמערכת?')) return;
-
-    showStatus('מתנתק מהמערכת... להתראות!', 100);
-    setTimeout(() => {
-        localStorage.removeItem(GITHUB_TOKEN_KEY);
-        localStorage.removeItem(GITHUB_USERNAME_KEY);
-        localStorage.removeItem(USER_CODE_KEY);
-        location.reload();
-    }, 1000);
-}
-
-// [חדש] פונקציה לאימות הטוקן מול GitHub
-async function verifyGitHubToken(token) {
-    try {
-        const response = await fetch('https://api.github.com/user', {
-            headers: {
-                'Authorization': `token ${token}`
-            }
-        });
-
-        if (response.ok) {
-            const userData = await response.json();
-            return userData.login; // מחזיר את שם המשתמש האמיתי
-        } else {
-            const errorData = await response.json();
-            // ✅ Fix: הסר debug logs חשופים של שגיאות
-            return null;
-        }
-    } catch (error) {
-        // ✅ Fix: הסר console.error של שגיאות
-        return null;
     }
 }
 
