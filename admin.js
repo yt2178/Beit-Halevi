@@ -668,9 +668,11 @@ async function loadAndRenderMessages() {
 
             const replyBtn = document.createElement('a');
             replyBtn.className = 'premium-btn small secondary reply-btn';
+            replyBtn.target = "_blank"; // פתיחה בחלון חדש עוזרת לדפדפנים מסוימים לטפל ב-mailto
             const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
             const mailBody = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
             replyBtn.href = `mailto:${email}?subject=${subject}&body=${mailBody}`;
+            replyBtn.title = "לחץ כאן כדי להשיב באמצעות אפליקציית המייל שלך";
             replyBtn.style.textDecoration = 'none';
             replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
             replyBtn.style.marginLeft = '8px';
@@ -1139,3 +1141,22 @@ document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo
 
 // כפתור יציאה
 document.getElementById('logout-btn').addEventListener('click', logout);
+// [?????] ??????? ????? ???????
+document.addEventListener('DOMContentLoaded', () => {
+    const bannerLoadDraftBtn = document.getElementById('banner-load-draft');
+    const bannerClearDraftBtn = document.getElementById('banner-clear-draft');
+    if (bannerLoadDraftBtn) {
+        bannerLoadDraftBtn.onclick = (e) => {
+            e.preventDefault();
+            loadNewsDraft(true);
+        };
+    }
+    if (bannerClearDraftBtn) {
+        bannerClearDraftBtn.onclick = (e) => {
+            e.preventDefault();
+            if (confirm('??? ??? ???? ??????? ????? ?? ???????')) {
+                clearNewsDraft();
+            }
+        };
+    }
+});
