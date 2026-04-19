@@ -148,21 +148,22 @@ if (contactForm) {
 if (menuToggle && navLinks) {
     const icon = menuToggle.querySelector('i');
     const closeMenu = () => {
-        if (navLinks.classList.contains('active')) {
-            navLinks.classList.remove('active');
-            icon.classList.add('fa-bars');
-            icon.classList.remove('fa-times');
-        }
+        navLinks.classList.remove('active');
+        icon.classList.add('fa-bars');
+        icon.classList.remove('fa-times');
     };
+    
     // [ חדש] 2. טיפול בלחיצה על כפתור התפריט
     menuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        navLinks.classList.toggle('active');
-        if (navLinks.classList.contains('active')) {
+        const isActive = navLinks.classList.contains('active');
+        
+        if (isActive) {
+            closeMenu();
+        } else {
+            navLinks.classList.add('active');
             icon.classList.remove('fa-bars');
             icon.classList.add('fa-times');
-        } else {
-            closeMenu();
         }
     });
     navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
@@ -244,6 +245,9 @@ if (hebrewYearDisplay) {
                             enable: false, // נשתמש בכפתור שלנו
                         },
                         allowLocalhostAsSecureOrigin: true,
+                        // [תיקון] הגדרות נתיב עבור GitHub Pages
+                        serviceWorkerParam: { scope: '/Beit-Halevi/' },
+                        serviceWorkerPath: 'OneSignalSDKWorker.js',
                     });
 
                     // [חדש] פונקציה לעדכון מצב הכפתור
@@ -427,6 +431,18 @@ if (hebrewYearDisplay) {
         pwaCloseBtn.addEventListener('click', () => {
             if (pwaInstallBanner) pwaInstallBanner.style.display = 'none';
             localStorage.setItem('pwa_banner_closed', Date.now().toString());
+        });
+    }
+
+    // --- [חדש] לוגיקה לכותרת מצטמצמת בגלילה (Sticky Shrunk Header) ---
+    const stickyWrapper = document.getElementById('sticky-header-wrapper');
+    if (stickyWrapper) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                stickyWrapper.classList.add('scrolled');
+            } else {
+                stickyWrapper.classList.remove('scrolled');
+            }
         });
     }
 

@@ -1141,6 +1141,13 @@ document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo
 
 // כפתור יציאה
 document.getElementById('logout-btn').addEventListener('click', logout);
+
+// --- [חדש] כפתורים זהים אבל מותאמים לנייד ---
+const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', logout);
+
+const themeBtnMobile = document.getElementById('theme-toggle-btn-mobile');
+if (themeBtnMobile) themeBtnMobile.addEventListener('click', toggleTheme);
 // [?????] ??????? ????? ???????
 document.addEventListener('DOMContentLoaded', () => {
     const bannerLoadDraftBtn = document.getElementById('banner-load-draft');

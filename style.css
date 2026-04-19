@@ -795,11 +795,31 @@ body.dark-mode .loading-thumbnail,
     border-bottom: 1px solid #ddd;
 }
 
-header {
+.sticky-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: var(--header-bg);
+}
+
+.sticky-wrapper.scrolled {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background-color: rgba(26, 75, 132, 0.95); /* מעט שקוף בגלילה */
+    backdrop-filter: blur(8px);
+}
+
+header {
+    background-color: transparent; /* העברנו את הרקע לעטיפה */
     color: white;
     padding: 20px 0;
     text-align: center;
+    transition: padding 0.3s ease, transform 0.3s ease;
+}
+
+.sticky-wrapper.scrolled header {
+    padding: 8px 0;
+    transform: scale(0.9);
 }
 
 header h1 {
@@ -807,21 +827,29 @@ header h1 {
     font-size: 2.8em;
     font-weight: 700;
     letter-spacing: -1px;
+    transition: font-size 0.3s ease;
+}
+
+.sticky-wrapper.scrolled header h1 {
+    font-size: 1.8em;
 }
 
 nav {
     background-color: var(--nav-bg);
     padding: 10px;
     text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: padding 0.3s ease;
+}
+
+.sticky-wrapper.scrolled nav {
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 .nav-links {
@@ -2191,7 +2219,8 @@ img {
     }
 
     section {
-        padding: 2rem 0.85rem;
+        padding: 2rem 1.2rem; /* הוספת מרווח צדדי קבוע במובייל */
+        box-sizing: border-box;
     }
 
     section h2 {
@@ -2223,6 +2252,12 @@ img {
     #contact textarea {
         font-size: 16px;
         /* מניעת זום אוטומטי ב-iOS */
+        text-align: center;
+    }
+    
+    .form-column, .contact-info {
+        text-align: center;
+        align-items: center;
     }
 
     .notification-card {
@@ -2237,14 +2272,19 @@ img {
     .notification-button {
         padding: 1rem 1.8rem;
         font-size: 1rem;
-        width: 100%;
+        width: auto;
+        max-width: 90%;
+        margin: 0 auto;
         justify-content: center;
     }
 
-    .donation-button {
+    .donation-button, #contact button {
         padding: 0.9rem 1.5rem;
         font-size: 0.95rem;
-        width: 100%;
+        width: auto;
+        max-width: 90%;
+        margin: 0 auto;
+        display: block;
         text-align: center;
         justify-content: center;
     }
@@ -2259,6 +2299,20 @@ img {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 12px;
     }
+
+    /* שיפור מרכוז וסידור של קטעי תוכן */
+    .donation-section, #contact {
+        text-align: center;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .donation-section p, #contact p {
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 90%;
+    }
+
 
     /* גריד זמני היום - כפול */
     .zmanim-grid {

@@ -64,24 +64,27 @@
     <!-- [חדש] אזור זמני היום -->
     <div id="zmanim-container" class="zmanim-container"></div>
 
-    <header>
-        <h1>ישיבת בית הלוי - ראש העין</h1>
-    </header>
-    <nav>
-        <button class="menu-toggle" aria-label="תפריט">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="nav-links">
-            <a href="#about">אודות</a>
-            <a href="#news">חדשות</a>
-            <a href="#gallery">גלריה</a>
-            <a href="#donations">תרומות</a>
-            <a href="#contact">צור קשר</a>
-        </div>
-        <button class="theme-toggle" id="theme-toggle" title="שינוי מצב תצוגה" aria-label="שינוי מצב תצוגה">
-            <i class="fas fa-moon"></i>
-        </button>
-    </nav>
+    <!-- [חדש] עטיפה נדבקת (Sticky) לכותרת ולניווט ביחד -->
+    <div id="sticky-header-wrapper" class="sticky-wrapper">
+        <header id="main-header">
+            <h1>ישיבת בית הלוי - ראש העין</h1>
+        </header>
+        <nav id="main-nav">
+            <button class="menu-toggle" aria-label="תפריט">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links">
+                <a href="#about">אודות</a>
+                <a href="#news">חדשות</a>
+                <a href="#gallery">גלריה</a>
+                <a href="#donations">תרומות</a>
+                <a href="#contact">צור קשר</a>
+            </div>
+            <button class="theme-toggle" id="theme-toggle" title="שינוי מצב תצוגה" aria-label="שינוי מצב תצוגה">
+                <i class="fas fa-moon"></i>
+            </button>
+        </nav>
+    </div>
     <main id="main-content">
         <section id="about">
             <h2 id="about-title-dynamic">אודות הישיבה</h2>
