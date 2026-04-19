@@ -265,6 +265,22 @@
                     <div class="input-group">
                         <label><strong>🔗 קישור לתרומות (נדרים פלוס/Jgive):</strong></label>
                         <input type="url" id="site-donation-link" placeholder="https://..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                </div>
+            </div>
+
+            <!-- הגדרות התראות OneSignal -->
+            <div class="admin-card">
+                <h3>🔔 מערכת התראות לגולשים (OneSignal)</h3>
+                <div class="site-settings-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
+                    <div class="input-group">
+                        <label><strong>OneSignal App ID (מזהה חיבור):</strong></label>
+                        <input type="text" id="site-onesignal-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr">
+                        <small style="color: #7f8c8d;">נדרש לרישום גולשים. נשמר ב-GitHub ונמצא בלוח סביבת OneSignal ב-Keys & IDs.</small>
+                    </div>
+                    <div class="input-group">
+                        <label><strong>REST API Key (לשליחת התראות):</strong></label>
+                        <input type="password" id="site-onesignal-rest" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr">
+                        <small style="color: #e74c3c;">זהו מפתח סודי! יִשָּׁמֵר <strong>אך ורק במחשב זה</strong> (בדפדפן שלך) ולא בשרת.</small>
                     </div>
                 </div>
             </div>
