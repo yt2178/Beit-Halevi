@@ -430,7 +430,8 @@ async function handleGallerySubmit(e) {
         return;
     }
 
-    if (albumImages.length === 0) {
+    const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
+    if (albumImages.length === 0 && existingImagesCount === 0) {
         showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
         return;
     }

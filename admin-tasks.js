@@ -9,15 +9,16 @@ import {
 let allTasks = [];
 let tasksSha = null;
 
-// אלמנטים
-const tasksListContainer = document.getElementById('tasks-list');
-const newTaskInput = document.getElementById('new-task-input');
-const addTaskBtn = document.getElementById('add-task-btn');
+// DOM helpers
+const getTasksListContainer = () => document.getElementById('tasks-list');
+const getNewTaskInput = () => document.getElementById('new-task-input');
+const getAddTaskBtn = () => document.getElementById('add-task-btn');
 
 export async function loadAndRenderTasks() {
-    if (!tasksListContainer) return;
+    const container = getTasksListContainer();
+    if (!container) return;
     
-    tasksListContainer.innerHTML = '<p style="text-align:center;">טוען משימות...</p>';
+    container.innerHTML = '<p style="text-align:center;">טוען משימות...</p>';
     
     try {
         const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${TASKS_JSON_PATH}`;
@@ -45,14 +46,15 @@ export async function loadAndRenderTasks() {
 }
 
 function renderTasks() {
-    if (!tasksListContainer) return;
+    const container = getTasksListContainer();
+    if (!container) return;
     
     if (allTasks.length === 0) {
-        tasksListContainer.innerHTML = '<p style="text-align:center; color:#7f8c8d;">אין משימות פתוחות. עבודה טובה!</p>';
+        container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">אין משימות פתוחות. עבודה טובה!</p>';
         return;
     }
     
-    tasksListContainer.innerHTML = '';
+    container.innerHTML = '';
     allTasks.forEach((task, index) => {
         const div = document.createElement('div');
         div.className = `task-item ${task.completed ? 'completed' : ''}`;
@@ -94,12 +96,13 @@ function renderTasks() {
         div.appendChild(checkbox);
         div.appendChild(span);
         div.appendChild(deleteBtn);
-        tasksListContainer.appendChild(div);
+        container.appendChild(div);
     });
 }
 
 async function addTask() {
-    const text = newTaskInput.value.trim();
+    const input = getNewTaskInput();
+    const text = input ? input.value.trim() : '';
     if (!text) return;
     
     const newTask = {
@@ -109,7 +112,7 @@ async function addTask() {
     };
     
     allTasks.unshift(newTask);
-    newTaskInput.value = '';
+    if (input) input.value = '';
     renderTasks();
     await saveTasks(`Add task: ${text}`);
 }
@@ -151,8 +154,7 @@ async function saveTasks(message) {
     }
 }
 
-// מאזינים
-document.addEventListener('DOMContentLoaded', () => {
+function initTasksListeners() {
     const addTaskBtn = document.getElementById('add-task-btn');
     const newTaskInput = document.getElementById('new-task-input');
 
@@ -164,4 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') addTask();
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTasksListeners);
+} else {
+    initTasksListeners();
+}
