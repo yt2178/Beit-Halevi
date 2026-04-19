@@ -41,8 +41,45 @@ async function fetchAndParse(path) {
         return data;
     }
 
+    // אם הנתיב מכיל site-config, קרא את קובץ site-config.json
+    if (path.includes('site-config')) {
+        return fetchStaticJson('site-config');
+    }
+
     // אם הנתיב לא מוכר, החזר שגיאה
     return { error: true, message: 'נתיב נתונים לא חוקי. יש צורך בקובץ news.json או gallery.json.' };
+}
+
+// ---- פונקציית טעינת הגדרות אתר ----
+export async function applySiteConfig() {
+    try {
+        const config = await fetchAndParse('site-config');
+        if (!config || config.error) return;
+
+        // עדכון טקסטים דינמיים
+        if (config.texts) {
+            const up = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val) el.textContent = val;
+            };
+            up('about-title-dynamic', config.texts.about_title);
+            up('about-body-dynamic', config.texts.about_body);
+            up('donation-title-dynamic', config.texts.donation_title);
+            up('donation-body-dynamic', config.texts.donation_body);
+            
+            const donationLink = document.getElementById('donation-link-dynamic');
+            if (donationLink && config.texts.donation_link) {
+                donationLink.href = config.texts.donation_link;
+            }
+        }
+
+        // עדכון צבע מיתוג
+        if (config.primaryColor) {
+            document.documentElement.style.setProperty('--primary-color', config.primaryColor);
+        }
+    } catch (e) {
+        console.error("Failed to apply site config", e);
+    }
 }
 // ---- פונקציית טעינת גלריה ----
 export async function loadGallery() {
@@ -50,6 +87,12 @@ export async function loadGallery() {
     if (!albumContainer) return;
 
     const response = await fetchAndParse('_posts/gallery');
+    
+    // Skeleton for albums
+    if (!albumContainer.innerHTML || albumContainer.innerHTML.includes('טוען')) {
+        albumContainer.innerHTML = Array(3).fill('<div class="album-cover skeleton-box" style="height:200px;"></div>').join('');
+    }
+
     if (response === null || response.error) {
         albumContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת האלבומים.'}</p>`;
         return;
@@ -96,9 +139,15 @@ export async function loadNews(loadMore = false) {
     const newsContainer = document.getElementById('news-container');
     if (!newsContainer) return;
 
-    // הצג הודעת טעינה רק אם הקונטיינר ריק
+    // הצג סקלטון בזמן הטעינה
     if (!loadMore) {
-        newsContainer.innerHTML = '<p style="text-align:center;">טוען עדכונים...</p>';
+        newsContainer.innerHTML = Array(3).fill(`
+            <div class="skeleton-item">
+                <div class="skeleton-box skeleton-title"></div>
+                <div class="skeleton-box skeleton-text"></div>
+                <div class="skeleton-box skeleton-text short"></div>
+            </div>
+        `).join('');
     }
 
     const response = await fetchAndParse('_posts/news'); // עכשיו קורא ל-news.json

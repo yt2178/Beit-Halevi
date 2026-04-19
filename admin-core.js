@@ -12,6 +12,7 @@ export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
+export const TASKS_JSON_PATH = 'data/admin-tasks.json';
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 // Google API Config
@@ -133,11 +134,7 @@ export async function googleLogin() {
             return reject(new Error("גוגל לא נטען כראוי, נא לרענן או לבדוק חיבור אינטרנט."));
         }
 
-        let timeoutId;
-
-        console.log("Setting up token callback...");
         window.tokenClient.callback = (tokenResponse) => {
-            clearTimeout(timeoutId);
             console.log("Received Token Response in googleLogin:", tokenResponse);
 
             if (tokenResponse.error) {
@@ -163,10 +160,7 @@ export async function googleLogin() {
         const scopeStr = "https://www.googleapis.com/auth/drive.file email profile openid";
         console.log("Requesting access token with explicit scope:", scopeStr);
 
-        // [חדש] טיפול בחלוןutorialשנסגר בלי סיום הכרת
-        timeoutId = setTimeout(() => {
-            reject(new Error("חלון התחברות לא נפתח. בדוק אם דפדפנך מחסום חלונות קופצים."));
-        }, 10000);
+        // הוסרה הגבלת ה-10 שניות לבקשת המשתמש чтобы לאפשר התחברות ללא לחץ זמן
 
         // REQUEST TOKEN
         // Explicitly passing the scope here is the RECOMMENDED fix for "Missing required parameter: scope"
@@ -177,7 +171,6 @@ export async function googleLogin() {
             });
             console.log("requestAccessToken called.");
         } catch (requestErr) {
-            clearTimeout(timeoutId);
             console.error("Error calling requestAccessToken:", requestErr);
             reject(requestErr);
         }
@@ -186,54 +179,23 @@ export async function googleLogin() {
 
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
-
-    // Using split strings and trim to bulletproof against hidden characters
-    const p1 = "https://";
-    const p2 = "www.googleapis.com";
-    const p3 = "/drive/v3/files";
-    const baseUrl = (p1 + p2 + p3).trim();
-
-    const query = "name='" + encodeURIComponent(FOLDER_NAME) + "' and mimeType='application/vnd.google-apps.folder' and trashed=false";
-    const searchUrl = baseUrl + "?q=" + query;
-
     try {
-        console.log("Drive Search URL:", searchUrl);
-        const searchRes = await fetch(searchUrl, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-
-        if (!searchRes.ok) {
-            const errText = await searchRes.text().catch(() => '');
-            console.error("Drive Search failed: " + searchRes.status, errText);
-            return "root";
-        }
-
+        const searchRes = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+            { headers: { "Authorization": "Bearer " + token } }
+        );
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
-        console.log("Folder not found, creating new folder...");
-        const createRes = await fetch(baseUrl, {
+        const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
             method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: FOLDER_NAME,
-                mimeType: "application/vnd.google-apps.folder"
-            })
+            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+            body: JSON.stringify({ name: FOLDER_NAME, mimeType: "application/vnd.google-apps.folder" })
         });
-
-        if (!createRes.ok) {
-            const errText = await createRes.text().catch(() => '');
-            throw new Error("Folder creation failed: " + createRes.status + " " + errText);
-        }
-
         const createData = await createRes.json();
         await makeFilePublic(createData.id, token);
         return createData.id;
     } catch (err) {
-        console.error("getFolderId error:", err);
         return "root";
     }
 }
@@ -245,15 +207,13 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    const uploadUrl = "https://" + "www.googleapis.com" + "/upload/drive/v3/files?uploadType=multipart";
+    // Retry + timeout support for Drive uploads
+    const uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     const maxAttempts = 2;
-
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
-
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
-            console.log("Attempt " + attempt + ": Uploading " + file.name + " to Drive...");
             const res = await fetch(uploadUrl, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
@@ -261,22 +221,19 @@ export async function uploadFileToDrive(file, token) {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
-
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
-                console.error("Drive upload attempt " + attempt + " failed: " + res.status, text);
-                if (attempt === maxAttempts) throw new Error("Drive upload failed: " + res.status + " " + text);
+                if (attempt === maxAttempts) throw new Error(`Drive upload failed: ${res.status} ${text}`);
+                // otherwise retry
                 continue;
             }
-
             const data = await res.json();
-            console.log("Upload successful, File ID: " + data.id);
             return data.id;
         } catch (err) {
             clearTimeout(timeoutId);
-            console.error("Attempt " + attempt + " error:", err);
             if (attempt === maxAttempts) throw err;
-            await new Promise(r => setTimeout(r, 1000));
+            // small backoff
+            await new Promise(r => setTimeout(r, 800));
         }
     }
 }
@@ -321,27 +278,19 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
 }
 
 export async function makeFilePublic(fileId, token) {
-    const p1 = "https://";
-    const p2 = "www.googleapis.com";
-    const p3 = "/drive/v3/files/";
-    const url = (p1 + p2 + p3).trim() + fileId + "/permissions";
-
-    await fetch(url, {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
         method: "POST",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ role: "reader", type: "anyone" })
     });
-    return "https://" + "drive.google.com" + "/thumbnail?id=" + fileId + "&sz=w1000";
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
 }
 
 // Logging helper
 export async function logEvent(action, type = 'general') {
     if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
     try {
-        const p1 = "https://";
-        const p2 = "api.github.com";
-        const p3 = "/repos/";
-        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
         let historyArray = [];
         let sha = null;
 
@@ -360,16 +309,68 @@ export async function logEvent(action, type = 'general') {
         });
         if (historyArray.length > 100) historyArray = historyArray.slice(0, 100);
 
-        await fetch(API_URL, {
-            method: 'PUT',
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: `Log action: ${action}`,
-                content: encodeToBase64(JSON.stringify(historyArray, null, 2)),
-                sha: sha,
-                branch: 'main'
-            })
-        });
+        const payload = {
+            message: `Log action: ${action}`,
+            content: encodeToBase64(JSON.stringify(historyArray, null, 2)),
+            branch: 'main'
+        };
+        await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 3);
     } catch (err) { }
 }
 
+// ============================================================
+// 6. Push Notifications
+// ============================================================
+export async function sendPushNotification(title, message) {
+    const restKey = localStorage.getItem('onesignal_rest_key');
+    let appIdStr = null;
+    
+    try {
+        const configElement = document.getElementById('site-onesignal-id');
+        if (configElement && configElement.value) {
+            appIdStr = configElement.value.trim();
+        } else {
+            // גיבוי לטעינה מהקובץ אם השדה לא נמצא
+            const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`);
+            if (res.ok) {
+                const data = await res.json();
+                const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
+                appIdStr = config.oneSignalAppId;
+            }
+        }
+    } catch (e) {
+        console.error("Could not fetch OneSignal App ID", e);
+    }
+
+    if (!restKey || !appIdStr) {
+        console.warn("OneSignal REST Key or App ID differs/missing. Push notification skipped.");
+        return;
+    }
+
+    try {
+        const payload = {
+            app_id: appIdStr,
+            included_segments: ["Subscribed Users"],
+            headings: { "en": title, "he": title },
+            contents: { "en": message, "he": message },
+            url: "https://yt2178.github.io/Beit-Halevi/"
+        };
+
+        const response = await fetch("https://onesignal.com/api/v1/notifications", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Basic ${restKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            console.error("Failed to send push notification:", await response.text());
+        } else {
+            console.log("Push notification sent successfully!");
+        }
+    } catch (err) {
+        console.error("Error sending push notification:", err);
+    }
+}

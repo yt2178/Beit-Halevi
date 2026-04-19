@@ -276,4 +276,36 @@ export function initGalleryEvents() {
             else if (e.key === 'Escape') closeLightbox();
         }
     });
-}
+
+    // [חדש] תמיכה בהחלקה (Swipe) למכשירי מגע בלייטבוקס
+    if (lightbox) {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const SWIPE_THRESHOLD = 50;  // פיקסלים מינימלי לזיהוי החלקה
+        const VERTICAL_LIMIT = 80;   // מניעת טריגר על גלילה אנכית
+
+        lightbox.addEventListener('touchstart', (e) => {
+            // לא מפעילים אם יש יותר מאצבע אחת (pinch-to-zoom)
+            if (e.touches.length > 1) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        lightbox.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 0) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+
+            // מתעלמים אם ההחלקה הייתה אנכית יותר מאופקית
+            if (Math.abs(dy) > VERTICAL_LIMIT) return;
+            if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+
+            // ב-RTL: החלקה שמאלה = תמונה הבאה, ימינה = קודמת
+            if (dx < 0) {
+                showNextImage(); // החלקה שמאלה → הבא
+            } else {
+                showPrevImage(); // החלקה ימינה → קודם
+            }
+        }, { passive: true });
+    }
+}

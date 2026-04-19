@@ -4,11 +4,55 @@ import {
     uploadFileToDrive, makeFilePublic,
     googleLogin,
     showStatus, hideStatus,
-    logEvent, putWithShaRetry
+    logEvent, putWithShaRetry, sendPushNotification
 } from './admin-core.js';
 
 let editingAlbumIndex = null; // לאחסן אם עורכים אלבום קיים
 let selectedFiles = [];       // התמונות שנבחרו להעלאה
+
+/**
+ * [חדש] פונקציה לדחיסת תמונה לפני העלאה לחיסכון במקום בדרייב
+ * מורידה איכות ל-0.8 ומגבילה רוחב למקסימום 1600px
+ */
+async function compressImage(file, maxWidth = 1600, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(compressedFile);
+                    } else {
+                        reject(new Error("Canvas toBlob failed"));
+                    }
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = err => reject(err);
+        };
+        reader.onerror = err => reject(err);
+    });
+}
 
 // [חדש] פונקציה להצגת תמונה בתצוגה מקדימה גדולה במודאל הניהול
 function showLargePreview(src) {
@@ -16,7 +60,7 @@ function showLargePreview(src) {
     const img = document.getElementById('preview-large-img');
     if (modal && img) {
         img.src = src;
-        modal.classList.add('active'); // משתמש במחלקה של ה-Lightbox
+        modal.style.display = 'flex';
     }
 }
 
@@ -26,7 +70,7 @@ export function initGalleryAdminEvents() {
     if (closeBtn) {
         closeBtn.onclick = () => {
             const modal = document.getElementById('image-preview-modal');
-            if (modal) modal.classList.remove('active');
+            if (modal) modal.style.display = 'none';
         };
     }
 }
@@ -67,14 +111,12 @@ export async function loadAndRenderGallery() {
     // שימוש במשתנים הגלובליים מ-admin.js
     if (typeof GITHUB_TOKEN === 'undefined' || !GITHUB_TOKEN) return;
 
-    const p1 = "https://";
-    const p2 = "api.github.com";
-    const p3 = "/repos/";
-    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
 
     try {
         const response = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to fetch gallery JSON');
@@ -210,12 +252,10 @@ async function deleteAlbum(indexToDelete) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את האלבום?')) return;
 
     try {
-        const p1 = "https://";
-        const p2 = "api.github.com";
-        const p3 = "/repos/";
-        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
         const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+            cache: 'no-store'
         });
 
         if (!fileResponse.ok) throw new Error('Failed to fetch gallery JSON');
@@ -368,18 +408,20 @@ async function handleGallerySubmit(e) {
 
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
+    const albumThumbnail = albumThumbnailInput.files[0];
     const albumImages = albumImagesInput.files;
-
-    // [תיקון] קבלת תמונת לוגו (אם הוזנה כ-URL ידני או נבחרה מתוך הרשימה)
-    // הערה: בקוד הנוכחי albumThumbnailInput הוא input type="text" שמקבל URL
-    let albumThumbnail = albumThumbnailInput.value.trim();
 
     if (!albumTitle) {
         showStatus('נא להזין שם לאלבום', null, true);
         return;
     }
 
-    if (albumImages.length === 0 && !editingAlbumIndex) {
+    if (!albumThumbnail) {
+        showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
+        return;
+    }
+
+    if (albumImages.length === 0) {
         showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
         return;
     }
@@ -393,12 +435,10 @@ async function handleGallerySubmit(e) {
 
         // 1. השגת הקובץ הנוכחי
         showStatus('ניגש למאגר הנתונים ב-GitHub...', 35);
-        const p1 = "https://";
-        const p2 = "api.github.com";
-        const p3 = "/repos/";
-        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
         const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+            cache: 'no-store'
         });
 
         if (!fileResponse.ok) throw new Error('Failed to fetch gallery JSON');
@@ -420,8 +460,20 @@ async function handleGallerySubmit(e) {
             } else {
                 const fileObj = selectedFiles.find(f => f.localUrl === img.src);
                 if (fileObj) {
+                    showStatus(`מעבד ודוחס תמונה ${processedCount + 1} מתוך ${totalItems}...`, 40 + (processedCount / totalItems * 40));
+                    
+                    let fileToUpload = fileObj.file;
+                    try {
+                        // דחיסת תמונה לחיסכון בנפח (רק אם זו תמונה)
+                        if (fileToUpload.type.startsWith('image/')) {
+                            fileToUpload = await compressImage(fileToUpload);
+                        }
+                    } catch (compressErr) {
+                        console.warn("Compression failed, uploading original:", compressErr);
+                    }
+
                     showStatus(`מעלה תמונה ${processedCount + 1} מתוך ${totalItems} לדרייב...`, 40 + (processedCount / totalItems * 40));
-                    const fileId = await uploadFileToDrive(fileObj.file, googleAccessToken);
+                    const fileId = await uploadFileToDrive(fileToUpload, googleAccessToken);
                     const publicUrl = await makeFilePublic(fileId, googleAccessToken);
                     finalImages.push(publicUrl);
                     processedCount++;
@@ -475,10 +527,12 @@ async function handleGallerySubmit(e) {
             showStatus('האלבום נשמר בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
             logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
-            resetGalleryForm();
-            loadAndRenderGallery();
-
-            logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
+            
+            // [חדש] התראה על הוספת אלבום חדש לגמרי
+            if (!isUpdate) {
+                sendPushNotification(albumTitleInput.value, "אלבום תמונות חדש הועלה לגלריית הישיבה. מוזמנים לצפות!");
+            }
+            
             resetGalleryForm();
             loadAndRenderGallery();
         } else {

@@ -4,8 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https://identity.netlify.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://identity.netlify.com https://cdn.jsdelivr.net https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://api.github.com https://onesignal.com https://*.onesignal.com https://*.googleapis.com https://www.hebcal.com https://identity.netlify.com https://docs.google.com; frame-src 'self' https://www.google.com; worker-src 'self' blob:;">
     <title>ישיבת בית הלוי - ראש העין</title>
     <meta name="description"
         content="האתר הרשמי של ישיבת בית הלוי בראש העין בראשות הגה&quot;צ אבנר עפג'ין שליט''א. באתר תוכלו למצוא חדשות, עדכונים, גלריות תמונות מאירועים בישיבה ועוד.">
@@ -16,16 +14,16 @@
         content="האתר הרשמי של ישיבת בית הלוי בראש העין בראשות הגה&quot;צ אבנר עפג'ין שליט''א. באתר תוכלו למצוא חדשות, עדכונים, גלריות תמונות מאירועים בישיבה ועוד." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://yt2178.github.io/Beit-Halevi/" />
-    <meta property="og:image" content="https://yt2178.github.io/Beit-Halevi/assets/social-image.jp.jpeg" />
+    <meta property="og:image" content="https://yt2178.github.io/Beit-Halevi/assets/social-preview.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="ישיבת בית הלוי - ראש העין" />
     <meta name="twitter:description" content="האתר הרשמי של ישיבת בית הלוי בראש העין - חדשות, עדכונים וגלריות." />
-    <meta name="twitter:image" content="https://yt2178.github.io/Beit-Halevi/assets/social-image.jp.jpeg" />
+    <meta name="twitter:image" content="https://yt2178.github.io/Beit-Halevi/assets/social-preview.png" />
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
@@ -55,12 +53,12 @@
       }
     }
     </script>
-</head> 210.97
 </head>
 
 <body>
 
     <div class="bsd">בס"ד</div>
+    <a href="#main-content" class="skip-link">דלג לתוכן המרכזי</a>
     <div class="top-bar"><span id="date-time-display">טוען תאריך ושעה...</span></div>
 
     <!-- [חדש] אזור זמני היום -->
@@ -84,11 +82,10 @@
             <i class="fas fa-moon"></i>
         </button>
     </nav>
-
-    <main>
+    <main id="main-content">
         <section id="about">
-            <h2>אודות הישיבה</h2>
-            <p>ישיבת "בית הלוי" בראש העין עומדת בראשותו של האדמו"ר הגאון הרב אבנר עפג'ין שליט"א.</p>
+            <h2 id="about-title-dynamic">אודות הישיבה</h2>
+            <p id="about-body-dynamic">ישיבת "בית הלוי" בראש העין עומדת בראשותו של האדמו"ר הגאון הרב אבנר עפג'ין שליט\"א.</p>
         </section>
 
         <section id="news">
@@ -108,12 +105,12 @@
         </section>
 
         <section id="donations" class="donation-section">
-            <h2>היו שותפים בהחזקת התורה</h2>
-            <p>כל תרומה מסייעת לנו להמשיך להגדיל תורה ולהאדירה. בזכותכם, נוכל להמשיך ולהעמיד עוד דורות של תלמידי
+            <h2 id="donation-title-dynamic">היו שותפים בהחזקת התורה</h2>
+            <p id="donation-body-dynamic">כל תרומה מסייעת לנו להמשיך להגדיל תורה ולהאדירה. בזכותכם, נוכל להמשיך ולהעמיד עוד דורות של תלמידי
                 חכמים.
             </p>
             <a href="https://www.kesherhk.info/kehilot/#!/Label/10465/moked=kehilot-site" target="_blank"
-                rel="noopener noreferrer" class="donation-button">לתרומה מאובטחת לחץ כאן</a>
+                id="donation-link-dynamic" rel="noopener noreferrer" class="donation-button">לתרומה מאובטחת לחץ כאן</a>
         </section>
 
         <section id="contact">
@@ -208,8 +205,8 @@
 
     <div class="lightbox" id="lightbox">
         <span class="lightbox-close">&times;</span>
-        <a class="lightbox-prev">&#10094;</a>
-        <a class="lightbox-next">&#10095;</a>
+        <a class="lightbox-prev" aria-label="תמונה קודמת">&#10095;</a>
+        <a class="lightbox-next" aria-label="תמונה הבאה">&#10094;</a>
 
 
         <div class="lightbox-controls">
@@ -248,6 +245,21 @@
             viewBox="0 0 24 24" fill="currentColor">
             <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path>
         </svg></button>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-banner" style="display:none;">
+        <div class="pwa-banner-content">
+            <img src="assets/icons/icon-192x192.png" alt="לוגו">
+            <div class="pwa-text">
+                <strong>ישיבת בית הלוי</strong>
+                <span>הוסף למסך הבית לגישה מהירה!</span>
+            </div>
+        </div>
+        <div class="pwa-actions">
+            <button id="pwa-install-btn" class="pwa-btn primary">התקן</button>
+            <button id="pwa-close-btn" class="pwa-btn secondary"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
 
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

@@ -23,15 +23,12 @@ const EDITABLE_TEXTS = [
     { key: 'donation_title', label: '💝 כותרת תרומות' },
     { key: 'donation_body', label: '💰 תוכן תרומות' },
     { key: 'contact_title', label: '📞 כותרת צור קשר' },
-    { key: 'contact_intro', label: '💬 תוכן צור קשר' },
+    { key: 'contact_intro', label: '💬 טקסט הקדמה צור קשר' },
 ];
 
 export async function loadSiteConfig() {
     try {
-        const p1 = "https://";
-        const p2 = "api.github.com";
-        const p3 = "/repos/";
-        const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
+        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
         const res = await fetch(API_URL, {
             headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
         });
@@ -42,9 +39,12 @@ export async function loadSiteConfig() {
             currentSiteConfig = {
                 texts: config.texts || {},
                 theme: config.theme || 'light',
-                primaryColor: config.primaryColor || '#1a4b84',
-                oneSignalAppId: config.oneSignalAppId || ''
+                primaryColor: config.primaryColor || '#1a4b84'
             };
+            if (config.texts && config.texts.donation_link) {
+                const linkEl = document.getElementById('site-donation-link');
+                if (linkEl) linkEl.value = config.texts.donation_link;
+            }
             siteConfigSHA = data.sha;
 
             // עדכון ה-UI
@@ -52,6 +52,9 @@ export async function loadSiteConfig() {
             document.getElementById('site-primary-color').value = currentSiteConfig.primaryColor;
             if (document.getElementById('site-onesignal-id')) {
                 document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
+            }
+            if (document.getElementById('site-onesignal-rest')) {
+                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
             }
 
             renderEditableTextsList(currentSiteConfig.texts);
@@ -186,11 +189,22 @@ export async function saveAllSiteSettings() {
     currentSiteConfig.theme = document.getElementById('site-theme-select').value;
     currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
     currentSiteConfig.oneSignalAppId = document.getElementById('site-onesignal-id').value.trim();
+    
+    // [חדש] שמירת קישור תרומה
+    const donationLinkEl = document.getElementById('site-donation-link');
+    if (donationLinkEl) {
+        currentSiteConfig.texts.donation_link = donationLinkEl.value.trim();
+    }
 
-    const p1 = "https://";
-    const p2 = "api.github.com";
-    const p3 = "/repos/";
-    const API_URL = (p1 + p2 + p3).trim() + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
+    // שמירה מקומית בלבד של ה-REST API KEY
+    const restKey = document.getElementById('site-onesignal-rest')?.value.trim();
+    if (restKey) {
+        localStorage.setItem('onesignal_rest_key', restKey);
+    } else {
+        localStorage.removeItem('onesignal_rest_key');
+    }
+
+    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
 
     try {
         const payload = {

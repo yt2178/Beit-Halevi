@@ -12,17 +12,6 @@
     --secondary-color: #3498db;
 }
 
-/* [תיקון] התאמת ה-Lightbox של האתר לשימוש בפאנל הניהול */
-#image-preview-modal.lightbox {
-    z-index: 11000;
-    /* וודא שזה מעל הכל בניהול */
-}
-
-#image-preview-modal .lightbox-content img {
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-}
-
 body {
     background-color: var(--bg-color);
     font-family: 'Assistant', 'Segoe UI', sans-serif;
@@ -30,6 +19,17 @@ body {
     padding: 0;
     direction: rtl;
 }
+
+/* --- שיפורי נגישות (Accessibility) --- */
+:focus-visible {
+    outline: 3px solid #3498db;
+    outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 
 .admin-main {
     max-width: 1100px;
@@ -253,13 +253,6 @@ textarea:focus {
     filter: brightness(1.1);
 }
 
-.premium-btn.small {
-    width: auto;
-    padding: 8px 18px;
-    font-size: 0.9rem;
-    border-radius: 8px;
-}
-
 .premium-btn.danger {
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
 }
@@ -307,12 +300,6 @@ textarea:focus {
     max-width: 400px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
     animation: slideUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-body.dark-theme .status-content {
-    background: var(--card-bg);
-    color: var(--text-main);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes slideUp {
@@ -497,46 +484,25 @@ body.dark-theme .status-content {
     border-bottom: none !important;
 }
 
-body.dark-theme .CodeMirror,
-body.dark-theme .editor-toolbar {
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    background: #0b1220;
-    color: var(--text-main);
-}
-
-/* Gallery Admin Grid — same layout as user's thumbnail-grid */
+/* Gallery Admin Grid */
 .album-preview-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    margin: 20px 0;
-    background: #1a1a2e;
-    /* רקע כהה כמו overlay הגלריה */
-    padding: 16px;
+    gap: 15px;
+    margin: 25px 0;
+    background: #f1f5f9;
+    padding: 20px;
     border-radius: 16px;
     max-width: 100%;
 }
 
-/* תווית "תצוגה מקדימה כמו שמשתמש רואה" */
-.album-preview-grid::before {
-    content: '👁 תצוגה מקדימה — כך יראה המשתמש';
-    display: block;
-    grid-column: 1 / -1;
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 4px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
 .album-preview-item {
     position: relative;
-    border-radius: 5px;
+    border-radius: 12px;
     overflow: hidden;
-    height: 120px;
-    /* גובה כמו .thumbnail-grid img */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-    border: 2px solid transparent;
+    aspect-ratio: 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 3px solid white;
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -546,16 +512,12 @@ body.dark-theme .editor-toolbar {
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: opacity 0.3s;
-}
-
-.album-preview-item:hover img {
-    opacity: 0.8;
 }
 
 .album-preview-item.is-thumbnail {
     border-color: #f1c40f;
-    box-shadow: 0 0 12px rgba(241, 196, 15, 0.7);
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6);
+    transform: scale(1.05);
     z-index: 2;
 }
 
@@ -772,11 +734,6 @@ body.dark-theme header {
     background: linear-gradient(135deg, #0f1218 0%, #1e3a5a 100%);
 }
 
-body.dark-theme .admin-main {
-    background-color: transparent;
-    box-shadow: none;
-}
-
 body.dark-theme .admin-card,
 body.dark-theme .login-card,
 body.dark-theme .dashboard-card,
@@ -836,33 +793,7 @@ body.dark-theme textarea {
     border-color: rgba(255, 255, 255, 0.03);
 }
 
-.premium-btn.small {
-    padding: 8px 12px;
-}
-
-/* Small layout tweak for draft buttons */
-.form-actions>div {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-/* Local draft note style */
-.local-draft-note {
-    background: linear-gradient(90deg, rgba(255, 249, 238, 0.6), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    color: var(--text-main);
-}
-
-body.dark-theme .local-draft-note {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 256, 0.1);
-}
-
-/* [תיקון] כותרת דאשבורד "מה תרצה לעשות היום?" במצב כהה */
+/* [תיקון] כותרת דاש bord "מה תרצה לעשות היום?" במצב כהה */
 body.dark-theme .dashboard-header h2 {
     color: #e2e8f0;
     /* לבן/אפור בהיר */
@@ -882,6 +813,11 @@ body.dark-theme .empty-state i {
 /* Local draft note style */
 .local-draft-note {
     background: linear-gradient(90deg, rgba(255, 249, 238, 0.6), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: var(--text-main);
     z-index: 5000;
     pointer-events: none;
 }
@@ -943,72 +879,413 @@ body.dark-theme .toast {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Toast Redesign */
-.toast-container {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    z-index: 12000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
+/* ============================================================
+   ADMIN RESPONSIVE SYSTEM - MOBILE FIRST
+   Breakpoints: 320px | 480px | 600px | 768px
+   ============================================================ */
+
+/* --- מניעת גלילה אופקית --- */
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
-.premium-toast {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-right: 5px solid var(--secondary-color);
-    padding: 16px 24px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    color: var(--text-main);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 250px;
-    transform: translateX(-120%);
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: auto;
+/* ============================================================
+   768px - טאבלטים וטלפונים גדולים
+   ============================================================ */
+@media screen and (max-width: 768px) {
+
+    /* Header */
+    header {
+        padding: 12px 16px;
+        flex-wrap: nowrap;
+    }
+
+    header h1 {
+        font-size: clamp(0.9rem, 4vw, 1.3rem);
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* כפתורי ה-header */
+    header > div {
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    #logout-btn,
+    #theme-toggle-btn {
+        padding: 7px 12px;
+        font-size: 0.85rem;
+    }
+
+    /* Main content */
+    .admin-main {
+        margin: 15px auto;
+        padding: 15px;
+        padding-bottom: 80px; /* מקום לתפריט תחתון */
+    }
+
+    /* Dashboard Grid → עמודה אחת */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .dashboard-card {
+        padding: 20px;
+        border-radius: 16px;
+        gap: 18px;
+    }
+
+    .card-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.6rem;
+        border-radius: 14px;
+    }
+
+    .card-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .card-content p {
+        font-size: 0.9rem;
+    }
+
+    /* Cards */
+    .admin-card,
+    .login-card {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    /* Section header */
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .section-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .back-to-dashboard-btn {
+        width: auto;
+        align-self: flex-start;
+    }
+
+    /* Inputs */
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    textarea {
+        font-size: 16px; /* מניעת זום ב-iOS */
+        padding: 12px 14px;
+    }
+
+    /* Form actions → עמודה */
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .form-actions > div {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .premium-btn {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+
+    .premium-btn.small {
+        font-size: 0.85rem;
+        padding: 9px 14px;
+    }
+
+    /* News list items */
+    .news-item-admin,
+    .album-item-admin {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .item-details {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .item-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .item-thumb-admin {
+        width: 80px;
+        height: 52px;
+    }
+
+    /* Gallery preview grid */
+    .album-preview-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 10px;
+        padding: 12px;
+    }
+
+    /* History */
+    .history-item {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 14px;
+    }
+
+    .history-time {
+        min-width: auto;
+        font-size: 0.8rem;
+        width: 100%;
+    }
+
+    /* Messages */
+    .message-header {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* File upload */
+    .file-upload-label {
+        padding: 25px 15px;
+    }
+
+    /* Status overlay */
+    .status-content {
+        padding: 28px 20px;
+        border-radius: 16px;
+    }
+
+    /* Toast */
+    #toast-container {
+        bottom: 80px; /* מעל התפריט התחתון */
+    }
+
+    /* Site settings grid → עמודה */
+    .site-settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    /* Dashboard header */
+    .dashboard-header h2 {
+        font-size: 1.6rem;
+    }
 }
 
-.premium-toast.active {
-    transform: translateX(0);
+/* ============================================================
+   480px - טלפונים רגילים
+   ============================================================ */
+@media screen and (max-width: 480px) {
+
+    .admin-main {
+        padding: 10px;
+        padding-bottom: 78px;
+    }
+
+    .admin-card,
+    .login-card {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .admin-card h3 {
+        font-size: 1rem;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="date"],
+    textarea {
+        padding: 11px 12px;
+        border-radius: 10px;
+    }
+
+    .premium-btn {
+        min-height: 48px;
+        font-size: 0.92rem;
+        border-radius: 10px;
+    }
+
+    .album-preview-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .history-user {
+        min-width: auto;
+        font-size: 0.9rem;
+    }
+
+    .history-action {
+        font-size: 0.9rem;
+    }
 }
 
-.premium-toast.success {
-    border-right-color: var(--accent-success);
+/* ============================================================
+   320px - iPhone SE ומכשירים קטנים מאד
+   ============================================================ */
+@media screen and (max-width: 320px) {
+
+    header h1 {
+        font-size: 0.85rem;
+    }
+
+    #logout-btn,
+    #theme-toggle-btn {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+    }
+
+    .admin-main {
+        padding: 8px;
+    }
+
+    .admin-card,
+    .login-card {
+        padding: 12px;
+    }
+
+    .dashboard-card {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .card-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 1.3rem;
+    }
+
+    .card-content h3 {
+        font-size: 1rem;
+    }
+
+    .card-content p {
+        font-size: 0.82rem;
+    }
+
+    .premium-btn {
+        font-size: 0.85rem;
+        padding: 10px 14px;
+        border-radius: 8px;
+    }
+
+    .section-header h2 {
+        font-size: 1.15rem;
+    }
+
+    .album-preview-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
 }
 
-.premium-toast.error {
-    border-right-color: var(--accent-danger);
-}
+/* ============================================================
+   תפריט ניווט תחתון קבוע (Bottom Nav) - מסכים עד 768px
+   כמו WhatsApp / Instagram
+   ============================================================ */
+@media screen and (max-width: 768px) {
 
-.premium-toast.info {
-    border-right-color: var(--secondary-color);
-}
+    /* כרגע הסקשנים מתחלפים דרך JS (dashboard → news → gallery...)
+       נוסיף IndicatorBar תחתון שמחקה ניווט מובייל */
 
-.premium-toast i {
-    font-size: 1.2rem;
-}
+    body::after {
+        content: '';
+        display: block;
+        height: 64px; /* גובה הבר התחתון */
+    }
 
-.premium-toast.success i {
-    color: var(--accent-success);
-}
+    .admin-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        z-index: 2000;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+    }
 
-.premium-toast.error i {
-    color: var(--accent-danger);
-}
+    body.dark-theme .admin-bottom-nav {
+        background: #0f1218;
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
 
-.premium-toast.info i {
-    color: var(--secondary-color);
-}
+    .admin-bottom-nav-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 12px;
+        color: #94a3b8;
+        font-size: 0.65rem;
+        font-family: inherit;
+        min-height: auto;
+        transition: all 0.2s;
+        flex: 1;
+        max-width: 70px;
+    }
 
-body.dark-theme .premium-toast {
-    background: rgba(30, 41, 59, 0.95);
-    color: #f8fafc;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    .admin-bottom-nav-btn i {
+        font-size: 1.3rem;
+        transition: transform 0.2s;
+    }
+
+    .admin-bottom-nav-btn.active,
+    .admin-bottom-nav-btn:hover {
+        color: #1a4b84;
+    }
+
+    body.dark-theme .admin-bottom-nav-btn.active,
+    body.dark-theme .admin-bottom-nav-btn:hover {
+        color: #60a5fa;
+    }
+
+    .admin-bottom-nav-btn.active i {
+        transform: scale(1.15);
+    }
+
+    .admin-bottom-nav-btn span {
+        font-weight: 600;
+    }
+
+    /* הדגשת הכפתור הפעיל */
+    .admin-bottom-nav-btn.active {
+        background: rgba(26, 75, 132, 0.08);
+        border-radius: 10px;
+    }
+
+    body.dark-theme .admin-bottom-nav-btn.active {
+        background: rgba(96, 165, 250, 0.1);
+    }
 }
 
 /* END OF FILE admin.css */

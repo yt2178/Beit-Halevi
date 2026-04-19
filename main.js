@@ -1,5 +1,5 @@
 // main.js
-import { loadNews, loadGallery, allLoadedNews, allLoadedAlbums, BASE_URL } from './data-loader.js';
+import { applySiteConfig, loadNews, loadGallery, allLoadedNews, allLoadedAlbums, BASE_URL } from './data-loader.js';
 // איחוד כל הפונקציות מ-gallery.js
 import {
     checkUrlHash, showNextImage, showPrevImage, closeLightbox, openGridOverlay, initGalleryEvents
@@ -194,6 +194,8 @@ if (hebrewYearDisplay) {
     initGalleryEvents(); // [חדש] רישום אירועי Gallery
     initNewsEvents(); // [חדש] רישום אירועי News
     initZmanim(); // [חדש] טעינת זמני היום
+    applySiteConfig(); // [פרימיום] החלת הגדרות אתר דינמיות
+    
     // [חדש] בדיקות Deep Link ראשוניות לאחר טעינת כל הנתונים
     checkUrlHash();
     checkNewsHash();
@@ -234,30 +236,42 @@ if (hebrewYearDisplay) {
             // [חדש] אתחול OneSignal אם מוגדר
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
-                // [Fix] דגל שיסמן אם OneSignal אותחל בהצלחה
-                window._oneSignalReady = false;
+                window.OneSignalDeferred.push(function (OneSignal) {
+                    OneSignal.init({
+                        appId: config.oneSignalAppId,
+                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
+                        notifyButton: {
+                            enable: false, // נשתמש בכפתור שלנו
+                        },
+                        allowLocalhostAsSecureOrigin: true,
+                    });
 
-                window.OneSignalDeferred.push(async function (OneSignal) {
-                    const isGitHubPages = window.location.hostname.includes('github.io');
-                    const basePath = isGitHubPages ? '/Beit-Halevi/' : '/';
-                    console.log('[OneSignal] Initialization with basePath:', basePath);
+                    // [חדש] פונקציה לעדכון מצב הכפתור
+                    function updateSubscribeUI() {
+                        const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+                        const subBtn = document.getElementById('subscribe-btn');
+                        const modalP = document.querySelector('#subscribe-modal p');
 
-                    try {
-                        await OneSignal.init({
-                            appId: config.oneSignalAppId,
-                            safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
-                            notifyButton: { enable: false },
-                            allowLocalhostAsSecureOrigin: true,
-                            // [תיקון] נתיב מלא למניעת שגיאת Invalid URL
-                            serviceWorkerPath: basePath + "OneSignalSDKWorker.js",
-                            serviceWorkerParam: { scope: basePath },
-                        });
-                        window._oneSignalReady = true;
-                        console.log('[OneSignal] initialized successfully ✓');
-                    } catch (initErr) {
-                        window._oneSignalReady = false;
-                        console.error('[OneSignal] init failed:', initErr);
+                        if (isSubscribed) {
+                            if (subBtn) {
+                                subBtn.innerHTML = '<i class="fas fa-bell-slash"></i> בטל הרשמה';
+                                subBtn.style.backgroundColor = '#e74c3c'; // צבע אדום
+                            }
+                            if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! לחץ למטה אם ברצונך לבטל.";
+                        } else {
+                            if (subBtn) {
+                                subBtn.innerHTML = '<i class="fas fa-bell"></i> הרשם עכשיו';
+                                subBtn.style.backgroundColor = ''; // חזור לצבע המקורי
+                            }
+                            if (modalP) modalP.textContent = "קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.";
+                        }
                     }
+
+                    // מאזין לשינוי במצב ההרשמה
+                    OneSignal.User.PushSubscription.addEventListener("change", updateSubscribeUI);
+                    
+                    // בדיקה ראשונית כשהדף עולה
+                    updateSubscribeUI();
                 });
 
                 // טעינת הסקריפט של OneSignal
@@ -269,30 +283,16 @@ if (hebrewYearDisplay) {
             }
         }
     } catch (e) { console.log("No site-config.json found yet"); }
-})();
 
-// [תיקון] לוגיקת הרשמה להתראות - מחוץ ל-IIFE כדי להבטיח שתמיד תרוץ
-// זה מבטיח שה-event listener יירשם גם אם site-config.json לא נטען
-(function initSubscriptionButton() {
-    'use strict';
-    console.log('Initializing subscription button...');
-
+    // [חדש] לוגיקת הרשמה להתראות (FAB ומודאל)
     const fabSubscribeBtn = document.getElementById('fab-subscribe-btn');
     const subscribeModal = document.getElementById('subscribe-modal');
     const subscribeCloseBtn = document.querySelector('.subscribe-close');
     const subscribeBtn = document.getElementById('subscribe-btn');
 
-    console.log('Subscribe button elements:', {
-        fabBtn: !!fabSubscribeBtn,
-        modal: !!subscribeModal,
-        closeBtn: !!subscribeCloseBtn,
-        subscribeBtn: !!subscribeBtn
-    });
-
     // פתיחת המודאל
     if (fabSubscribeBtn && subscribeModal) {
         fabSubscribeBtn.addEventListener('click', () => {
-            console.log('FAB button clicked, opening modal');
             subscribeModal.classList.add('active');
         });
     }
@@ -300,7 +300,6 @@ if (hebrewYearDisplay) {
     // סגירת המודאל
     if (subscribeCloseBtn && subscribeModal) {
         subscribeCloseBtn.addEventListener('click', () => {
-            console.log('Close button clicked, closing modal');
             subscribeModal.classList.remove('active');
         });
     }
@@ -309,7 +308,6 @@ if (hebrewYearDisplay) {
     if (subscribeModal) {
         window.addEventListener('click', (e) => {
             if (e.target === subscribeModal) {
-                console.log('Clicked outside modal, closing');
                 subscribeModal.classList.remove('active');
             }
         });
@@ -317,60 +315,44 @@ if (hebrewYearDisplay) {
 
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
-        console.log('Registering click event on subscribe button');
         subscribeBtn.addEventListener('click', async () => {
-            console.log('Subscribe button clicked!');
-
-            // בדיקה אם OneSignal אותחל בהצלחה (הדגל מוגדר ל-true רק אחרי init מוצלח)
-            if (window._oneSignalReady === true) {
-                console.log('OneSignal is ready, requesting subscription via OneSignal');
+            // אם OneSignal נטען
+            if (window.OneSignalDeferred) {
                 window.OneSignalDeferred.push(async function (OneSignal) {
-                    try {
-                        console.log('Calling OneSignal.User.PushSubscription.optIn()');
+                    const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+                    
+                    if (isSubscribed) {
+                        await OneSignal.User.PushSubscription.optOut();
+                        alert("ביטלת את הרשמתך להתראות בהצלחה.");
+                    } else {
                         await OneSignal.User.PushSubscription.optIn();
-                        console.log('OneSignal subscription successful!');
-                        alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים.");
-                        if (subscribeModal) subscribeModal.classList.remove('active');
-                    } catch (error) {
-                        console.error('OneSignal subscription error:', error);
-                        alert("אירעה שגיאה בהרשמה. אנא נסה שנית.");
+                        // alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים."); (OneSignal כבר נותן חיווי)
                     }
+                    if (subscribeModal) subscribeModal.classList.remove('active');
                 });
                 return;
             }
 
-            console.log('OneSignal not ready (init failed or not loaded), using native Notification API');
-
-            console.log('OneSignal not available, using fallback Notification API');
-
             // [גיבוי] בדיקה אם הדפדפן תומך בהתראות (ללא OneSignal)
             if (!('Notification' in window)) {
-                console.warn('Browser does not support notifications');
                 alert("הדפדפן שלך לא תומך בהתראות.");
                 return;
             }
-
-            console.log('Current notification permission:', Notification.permission);
+            // ... (שאר הקוד הישן נשאר כגיבוי)
 
             // [תיקון] בדיקה אם already granted
             if (Notification.permission === 'granted') {
-                console.log('Notification permission already granted');
                 alert("אתה כבר רשום להתראות! תקבל עדכונים על חדשות וגלריות חדשות.");
-                if (subscribeModal) subscribeModal.classList.remove('active');
                 return;
             }
 
             if (Notification.permission === 'denied') {
-                console.log('Notification permission denied');
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן, עדכן את הגדרות הדפדפן שלך.");
                 return;
             }
 
             // בקשה להרשמה
-            console.log('Requesting notification permission...');
             const permission = await Notification.requestPermission();
-            console.log('Permission result:', permission);
-
             if (permission === 'granted') {
                 // [חדש] שמירת ה-subscription למכסן מקומי
                 localStorage.setItem('notificationsEnabled', 'true');
@@ -385,13 +367,49 @@ if (hebrewYearDisplay) {
                 });
 
                 alert("נרשמת בהצלחה להתראות! 🔔\n\nתקבל עדכונים כאשר:\n• יתווספו חדשות חדשות\n• יתווספו תמונות האירועים החדשים\n\nאתה יכול לבטל זאת בכל עת בהגדרות הדפדפן.");
-                if (subscribeModal) subscribeModal.classList.remove('active');
             } else if (permission === 'denied') {
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן מאוחר יותר, עדכן את הגדרות הדפדפן.");
             }
         });
-        console.log('Subscribe button event listener registered successfully');
-    } else {
-        console.error('Subscribe button not found! Check HTML for element with id="subscribe-btn"');
     }
+
+    // --- PWA Install Prompt Logic ---
+    let deferredPrompt;
+    const pwaInstallBanner = document.getElementById('pwa-install-banner');
+    const pwaInstallBtn = document.getElementById('pwa-install-btn');
+    const pwaCloseBtn = document.getElementById('pwa-close-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt = e;
+        
+        // Check if user already closed it recently
+        const lastClosed = localStorage.getItem('pwa_banner_closed');
+        if (!lastClosed || (Date.now() - parseInt(lastClosed)) > 86400000) {
+            // Show the custom install banner
+            if (pwaInstallBanner) pwaInstallBanner.style.display = 'flex';
+        }
+    });
+
+    if (pwaInstallBtn) {
+        pwaInstallBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (pwaInstallBanner) pwaInstallBanner.style.display = 'none';
+        });
+    }
+
+    if (pwaCloseBtn) {
+        pwaCloseBtn.addEventListener('click', () => {
+            if (pwaInstallBanner) pwaInstallBanner.style.display = 'none';
+            localStorage.setItem('pwa_banner_closed', Date.now().toString());
+        });
+    }
+
 })();
