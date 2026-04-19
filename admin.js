@@ -1101,9 +1101,9 @@ loginForm.addEventListener('submit', async (e) => {
             if (verifiedLogin) {
                 // שמור שם המנהל מ-ADMIN_USER_CODES (לא GitHub username)
                 const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
+                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 updateGithubAuth(tokenInput, adminDisplayName);
 
-                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
                 localStorage.setItem(USER_CODE_KEY, userCodeInput);
 
