@@ -98,19 +98,35 @@ async function loadZmanimData() {
 
     try {
         const today = new Date().toISOString().split('T')[0];
-        // קריאה ל-Hebcal API
-        // cfg=json, v=1, geonameid=..., m=50 (Havdalah 50 min)
-        const response = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=${currentCity.geonameid}&date=${today}`);
+        
+        // [שיפור] שימוש באובייקט URL כדי להבטיח נתיב אבסולוטי ומניעת שגיאות 404 מוזרות
+        const zmanimUrl = new URL('https://www.hebcal.com/zmanim');
+        zmanimUrl.searchParams.set('cfg', 'json');
+        zmanimUrl.searchParams.set('geonameid', currentCity.geonameid);
+        zmanimUrl.searchParams.set('date', today);
+        zmanimUrl.searchParams.set('v', Date.now()); // [בונוס] מניעת מטמון (Cache Busting)
+        
+        const response = await fetch(zmanimUrl.toString());
         const data = await response.json();
 
-        const calendarResponse = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${today}&g2h=1&strict=1`);
+        const calendarUrl = new URL('https://www.hebcal.com/converter');
+        calendarUrl.searchParams.set('cfg', 'json');
+        calendarUrl.searchParams.set('date', today);
+        calendarUrl.searchParams.set('g2h', '1');
+        calendarUrl.searchParams.set('strict', '1');
+        
+        const calendarResponse = await fetch(calendarUrl.toString());
         const calendarData = await calendarResponse.json();
 
         // עדכון תאריך ופרשה
         hebrewDateEl.textContent = calendarData.hebrew;
-        // בדיקת פרשת השבוע (לרוב מגיע ב-events, כאן נפשט ונציג רק תאריך כרגע, או נשלוף מ-Shabbat API אם צריך)
-        // לצורך הפשטות נשתמש ב-API של שבת לקבלת הפרשה
-        const shabbatResponse = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=${currentCity.geonameid}&m=50`);
+        
+        const shabbatUrl = new URL('https://www.hebcal.com/shabbat');
+        shabbatUrl.searchParams.set('cfg', 'json');
+        shabbatUrl.searchParams.set('geonameid', currentCity.geonameid);
+        shabbatUrl.searchParams.set('m', '50');
+        
+        const shabbatResponse = await fetch(shabbatUrl.toString());
         const shabbatData = await shabbatResponse.json();
         const parashaItem = shabbatData.items.find(item => item.category === "parashat");
         if (parashaItem) {

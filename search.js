@@ -5,14 +5,18 @@
 
 export function initSearch(newsContainerId, galleryContainerId) {
     const searchWrapper = document.createElement('div');
-    searchWrapper.className = 'search-wrapper sticky-wrapper';
+    searchWrapper.className = 'search-wrapper floating-search'; // [שינוי] עיצוב צף
     searchWrapper.innerHTML = `
-        <div class="search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="global-search" placeholder="חיפוש בידיעות ובאלבומים..." aria-label="חיפוש באתר">
-            <button id="clear-search" class="clear-search-btn" style="display:none;">
-                <i class="fas fa-times"></i>
+        <div class="search-container collapsed" id="search-container">
+            <button id="search-toggle-btn" class="search-toggle-btn" aria-label="פתח חיפוש">
+                <i class="fas fa-search"></i>
             </button>
+            <div class="search-input-wrapper">
+                <input type="text" id="global-search" placeholder="חיפוש..." aria-label="חיפוש באתר">
+                <button id="clear-search" class="clear-search-btn" style="display:none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
     `;
 
@@ -23,14 +27,35 @@ export function initSearch(newsContainerId, galleryContainerId) {
         mainContent.insertBefore(searchWrapper, newsSection);
     }
 
+    const searchContainer = document.getElementById('search-container');
+    const toggleBtn = document.getElementById('search-toggle-btn');
     const searchInput = document.getElementById('global-search');
     const clearBtn = document.getElementById('clear-search');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const isCollapsed = searchContainer.classList.toggle('collapsed');
+            if (!isCollapsed) {
+                searchInput.focus();
+            } else {
+                // איפוס חיפוש בסגירה
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                filterContent('');
+            }
+        });
+    }
 
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.trim().toLowerCase();
             clearBtn.style.display = query ? 'block' : 'none';
             filterContent(query);
+        });
+        
+        // סגירה בלחיצה על Enter (אופציונלי)
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchInput.blur();
         });
     }
 
@@ -42,6 +67,16 @@ export function initSearch(newsContainerId, galleryContainerId) {
             searchInput.focus();
         });
     }
+    
+    // סגירה בלחיצה מחוץ לחיפוש
+    document.addEventListener('click', (e) => {
+        if (!searchContainer.contains(e.target) && !searchContainer.classList.contains('collapsed')) {
+            searchContainer.classList.add('collapsed');
+            searchInput.value = '';
+            clearBtn.style.display = 'none';
+            filterContent('');
+        }
+    });
 }
 
 function filterContent(query) {
