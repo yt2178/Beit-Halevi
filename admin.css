@@ -263,7 +263,7 @@ textarea:focus {
     font-weight: 700;
     font-size: 1.05rem;
     cursor: pointer;
-    width: 100%;
+    width: auto;
     transition: all 0.3s;
     display: inline-flex;
     align-items: center;
@@ -1311,6 +1311,48 @@ html, body {
     body.dark-theme .admin-bottom-nav-btn.active {
         background: rgba(96, 165, 250, 0.1);
     }
+}
+
+/* News Item Checkbox */
+.news-item-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-left: 15px;
+    accent-color: var(--secondary-color);
+}
+
+.news-item-admin {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f7;
+    transition: transform 0.2s;
+}
+
+.news-item-admin:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+body.dark-theme .news-item-admin {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+/* Gallery Animations */
+.album-cover img, .thumbnail-grid img {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.album-cover img.loaded, .thumbnail-grid img.loaded {
+    opacity: 1;
 }
 
 /* END OF FILE admin.css */

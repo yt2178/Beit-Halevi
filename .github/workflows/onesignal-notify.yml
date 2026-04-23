@@ -1,0 +1,79 @@
+name: OneSignal Notification
+
+on:
+  push:
+    paths:
+      - 'data/news.json'
+      - 'data/gallery.json'
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect Changes and Notify
+        shell: bash
+        env:
+          ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
+          ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
+        run: |
+          # Get list of changed files in this push
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files: $CHANGED_FILES"
+
+          BASE_URL="https://yt2178.github.io/Beit-Halevi"
+
+          # Handle news.json changes
+          if echo "$CHANGED_FILES" | grep -q 'data/news.json'; then
+            echo "Processing news.json change..."
+            # Extract the newest item (first one in the array)
+            TITLE=$(jq -r '.[0].data.title' data/news.json)
+            DATE=$(jq -r '.[0].data.date' data/news.json)
+            # Clean slug logic (bash version)
+            CLEAN_TITLE=$(echo "$TITLE" | tr ' ' '-' | sed 's/[^a-zA-Z0-9א-ת-]//g')
+            SLUG="${DATE}-${CLEAN_TITLE}"
+            
+            MESSAGE="חדשות ועדכונים: ${TITLE}"
+            URL="${BASE_URL}/#news/${SLUG}"
+            
+            echo "Sending news notification: $MESSAGE"
+            curl -X POST "https://onesignal.com/api/v1/notifications" \
+                 -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
+                 -H "Content-Type: application/json; charset=utf-8" \
+                 -d "{
+                   \"app_id\": \"$ONESIGNAL_APP_ID\",
+                   \"headings\": {\"he\": \"חדשות ועדכונים\"},
+                   \"contents\": {\"he\": \"${TITLE}\"},
+                   \"url\": \"$URL\",
+                   \"included_segments\": [\"All\"]
+                 }"
+          fi
+
+          # Handle gallery.json changes
+          if echo "$CHANGED_FILES" | grep -q 'data/gallery.json'; then
+            echo "Processing gallery.json change..."
+            ALBUM_TITLE=$(jq -r '.[0].data.title' data/gallery.json)
+            # Clean slug logic
+            CLEAN_ALBUM=$(echo "$ALBUM_TITLE" | tr ' ' '-' | sed 's/[^a-zA-Z0-9א-ת-]//g')
+            
+            MESSAGE="אלבום חדש בגלריה: ${ALBUM_TITLE}"
+            URL="${BASE_URL}/#gallery/${CLEAN_ALBUM}"
+            
+            echo "Sending gallery notification: $MESSAGE"
+            curl -X POST "https://onesignal.com/api/v1/notifications" \
+                 -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
+                 -H "Content-Type: application/json; charset=utf-8" \
+                 -d "{
+                   \"app_id\": \"$ONESIGNAL_APP_ID\",
+                   \"headings\": {\"he\": \"גלריית תמונות\"},
+                   \"contents\": {\"he\": \"${ALBUM_TITLE}\"},
+                   \"url\": \"$URL\",
+                   \"included_segments\": [\"All\"]
+                 }"
+          fi

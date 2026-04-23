@@ -3,7 +3,8 @@ import { BASE_URL, allLoadedNews } from './data-loader.js';
 import { focusLock } from './utils.js';
 import {
     newsModal, modalTitle, modalDate, modalBody,
-    newsShareBtn, newsPrevBtn, newsNextBtn
+    newsShareBtn, newsPrevBtn, newsNextBtn,
+    updateDynamicMetadata
 } from './main.js';
 export let currentNewsIndex = 0;
 export function closeNewsModal() {
@@ -12,6 +13,7 @@ export function closeNewsModal() {
     newsModal.removeAttribute('aria-modal');
     // ניקוי ה-hash לכתובת הבסיס של #news
     window.history.pushState(null, null, '#');
+    updateDynamicMetadata('ישיבת בית הלוי - ראש העין');
 }
 // [חדש] פתיחת חלון קופץ עבור ידיעה אחת
 export function openNewsModal(newsItem) {
@@ -25,7 +27,13 @@ export function openNewsModal(newsItem) {
 
     modalTitle.textContent = newsItem.title;
     modalDate.textContent = `פורסם בתאריך: ${formattedDate}`;
-    modalBody.innerHTML = marked.parse(newsItem.body);
+    
+    // [תיקון אבטחה] ניקוי HTML שיוצר מ-Markdown למניעת XSS
+    const dirtyHTML = marked.parse(newsItem.body);
+    modalBody.innerHTML = DOMPurify.sanitize(dirtyHTML);
+
+    // [חדש] עדכון כותרת הדף
+    updateDynamicMetadata(newsItem.title);
 
     // לוגיקת שיתוף (עם גיבוי)
     if (newsShareBtn) {

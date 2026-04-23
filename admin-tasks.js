@@ -40,6 +40,13 @@ export async function loadAndRenderTasks() {
         }
         
         renderTasks();
+        
+        // [חדש] עדכון באדג' (Badge) של האפליקציה במידה ונתמך
+        if ('setAppBadge' in navigator) {
+            const openTasks = allTasks.filter(t => !t.completed).length;
+            if (openTasks > 0) navigator.setAppBadge(openTasks).catch(() => {});
+            else navigator.clearAppBadge().catch(() => {});
+        }
     } catch (err) {
         tasksListContainer.innerHTML = `<p style="text-align:center; color:red;">שגיאה בטעינת משימות: ${err.message}</p>`;
     }
@@ -111,37 +118,59 @@ async function addTask() {
         createdAt: new Date().toISOString()
     };
     
-    allTasks.unshift(newTask);
+    const transformFn = (latestTasks) => {
+        latestTasks.unshift(newTask);
+        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
+    };
+
     if (input) input.value = '';
-    renderTasks();
-    await saveTasks(`Add task: ${text}`);
+    await saveTasks(`Add task: ${text}`, transformFn);
+    await loadAndRenderTasks(); 
 }
 
 async function toggleTask(index) {
-    allTasks[index].completed = !allTasks[index].completed;
-    renderTasks();
-    await saveTasks(`Toggle task: ${allTasks[index].text}`);
+    const taskToToggle = allTasks[index];
+    if (!taskToToggle) return;
+
+    const transformFn = (latestTasks) => {
+        const latestIdx = latestTasks.findIndex(t => t.text === taskToToggle.text && t.createdAt === taskToToggle.createdAt);
+        if (latestIdx !== -1) {
+            latestTasks[latestIdx].completed = !latestTasks[latestIdx].completed;
+        }
+        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
+    };
+
+    await saveTasks(`Toggle task: ${taskToToggle.text}`, transformFn);
+    await loadAndRenderTasks();
 }
 
 async function deleteTask(index) {
-    const text = allTasks[index].text;
-    allTasks.splice(index, 1);
-    renderTasks();
-    await saveTasks(`Delete task: ${text}`);
+    const taskToDelete = allTasks[index];
+    if (!taskToDelete) return;
+
+    const transformFn = (latestTasks) => {
+        const latestIdx = latestTasks.findIndex(t => t.text === taskToDelete.text && t.createdAt === taskToDelete.createdAt);
+        if (latestIdx !== -1) {
+            latestTasks.splice(latestIdx, 1);
+        }
+        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
+    };
+
+    await saveTasks(`Delete task: ${taskToDelete.text}`, transformFn);
+    await loadAndRenderTasks();
 }
 
-async function saveTasks(message) {
+async function saveTasks(message, transformFn) {
     showStatus('מעדכן משימות ב-GitHub...', 50);
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${TASKS_JSON_PATH}`;
     
     try {
         const payload = {
             message,
-            content: encodeToBase64(JSON.stringify(allTasks, null, 2)),
             branch: 'main'
         };
         
-        const res = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, tasksSha, 2);
+        const res = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, tasksSha, 3, transformFn);
         if (res.ok) {
             const data = await res.json();
             tasksSha = data.content.sha;

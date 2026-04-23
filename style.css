@@ -4,11 +4,14 @@
 /* --- [תיקון] הגדרות גלילה ותיקון תפריט דביק --- */
 html {
     scroll-padding-top: 60px;
-    /* גובה משוער של תפריט הניווט */
     scroll-behavior: smooth;
-    /* גלילה חלקה ואנימטיבית */
     overflow-x: hidden;
-    max-width: 100vw;
+}
+
+body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
 }
 
 /* --- [חדש] גלילה מותאמת אישית (Scrollbar) --- */
@@ -223,7 +226,6 @@ body {
     line-height: 1.7;
     font-size: 16px;
     overflow-x: hidden;
-    max-width: 100vw;
     position: relative;
 }
 
@@ -3065,3 +3067,114 @@ section {
     box-sizing: border-box;
 }
 
+/* --- Empty States --- */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--surface-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin: 20px 0;
+    transition: all var(--transition-speed);
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.empty-state p {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    margin: 0;
+    font-weight: 600;
+}
+
+body.dark-mode .empty-state {
+    background: var(--dark-surface);
+}
+
+/* --- Search Styles --- */
+.search-wrapper {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+    z-index: 100;
+}
+
+.search-wrapper.sticky-wrapper {
+    position: sticky;
+    top: 80px; /* מתחת לתפריט הניווט */
+}
+
+.search-container {
+    position: relative;
+    background: var(--white);
+    border-radius: 50px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    padding: 5px 20px;
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-speed);
+}
+
+.search-container:focus-within {
+    box-shadow: 0 0 0 3px rgba(195, 166, 118, 0.2);
+    border-color: var(--secondary-color);
+}
+
+.search-icon {
+    color: var(--secondary-color);
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+#global-search {
+    border: none;
+    background: transparent;
+    padding: 12px 10px;
+    flex: 1;
+    font-size: 1rem;
+    color: var(--text-color);
+    outline: none;
+    font-family: inherit;
+}
+
+#global-search::placeholder {
+    color: #94a3b8;
+}
+
+.clear-search-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+
+.clear-search-btn:hover {
+    color: var(--danger-color);
+}
+
+body.dark-mode .search-container {
+    background: var(--dark-surface);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #global-search {
+    color: var(--dark-text);
+}
+
+@media (max-width: 768px) {
+    .search-wrapper.sticky-wrapper {
+        top: 70px;
+    }
+    .search-container {
+        padding: 2px 15px;
+    }
+}

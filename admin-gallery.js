@@ -525,13 +525,19 @@ async function handleGallerySubmit(e) {
         showStatus('מעדכן את האתר... כמעט סיימנו', 90);
 
         // 5. שמירה ב-GitHub
-        const updatedContentBase64 = encodeToBase64(JSON.stringify(galleryArray, null, 2));
-        const payload = {
-            message: `Update gallery: ${albumTitleInput.value}`,
-            content: updatedContentBase64,
-            branch: 'main'
+        const transformFn = (latestContent) => {
+            if (editingAlbumIndex !== null) {
+                latestContent[editingAlbumIndex] = newAlbum;
+            } else {
+                latestContent.push(newAlbum);
+            }
+            return encodeToBase64(JSON.stringify(latestContent, null, 2));
         };
-        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, fileData.sha, 2);
+
+        const updateResponse = await putWithShaRetry(API_URL, {
+            message: `Update gallery: ${albumTitleInput.value}`,
+            branch: 'main'
+        }, GITHUB_TOKEN, fileData.sha, 3, transformFn);
 
         if (updateResponse && updateResponse.ok) {
             showStatus('האלבום נשמר בהצלחה!', 100);

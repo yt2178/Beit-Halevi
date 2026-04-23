@@ -18,5 +18,28 @@
             "sizes": "512x512",
             "type": "image/png"
         }
+    ],
+    "shortcuts": [
+        {
+            "name": "ניהול חדשות",
+            "short_name": "חדשות",
+            "description": "הוספה ועריכת ידיעות",
+            "url": "./admin.html#news-section",
+            "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "גלריה",
+            "short_name": "גלריה",
+            "description": "ניהול אלבומי תמונות",
+            "url": "./admin.html#gallery-section",
+            "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "משימות",
+            "short_name": "משימות",
+            "description": "רשימת משימות למנהלים",
+            "url": "./admin.html#tasks-section",
+            "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+        }
     ]
 }

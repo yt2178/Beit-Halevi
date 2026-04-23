@@ -1,15 +1,10 @@
 // main.js
 import { applySiteConfig, loadNews, loadGallery, allLoadedNews, allLoadedAlbums, BASE_URL } from './data-loader.js';
-// איחוד כל הפונקציות מ-gallery.js
-import {
-    checkUrlHash, showNextImage, showPrevImage, closeLightbox, openGridOverlay, initGalleryEvents
-} from './gallery.js';
-// איחוד כל הפונקציות מ-news.js
-import {
-    checkNewsHash, openNewsModal, navigateNews, initNewsEvents
-} from './news.js';
+import { checkUrlHash, initGalleryEvents } from './gallery.js';
+import { checkNewsHash, initNewsEvents } from './news.js';
 import { getHebrewYear } from './utils.js';
 import { initZmanim } from './zmanim.js';
+import { initSearch } from './search.js';
 
 // ---- משתנים ואלמנטים כלליים ---- 
 export const dateTimeDisplay = document.getElementById('date-time-display');
@@ -52,6 +47,23 @@ function updateDateTime() {
     const time = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     // [מתוקן] הסרנו את התאריך העברי
     dateTimeDisplay.textContent = `${gregorianDate} | ${time}`;
+}
+
+// [חדש] עדכון כותרת הדף ומטא-תגים בצורה דינמית
+export function updateDynamicMetadata(title, description) {
+    if (title) document.title = `${title} | ישיבת בית הלוי`;
+    // כאן אפשר להוסיף עדכון של מטא-תגים עבור OG אם רוצים שיתוף מדויק יותר בסושיאל
+}
+
+// [חדש] ניהול באדג' (Badge) באייקון האפליקציה (PWA)
+export function updateAppBadge(count) {
+    if ('setAppBadge' in navigator) {
+        if (count > 0) {
+            navigator.setAppBadge(count).catch(console.error);
+        } else {
+            navigator.clearAppBadge().catch(console.error);
+        }
+    }
 }
 // כפתור חזרה למעלה
 if (backToTopButton) {
@@ -197,9 +209,34 @@ if (hebrewYearDisplay) {
     initZmanim(); // [חדש] טעינת זמני היום
     applySiteConfig(); // [פרימיום] החלת הגדרות אתר דינמיות
     
-    // [חדש] בדיקות Deep Link ראשוניות לאחר טעינת כל הנתונים
     checkUrlHash();
     checkNewsHash();
+    
+    // [חדש] אתחול חיפוש גלובלי
+    initSearch('news-container', 'album-grid-container');
+
+    // [חדש] תצפית על תמונות לטעינה חלקה (Lazy Loading Fade-in)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.addEventListener('load', () => img.classList.add('loaded'));
+                if (img.complete) img.classList.add('loaded');
+                observer.unobserve(img);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    const observeNewImages = () => {
+        document.querySelectorAll('img.lazy-load:not(.observed)').forEach(img => {
+            img.classList.add('observed');
+            observer.observe(img);
+        });
+    };
+    observeNewImages();
+    const mutationObserver = new MutationObserver(observeNewImages);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
     // [חדש] עדכון השנה העברית
     if (hebrewYearDisplay) hebrewYearDisplay.textContent = getHebrewYear();
     // [חדש] רישום Service Worker עבור PWA

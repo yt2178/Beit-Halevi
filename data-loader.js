@@ -117,7 +117,7 @@ export async function loadGallery() {
     allLoadedAlbums.forEach((albumData, index) => {
         const albumElement = document.createElement('a');
         albumElement.className = 'album-cover';
-        albumElement.innerHTML = `<img loading="lazy" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+        albumElement.innerHTML = `<img loading="lazy" class="lazy-load" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
         albumElement.addEventListener('click', (e) => {
             e.preventDefault(); // מונע קפיצה של הדף
             // [שינוי] פותח גלריה ומעדכן את ה-URL

@@ -10,8 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://accounts.google.com/gsi/client 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.githubusercontent.com https://*.googleusercontent.com https://*.googleapis.com https://*.google.com; connect-src 'self' https://api.github.com https://*.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com https://www.google.com;">
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     
     <!-- [חדש] Favicons לדף הניהול -->
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192x192.png">
@@ -157,20 +159,28 @@
                     <input type="text" id="news-title" placeholder="כותרת הידיעה" required>
                     <input type="date" id="news-date" required>
                     <textarea id="news-body"></textarea>
-                    <div class="form-actions" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:20px;">
-                        <button type="submit" class="premium-btn" style="flex:1; min-width:140px;">פרסם ידיעה</button>
+                    <div class="form-actions">
+                        <button type="submit" class="premium-btn">פרסם ידיעה</button>
                         <button type="button" id="save-draft-btn" class="premium-btn small secondary" title="שמור טיוטה בצורה מקומית"><i class="fas fa-save"></i> שמור טיוטה</button>
-                        <div style="display:flex; gap:5px; margin-right:auto;">
+                        <div class="editor-controls-group">
                             <button type="button" id="undo-news-btn" class="premium-btn small secondary" title="בטל"><i class="fas fa-undo"></i></button>
                             <button type="button" id="redo-news-btn" class="premium-btn small secondary" title="בצע שוב"><i class="fas fa-redo"></i></button>
                         </div>
-                        <button type="button" id="cancel-news-edit" class="premium-btn secondary" style="display:none; width:100%;">ביטול עריכה</button>
+                        <button type="button" id="cancel-news-edit" class="premium-btn secondary" style="display:none;">ביטול עריכה</button>
                     </div>
                 </form>
             </div>
 
             <div class="admin-card">
-                <h3>כל הידיעות הקיימות</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>כל הידיעות הקיימות</h3>
+                    <div id="bulk-actions" style="display: none; gap: 10px; align-items: center;">
+                        <span id="selected-count" style="font-weight: 600; font-size: 0.9rem; color: var(--secondary-color);">נבחרו 0 פריטים</span>
+                        <button id="bulk-delete-btn" class="premium-btn small danger">
+                            <i class="fas fa-trash-alt"></i> מחק נבחרים
+                        </button>
+                    </div>
+                </div>
                 <div id="news-list-container"></div>
             </div>
         </section>

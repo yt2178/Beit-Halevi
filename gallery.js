@@ -5,7 +5,7 @@ import {
     gridOverlay, lightbox, downloadBtn, lightboxCloseBtn,
     nextBtn, prevBtn, gridCloseBtn, thumbnailGrid,
     gridAlbumTitle, lightboxImg, shareBtn, albumShareBtn,
-    albumDownloadBtn, // משתנים שמוגדרים ב-main.js
+    albumDownloadBtn, updateDynamicMetadata // משתנים שמוגדרים ב-main.js
 } from './main.js';
 export let currentAlbumData = null;
 export let currentIndex = 0;
@@ -17,6 +17,7 @@ export function openGridOverlay(albumData) {
 
     thumbnailGrid.textContent = '';
     gridAlbumTitle.textContent = albumData.title;
+    updateDynamicMetadata(`גלריה: ${albumData.title}`);
     currentAlbumImages = (albumData.images || []).map(imgSrc => ({
         src: cleanPath(imgSrc),
         alt: albumData.title,
@@ -39,6 +40,7 @@ export function openGridOverlay(albumData) {
             thumbnailGrid.textContent = ''; // נקה את ה-Skeleton
             currentAlbumImages.forEach((imgData, index) => {
                 const thumb = document.createElement('img');
+                thumb.className = 'lazy-load';
                 thumb.loading = 'lazy';
                 thumb.src = imgData.src;
                 thumb.alt = imgData.alt;
@@ -131,6 +133,7 @@ export function showLightboxImage(isFirstLoad = false) {
 
     lightboxImg.src = currentImage.src;
     lightboxImg.alt = currentImage.alt;
+    updateDynamicMetadata(`${currentImage.alt} (תמונה ${currentIndex + 1})`);
 
     // [חדש] עדכון ה-URL עם הקישור לתמונה הספציפית
     const newHash = `#gallery/${currentImage.albumSlug}/${currentIndex + 1}`;
@@ -194,6 +197,11 @@ export function closeLightbox() {
     // [שינוי] במקום hash '#', נחזיר ל-hash של האלבום אם הוא פתוח ברקע
     const albumSlug = currentAlbumData ? currentAlbumData.slug : '';
     window.history.pushState(null, null, albumSlug ? `#gallery/${albumSlug}` : '#');
+    if (currentAlbumData) {
+        updateDynamicMetadata(`גלריה: ${currentAlbumData.title}`);
+    } else {
+        updateDynamicMetadata('ישיבת בית הלוי - ראש העין');
+    }
 }
 
 // [שינוי] פונקציות ניווט בתמונות
@@ -266,6 +274,7 @@ export function initGalleryEvents() {
         gridOverlay.removeAttribute('aria-modal');
         window.history.pushState(null, null, '#');
         currentAlbumData = null;
+        updateDynamicMetadata('ישיבת בית הלוי - ראש העין');
     });
 
     // [חדש] טיפול בכפתורי המקלדת

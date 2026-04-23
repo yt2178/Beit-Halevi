@@ -207,12 +207,19 @@ export async function saveAllSiteSettings() {
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
 
     try {
-        const payload = {
-            message: `Update site configuration and text`,
-            content: encodeToBase64(JSON.stringify(currentSiteConfig, null, 2)),
-            branch: 'main'
+        const transformFn = (latestConfig) => {
+            // Merge our changes into latest
+            latestConfig.theme = currentSiteConfig.theme;
+            latestConfig.primaryColor = currentSiteConfig.primaryColor;
+            latestConfig.oneSignalAppId = currentSiteConfig.oneSignalAppId;
+            latestConfig.texts = Object.assign({}, latestConfig.texts, currentSiteConfig.texts);
+            return encodeToBase64(JSON.stringify(latestConfig, null, 2));
         };
-        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, siteConfigSHA, 2);
+
+        const updateResponse = await putWithShaRetry(API_URL, {
+            message: `Update site configuration and text`,
+            branch: 'main'
+        }, GITHUB_TOKEN, siteConfigSHA, 3, transformFn);
 
         if (updateResponse && updateResponse.ok) {
             showStatus('✅ הגדרות האתר נשמרו בהצלחה! 🎉', 100);

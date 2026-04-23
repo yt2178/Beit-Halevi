@@ -238,40 +238,67 @@ export async function uploadFileToDrive(file, token) {
     }
 }
 
-// Helper: perform a GitHub PUT with SHA retry on conflict (409/422)
-export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = null, maxRetries = 2) {
+// Helper: perform a GitHub PUT with SHA retry on conflict (409/422/500)
+// Now supports a transformFn to merge/re-apply changes on conflict!
+export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = null, maxRetries = 3, transformFn = null) {
     let sha = initialSha;
     let lastErr = null;
+    let currentPayload = Object.assign({}, payloadObj);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const bodyObj = Object.assign({}, payloadObj);
+        // If we have a transform function, we should ideally use it if we refetched the data
+        const bodyObj = Object.assign({}, currentPayload);
         if (sha) bodyObj.sha = sha;
+
         try {
             const res = await fetch(API_URL, {
                 method: 'PUT',
-                headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(bodyObj)
             });
+
             if (res.ok) return res;
-            // If conflict or validation error, refetch latest sha and retry
-            if (res.status === 409 || res.status === 422 || res.status === 500) {
+
+            // If conflict or validation error, refetch latest content and retry
+            if (res.status === 409 || res.status === 422 || (res.status === 500 && attempt < maxRetries)) {
+                console.warn(`Conflict/Error (${res.status}) on attempt ${attempt}. Refetching latest...`);
                 try {
-                    const latest = await fetch(API_URL, { headers: { 'Authorization': `token ${token}` } });
+                    const latest = await fetch(API_URL, {
+                        headers: { 'Authorization': `token ${token}` },
+                        cache: 'no-store'
+                    });
                     if (latest.ok) {
                         const fileData = await latest.json();
                         sha = fileData.sha;
+
+                        // CRITICAL: If a transform function is provided, re-calculate the content!
+                        if (transformFn && typeof transformFn === 'function') {
+                            const latestContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+                            const newBase64 = transformFn(latestContent);
+                            currentPayload.content = newBase64;
+                            console.log("Transformation re-applied to latest content.");
+                        }
+
                         // small backoff before retrying
-                        await new Promise(r => setTimeout(r, 500));
+                        await new Promise(r => setTimeout(r, 600 * attempt));
                         continue;
                     }
-                } catch (e) { lastErr = e; }
+                } catch (e) {
+                    console.error("Refetch during retry failed:", e);
+                    lastErr = e;
+                }
             }
+
             // other errors: attach message and throw
             const txt = await res.text().catch(() => '');
             throw new Error(`GitHub PUT failed: ${res.status} ${txt}`);
         } catch (err) {
             lastErr = err;
             if (attempt === maxRetries) throw lastErr;
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 800 * attempt));
         }
     }
     throw lastErr;

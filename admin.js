@@ -191,6 +191,9 @@ export let editingNewsSlug = null;
 export let editingNewsSHA = null;
 const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
+// [חדש] ניהול בחירה מרובה
+let selectedNewsSlugs = [];
+
 // אלמנטים DOM
 const loginSection = document.getElementById('login-section');
 const newsSection = document.getElementById('news-section');
@@ -298,6 +301,10 @@ function renderNewsList(newsArray) {
 
     container.innerHTML = '';
 
+    // [חדש] איפוס בחירה כשמרנדרים מחדש
+    selectedNewsSlugs = [];
+    updateBulkActionsUI();
+
     if (newsArray.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -313,6 +320,18 @@ function renderNewsList(newsArray) {
         const newsDiv = document.createElement('div');
         newsDiv.className = 'news-item-admin';
         newsDiv.dataset.slug = slug;
+        
+        // [חדש] תיבת בחירה (Checkbox) למחיקה מרובה
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'news-item-checkbox';
+        checkbox.dataset.slug = slug;
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) selectedNewsSlugs.push(slug);
+            else selectedNewsSlugs = selectedNewsSlugs.filter(s => s !== slug);
+            updateBulkActionsUI();
+        });
+        newsDiv.appendChild(checkbox);
 
         // ✅ Fix XSS: תוכן דינמי מנוקה דרך textContent
         const detailsDiv = document.createElement('div');
@@ -358,11 +377,33 @@ function renderNewsList(newsArray) {
     });
 }
 
+function updateBulkActionsUI() {
+    const bar = document.getElementById('bulk-actions');
+    const countSpan = document.getElementById('selected-count');
+    if (!bar || !countSpan) return;
+
+    if (selectedNewsSlugs.length > 0) {
+        bar.style.display = 'flex';
+        countSpan.textContent = `נבחרו ${selectedNewsSlugs.length} פריטים`;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
 // מחיקת ידיעה
 async function handleDeleteNews(slug) {
     if (!confirm('האם אתה בטוח שברצונך למחוק ידיעה זו? הפעולה אינה ניתנת לביטול.')) return;
+    performDelete([slug]);
+}
 
-    showStatus('מוחק ידיעה...', 50);
+async function handleBulkDelete() {
+    if (selectedNewsSlugs.length === 0) return;
+    if (!confirm(`האם אתה בטוח שברצונך למחוק ${selectedNewsSlugs.length} ידיעות? הפעולה אינה ניתנת לביטול.`)) return;
+    performDelete([...selectedNewsSlugs]);
+}
+
+async function performDelete(slugs) {
+    showStatus(`מוחק ${slugs.length} פריטים...`, 50);
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
 
     try {
@@ -374,25 +415,26 @@ async function handleDeleteNews(slug) {
         if (!fileResponse.ok) throw new Error('Failed to fetch JSON');
 
         const fileData = await fileResponse.json();
-        const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
-
-        const updatedContent = existingContent.filter(item =>
-            generateSlug(item.data.title, item.data.date) !== slug
-        );
-
-        const updatedContentBase64 = encodeToBase64(JSON.stringify(updatedContent, null, 2));
-
-        const payload = {
-            message: `Delete news item: ${slug}`,
-            content: updatedContentBase64,
-            branch: 'main'
+        
+        const transformFn = (latestContent) => {
+            const updated = latestContent.filter(item => {
+                const itemSlug = generateSlug(item.data.title, item.data.date);
+                return !slugs.includes(itemSlug);
+            });
+            return encodeToBase64(JSON.stringify(updated, null, 2));
         };
-        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, fileData.sha, 2);
+
+        const updateResponse = await putWithShaRetry(API_URL, {
+            message: `Delete ${slugs.length} news items`,
+            branch: 'main'
+        }, GITHUB_TOKEN, fileData.sha, 3, transformFn);
 
         if (updateResponse && updateResponse.ok) {
-            showStatus('הידיעה נמחקה בהצלחה!', 100);
+            showStatus('הפעולה הושלמה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
-            logEvent(`מחק ידיעה: ${slug}`, 'news');
+            logEvent(`מחק ${slugs.length} ידיעות`, 'news');
+            selectedNewsSlugs = [];
+            updateBulkActionsUI();
             await loadAndRenderNewsList();
         } else {
             throw new Error('Delete failed on GitHub');
@@ -450,13 +492,17 @@ async function loadAndRenderHistory() {
         history.forEach(log => {
             const div = document.createElement('div');
             div.className = 'history-item';
+            
+            // [אבטחה] ניקוי תוכן הפעולה למקרה שמכיל תגים
+            const safeAction = DOMPurify.sanitize(log.action);
+            
             div.innerHTML = `
                 <div class="history-icon ${log.type || 'general'}">
                     <i class="fas ${getIconForType(log.type)}"></i>
                 </div>
                 <div class="history-time">${log.timestamp}</div>
-                <div class="history-user">${log.user}</div>
-                <div class="history-action">${log.action}</div>
+                <div class="history-user">${DOMPurify.sanitize(log.user)}</div>
+                <div class="history-action">${safeAction}</div>
             `;
             container.appendChild(div);
         });
@@ -742,14 +788,24 @@ async function handleSaveNews(e) {
             existingContent.unshift(newItem);
         }
 
-        const updatedContentBase64 = encodeToBase64(JSON.stringify(existingContent, null, 2));
-
-        const payload = {
-            message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
-            content: updatedContentBase64,
-            branch: 'main'
+        const transformFn = (latestContent) => {
+            // Need to capture editingNewsSlug locally because it's reset in the outer scope
+            // actually it's reset AFTER the call, but let's be safe and use parameters or closure
+            if (editingNewsSlug) {
+                const index = latestContent.findIndex(item =>
+                    generateSlug(item.data.title, item.data.date) === editingNewsSlug
+                );
+                if (index !== -1) latestContent[index] = newItem;
+            } else {
+                latestContent.unshift(newItem);
+            }
+            return encodeToBase64(JSON.stringify(latestContent, null, 2));
         };
-        const updateResponse = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 2);
+
+        const updateResponse = await putWithShaRetry(API_URL, {
+            message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
+            branch: 'main'
+        }, GITHUB_TOKEN, sha, 3, transformFn);
 
         if (updateResponse && updateResponse.ok) {
             clearNewsDraft();
@@ -872,6 +928,9 @@ async function initAdmin() {
     document.getElementById('bnav-gallery')?.addEventListener('click', () => navigateTo('gallery-section'));
     document.getElementById('bnav-messages')?.addEventListener('click', () => navigateTo('messages-section'));
     document.getElementById('bnav-site')?.addEventListener('click', () => navigateTo('site-section'));
+
+    // [חדש] כפתור מחיקה מרובה
+    document.getElementById('bulk-delete-btn')?.addEventListener('click', handleBulkDelete);
 }
 
 if (document.readyState === 'loading') {
