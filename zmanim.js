@@ -64,11 +64,11 @@ function renderWidgetStructure(container) {
                 <h3>בחר עיר להצגת זמנים</h3>
                 <div class="city-list">
                     ${POPULAR_CITIES.map(city =>
-        `<button class="city-option ${city.geonameid === currentCity.geonameid ? 'active' : ''}" 
+                        `<button class="city-option ${city.geonameid === currentCity.geonameid ? 'active' : ''}" 
                           data-id="${city.geonameid}" data-name="${city.name}">
                           ${city.name}
                         </button>`
-    ).join('')}
+                    ).join('')}
                 </div>
             </div>
         </div>
@@ -99,34 +99,26 @@ async function loadZmanimData() {
     try {
         const today = new Date().toISOString().split('T')[0];
         
-        // [שיפור] שימוש באובייקט URL כדי להבטיח נתיב אבסולוטי ומניעת שגיאות 404 מוזרות
-        const zmanimUrl = new URL('https://www.hebcal.com/zmanim');
-        zmanimUrl.searchParams.set('cfg', 'json');
-        zmanimUrl.searchParams.set('geonameid', currentCity.geonameid);
-        zmanimUrl.searchParams.set('date', today);
-        zmanimUrl.searchParams.set('v', Date.now()); // [בונוס] מניעת מטמון (Cache Busting)
+        // [שיפור סופי] שימוש במחרוזת URL מלאה למניעת בעיות רינדור בדפדפנים מסוימים
+        const zmanimBase = "https://www.hebcal.com/zmanim";
+        const zmanimUrl = `${zmanimBase}?cfg=json&geonameid=${currentCity.geonameid}&date=${today}&v=${Date.now()}`;
         
-        const response = await fetch(zmanimUrl.toString());
+        const response = await fetch(zmanimUrl);
         const data = await response.json();
 
-        const calendarUrl = new URL('https://www.hebcal.com/converter');
-        calendarUrl.searchParams.set('cfg', 'json');
-        calendarUrl.searchParams.set('date', today);
-        calendarUrl.searchParams.set('g2h', '1');
-        calendarUrl.searchParams.set('strict', '1');
+        const converterBase = "https://www.hebcal.com/converter";
+        const calendarUrl = `${converterBase}?cfg=json&date=${today}&g2h=1&strict=1`;
         
-        const calendarResponse = await fetch(calendarUrl.toString());
+        const calendarResponse = await fetch(calendarUrl);
         const calendarData = await calendarResponse.json();
 
         // עדכון תאריך ופרשה
         hebrewDateEl.textContent = calendarData.hebrew;
         
-        const shabbatUrl = new URL('https://www.hebcal.com/shabbat');
-        shabbatUrl.searchParams.set('cfg', 'json');
-        shabbatUrl.searchParams.set('geonameid', currentCity.geonameid);
-        shabbatUrl.searchParams.set('m', '50');
+        const shabbatBase = "https://www.hebcal.com/shabbat";
+        const shabbatUrl = `${shabbatBase}?cfg=json&geonameid=${currentCity.geonameid}&m=50`;
         
-        const shabbatResponse = await fetch(shabbatUrl.toString());
+        const shabbatResponse = await fetch(shabbatUrl);
         const shabbatData = await shabbatResponse.json();
         const parashaItem = shabbatData.items.find(item => item.category === "parashat");
         if (parashaItem) {
@@ -142,7 +134,7 @@ async function loadZmanimData() {
             { label: "סוף זמן תפילה (גר''א)", time: times.sofZmanTfilla },
             { label: "חצות היום", time: times.chatzot },
             { label: "שקיעה", time: times.sunset },
-            { label: "צאת הכוכבים", time: times.tzeit50min } // לפי שיטת הישיבה (בדרך כלל 50 דקות או דומה)
+            { label: "צאת הכוכבים", time: times.tzeit50min }
         ];
 
         timesContainer.innerHTML = importantTimes.map(item => `
@@ -153,6 +145,7 @@ async function loadZmanimData() {
         `).join('');
 
     } catch (error) {
+        console.error("Zmanim load error:", error);
         timesContainer.innerHTML = `
             <div class="error-msg" style="grid-column: 1/-1; text-align: center; padding: 20px;">
                 <i class="fas fa-exclamation-circle"></i> 
