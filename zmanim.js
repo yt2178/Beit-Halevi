@@ -8,7 +8,6 @@ const DEFAULT_CITY = {
 
 let currentCity = JSON.parse(localStorage.getItem('zmanim_city')) || DEFAULT_CITY;
 
-// רשימת ערים פופולריות לבחירה מהירה
 const POPULAR_CITIES = [
     { name: "ראש העין", geonameid: "293690" },
     { name: "ירושלים", geonameid: "281184" },
@@ -27,12 +26,11 @@ const POPULAR_CITIES = [
 export async function initZmanim() {
     const container = document.getElementById('zmanim-container');
     if (!container) return;
-
     renderWidgetStructure(container);
     await loadZmanimData();
-
-    // האזנה לשינוי עיר
-    document.getElementById('change-city-btn').addEventListener('click', openCityModal);
+    document.getElementById('change-city-btn').addEventListener('click', () => {
+        document.getElementById('city-modal').classList.add('active');
+    });
 }
 
 function renderWidgetStructure(container) {
@@ -56,11 +54,9 @@ function renderWidgetStructure(container) {
                 </div>
             </div>
         </div>
-        
-        <!-- מודאל בחירת עיר -->
         <div id="city-modal" class="city-modal">
             <div class="city-modal-content">
-                <span class="city-close">&times;</span>
+                <span class="city-close" onclick="document.getElementById('city-modal').classList.remove('active')">&times;</span>
                 <h3>בחר עיר להצגת זמנים</h3>
                 <div class="city-list">
                     ${POPULAR_CITIES.map(city =>
@@ -74,19 +70,15 @@ function renderWidgetStructure(container) {
         </div>
     `;
 
-    // סגירת מודאל
-    document.querySelector('.city-close').addEventListener('click', () => {
-        document.getElementById('city-modal').classList.remove('active');
-    });
-
-    // בחירת עיר
     document.querySelectorAll('.city-option').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const newCity = {
-                name: e.target.dataset.name,
-                geonameid: e.target.dataset.id
-            };
-            saveCity(newCity);
+            const newCity = { name: e.target.dataset.name, geonameid: e.target.dataset.id };
+            currentCity = newCity;
+            localStorage.setItem('zmanim_city', JSON.stringify(newCity));
+            document.getElementById('current-city-name').textContent = newCity.name;
+            document.getElementById('city-modal').classList.remove('active');
+            loadZmanimData();
+            document.querySelectorAll('.city-option').forEach(b => b.classList.toggle('active', b.dataset.id === newCity.geonameid));
         });
     });
 }
@@ -98,40 +90,30 @@ async function loadZmanimData() {
 
     try {
         const today = new Date().toISOString().split('T')[0];
+        const cb = Date.now();
         
-        // [שיפור סופי] שימוש במחרוזת URL מלאה למניעת בעיות רינדור בדפדפנים מסוימים
-        const zmanimBase = "https://www.hebcal.com/zmanim";
-        const zmanimUrl = `${zmanimBase}?cfg=json&geonameid=${currentCity.geonameid}&date=${today}&v=${Date.now()}`;
-        
+        // נתיבים מלאים ואבסולוטיים למניעת 404
+        const zmanimUrl = "https://www.hebcal.com/zmanim?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
         const response = await fetch(zmanimUrl);
         const data = await response.json();
 
-        const converterBase = "https://www.hebcal.com/converter";
-        const calendarUrl = `${converterBase}?cfg=json&date=${today}&g2h=1&strict=1`;
-        
-        const calendarResponse = await fetch(calendarUrl);
+        const converterUrl = "https://www.hebcal.com/converter?cfg=json&date=" + today + "&g2h=1&strict=1&v=" + cb;
+        const calendarResponse = await fetch(converterUrl);
         const calendarData = await calendarResponse.json();
-
-        // עדכון תאריך ופרשה
         hebrewDateEl.textContent = calendarData.hebrew;
         
-        const shabbatBase = "https://www.hebcal.com/shabbat";
-        const shabbatUrl = `${shabbatBase}?cfg=json&geonameid=${currentCity.geonameid}&m=50`;
-        
+        const shabbatUrl = "https://www.hebcal.com/shabbat?cfg=json&geonameid=" + currentCity.geonameid + "&m=50&v=" + cb;
         const shabbatResponse = await fetch(shabbatUrl);
         const shabbatData = await shabbatResponse.json();
         const parashaItem = shabbatData.items.find(item => item.category === "parashat");
-        if (parashaItem) {
-            parashaEl.textContent = parashaItem.hebrew;
-        }
+        if (parashaItem) parashaEl.textContent = parashaItem.hebrew;
 
-        // עיבוד זמנים חשובים
         const times = data.times;
         const importantTimes = [
             { label: "עלות השחר", time: times.alotHaShachar },
             { label: "נץ החמה", time: times.sunrise },
-            { label: "סוף זמן ק''ש (גר''א)", time: times.sofZmanShma },
-            { label: "סוף זמן תפילה (גר''א)", time: times.sofZmanTfilla },
+            { label: "סוף זמן ק''ש", time: times.sofZmanShma },
+            { label: "סוף זמן תפילה", time: times.sofZmanTfilla },
             { label: "חצות היום", time: times.chatzot },
             { label: "שקיעה", time: times.sunset },
             { label: "צאת הכוכבים", time: times.tzeit50min }
@@ -143,15 +125,9 @@ async function loadZmanimData() {
                 <span class="zman-time">${formatTime(item.time)}</span>
             </div>
         `).join('');
-
     } catch (error) {
-        console.error("Zmanim load error:", error);
-        timesContainer.innerHTML = `
-            <div class="error-msg" style="grid-column: 1/-1; text-align: center; padding: 20px;">
-                <i class="fas fa-exclamation-circle"></i> 
-                אירעה שגיאה בטעינת הזמנים. 
-                <button onclick="location.reload()" style="background: none; border: underline; color: var(--primary-color); cursor: pointer;">נסה שוב</button>
-            </div>`;
+        console.error("Zmanim Error:", error);
+        timesContainer.innerHTML = '<div class="error-msg">שגיאה בטעינת זמנים</div>';
     }
 }
 
@@ -159,26 +135,4 @@ function formatTime(isoTime) {
     if (!isoTime) return "--:--";
     const date = new Date(isoTime);
     return date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-}
-
-function openCityModal() {
-    document.getElementById('city-modal').classList.add('active');
-}
-
-function saveCity(city) {
-    currentCity = city;
-    localStorage.setItem('zmanim_city', JSON.stringify(city));
-
-    // עדכון UI
-    document.getElementById('current-city-name').textContent = city.name;
-    document.getElementById('city-modal').classList.remove('active');
-
-    // טעינה מחדש של הנתונים
-    loadZmanimData();
-
-    // עדכון מחלקת active ברשימה
-    document.querySelectorAll('.city-option').forEach(btn => {
-        if (btn.dataset.id === city.geonameid) btn.classList.add('active');
-        else btn.classList.remove('active');
-    });
 }
