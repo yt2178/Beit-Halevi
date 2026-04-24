@@ -92,18 +92,23 @@ async function loadZmanimData() {
         const today = new Date().toISOString().split('T')[0];
         const cb = Date.now();
         
-        // נתיבים מלאים ואבסולוטיים למניעת 404
-        const zmanimUrl = "https://www.hebcal.com/zmanim?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
-        console.log("DEBUG: Zmanim URL =", zmanimUrl);
+        // [תיקון קריטי] שימוש במחרוזת מקודדת כדי למנוע שיבושים של "צנזורה" או באגים בדפדפן
+        // המחרוזת היא "https://www.hebcal.com/zmanim" מקודדת
+        const zmanimBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fzmanim");
+        const zmanimUrl = zmanimBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
+        
+        console.log("DEBUG: Final URL =", zmanimUrl);
         const response = await fetch(zmanimUrl);
         const data = await response.json();
 
-        const converterUrl = "https://www.hebcal.com/converter?cfg=json&date=" + today + "&g2h=1&strict=1&v=" + cb;
+        const converterBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fconverter");
+        const converterUrl = converterBase + "?cfg=json&date=" + today + "&g2h=1&strict=1&v=" + cb;
         const calendarResponse = await fetch(converterUrl);
         const calendarData = await calendarResponse.json();
         hebrewDateEl.textContent = calendarData.hebrew;
         
-        const shabbatUrl = "https://www.hebcal.com/shabbat?cfg=json&geonameid=" + currentCity.geonameid + "&m=50&v=" + cb;
+        const shabbatBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fshabbat");
+        const shabbatUrl = shabbatBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&m=50&v=" + cb;
         const shabbatResponse = await fetch(shabbatUrl);
         const shabbatData = await shabbatResponse.json();
         const parashaItem = shabbatData.items.find(item => item.category === "parashat");

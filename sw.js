@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-v13';
+const CACHE_NAME = 'beit-halevi-v14';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -17,7 +17,10 @@ const ASSETS_TO_CACHE = [
     './news.js',
     './utils.js',
     './zmanim.js',
-    './manifest.json',
+    './manifest.json'
+];
+
+const EXTERNAL_ASSETS = [
     'https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=Heebo:wght@300;400;700;900&family=Amiri:wght@400;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
@@ -25,7 +28,15 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache) => {
+            // טעינת נכסים מקומיים - קריטי
+            const internalPromise = cache.addAll(ASSETS_TO_CACHE);
+            // טעינת נכסים חיצוניים - פחות קריטי, לא יכשיל את הכל
+            const externalPromise = Promise.all(
+                EXTERNAL_ASSETS.map(url => cache.add(url).catch(err => console.warn("Failed to cache external asset:", url, err)))
+            );
+            return Promise.all([internalPromise, externalPromise]);
+        })
     );
 });
 
