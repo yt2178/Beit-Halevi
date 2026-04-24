@@ -81,7 +81,7 @@ export function initSearch(newsContainerId, galleryContainerId) {
 
 function filterContent(query) {
     // סינון חדשות
-    const newsCards = document.querySelectorAll('.news-card');
+    const newsCards = document.querySelectorAll('.news-item');
     let newsVisible = 0;
     newsCards.forEach(card => {
         const title = card.querySelector('h3')?.textContent.toLowerCase() || '';

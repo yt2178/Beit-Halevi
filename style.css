@@ -2098,7 +2098,13 @@ img {
     }
 
     .map-container {
-        min-height: 220px;
+        min-height: 250px;
+        width: 100%;
+        display: flex;
+        flex: 1;
+    }
+    .map-container iframe {
+        flex: 1;
     }
 
     /* לייטבוקס */
@@ -3169,6 +3175,22 @@ body.dark-mode .empty-state {
     color: var(--text-color);
     outline: none;
     font-family: inherit;
+}
+
+.clear-search-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 5px 10px;
+    outline: none;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.clear-search-btn:hover {
+    opacity: 1;
 }
 
 body.dark-mode .search-container {
