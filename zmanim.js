@@ -94,6 +94,7 @@ async function loadZmanimData() {
         
         // נתיבים מלאים ואבסולוטיים למניעת 404
         const zmanimUrl = "https://www.hebcal.com/zmanim?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
+        console.log("DEBUG: Zmanim URL =", zmanimUrl);
         const response = await fetch(zmanimUrl);
         const data = await response.json();
 
