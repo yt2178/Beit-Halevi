@@ -123,6 +123,18 @@ if (contactForm) {
         const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSei1Bf5tZILqekHD0nV2QsirdzryO8YEoOtkcl7rVB9HCKUog/formResponse";
 
         // מיפוי השדות (המשתמש יצטרך להוציא את ה-entry.ID מהטופס שלו)
+        
+        // בדיקת האניפוט
+        if (contactForm.honeypot && contactForm.honeypot.value !== "") {
+            console.warn("Spam detected via honeypot");
+            statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
+            statusMessage.style.color = "green";
+            button.disabled = false;
+            button.innerHTML = originalButtonHtml;
+            contactForm.appendChild(statusMessage);
+            return;
+        }
+
         const formData = new FormData();
         formData.append('entry.659007933', contactForm.name.value);   // שם מלא
         formData.append('entry.627036351', contactForm.email.value);  // אימייל

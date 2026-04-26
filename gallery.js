@@ -18,9 +18,9 @@ export function openGridOverlay(albumData) {
     thumbnailGrid.textContent = '';
     gridAlbumTitle.textContent = albumData.title;
     updateDynamicMetadata(`גלריה: ${albumData.title}`);
-    currentAlbumImages = (albumData.images || []).map(imgSrc => ({
+    currentAlbumImages = (albumData.images || []).map((imgSrc, index) => ({
         src: cleanPath(imgSrc),
-        alt: albumData.title,
+        alt: `${albumData.title} - תמונה ${index + 1}`,
         albumSlug: albumData.slug
     }));
     setupAlbumControls(albumData);

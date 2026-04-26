@@ -1,10 +1,22 @@
-const CACHE_NAME = 'beit-halevi-v16';
+﻿const CACHE_NAME = 'beit-halevi-v16';
 
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './admin.html',
     './style.css',
+    './base.css',
+    './header.css',
+    './footer.css',
+    './layout.css',
+    './gallery.css',
+    './news.css',
+    './zmanim.css',
+    './notifications.css',
+    './contact.css',
+    './components.css',
+    './animations.css',
+    './responsive.css',
     './admin.css',
     './main.js',
     './admin.js',
@@ -29,9 +41,11 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // טעינת נכסים מקומיים - קריטי
-            const internalPromise = cache.addAll(ASSETS_TO_CACHE);
-            // טעינת נכסים חיצוניים - פחות קריטי, לא יכשיל את הכל
+            // ׳˜׳¢׳™׳ ׳× ׳ ׳›׳¡׳™׳ ׳׳§׳•׳׳™׳™׳ - ׳”׳•׳₪׳¨׳“ ׳›׳“׳™ ׳׳ ׳׳”׳›׳©׳™׳ ׳”׳›׳
+            const internalPromise = Promise.all(
+                ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.warn("Failed to cache internal asset:", url, err)))
+            );
+            // ׳˜׳¢׳™׳ ׳× ׳ ׳›׳¡׳™׳ ׳—׳™׳¦׳•׳ ׳™׳™׳ - ׳₪׳—׳•׳× ׳§׳¨׳™׳˜׳™, ׳׳ ׳™׳›׳©׳™׳ ׳׳× ׳”׳›׳
             const externalPromise = Promise.all(
                 EXTERNAL_ASSETS.map(url => cache.add(url).catch(err => console.warn("Failed to cache external asset:", url, err)))
             );
@@ -61,7 +75,7 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
-    // אסטרטגיה עבור קבצי נתונים ו-Google Drive
+    // ׳׳¡׳˜׳¨׳˜׳’׳™׳” ׳¢׳‘׳•׳¨ ׳§׳‘׳¦׳™ ׳ ׳×׳•׳ ׳™׳ ׳•-Google Drive
     if (url.hostname.includes('github') || url.hostname.includes('googleusercontent') || url.hostname.includes('googleapis')) {
         event.respondWith(
             fetch(event.request).then((response) => {
@@ -77,7 +91,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Stale-While-Revalidate עבור כל השאר
+    // Stale-While-Revalidate ׳¢׳‘׳•׳¨ ׳›׳ ׳”׳©׳׳¨
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -94,3 +108,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+

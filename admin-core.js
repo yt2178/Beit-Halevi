@@ -257,7 +257,8 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
                     'Authorization': `token ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(bodyObj)
+                body: JSON.stringify(bodyObj),
+                keepalive: true
             });
 
             if (res.ok) return res;
