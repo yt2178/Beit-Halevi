@@ -534,8 +534,11 @@ async function handleGallerySubmit(e) {
             return encodeToBase64(JSON.stringify(latestContent, null, 2));
         };
 
+        const initialContent = encodeToBase64(JSON.stringify(galleryArray, null, 2));
+
         const updateResponse = await putWithShaRetry(API_URL, {
             message: `Update gallery: ${albumTitleInput.value}`,
+            content: initialContent,
             branch: 'main'
         }, GITHUB_TOKEN, fileData.sha, 3, transformFn);
 

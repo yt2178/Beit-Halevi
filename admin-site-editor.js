@@ -57,6 +57,41 @@ export async function loadSiteConfig() {
                 document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
             }
 
+            const onesignalBtn = document.getElementById('save-onesignal-btn');
+            if(onesignalBtn) onesignalBtn.onclick = async (e) => {
+                e.preventDefault();
+                const appId = document.getElementById('site-onesignal-id').value.trim();
+                const restKey = document.getElementById('site-onesignal-rest').value.trim();
+                
+                if (restKey) localStorage.setItem('onesignal_rest_key', restKey);
+                else localStorage.removeItem('onesignal_rest_key');
+
+                if (!appId || appId.length < 20) {
+                    showStatus('App ID לא נראה תקין. אנא בדוק אותו בחשבון OneSignal.', null, true);
+                    return;
+                }
+                
+                showStatus('בודק קישור ל-OneSignal...', 50);
+                if (restKey) {
+                    try {
+                        const res = await fetch(`https://onesignal.com/api/v1/apps/${appId}`, {
+                            headers: { 'Authorization': `Basic ${restKey}` }
+                        });
+                        if (res.ok) {
+                            showStatus('✅ חיבור OneSignal תקין ומאפשר שליחת התראות!', 100);
+                            setTimeout(hideStatus, 3000);
+                        } else {
+                            showStatus('❌ חיבור נכשל. מפתח ה-REST API המקומי שגוי.', null, true);
+                        }
+                    } catch (err) {
+                         showStatus('❌ שגיאת רשת בבדיקת חיבור OneSignal.', null, true);
+                    }
+                } else {
+                    showStatus('✅ App ID נשמר. (יכולת שליחת פוש מושבתת ממחשב זה. זה תקין למנהלים כותבים)', 100);
+                    setTimeout(hideStatus, 3500);
+                }
+            };
+
             renderEditableTextsList(currentSiteConfig.texts);
             renderSitePreview(currentSiteConfig);
             return config;

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="admin.css"> <!-- קובץ CSS ייעודי לניהול -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://accounts.google.com/gsi/client https://cdn.onesignal.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://maxcdn.bootstrapcdn.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src 'self' data: https://*.githubusercontent.com https://*.googleusercontent.com https://*.googleapis.com https://*.google.com https://cdn.onesignal.com; connect-src 'self' https://api.github.com https://*.googleapis.com https://accounts.google.com https://onesignal.com https://*.onesignal.com https://cdn.jsdelivr.net https://docs.google.com; frame-src https://accounts.google.com https://www.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://accounts.google.com/gsi/client https://cdn.onesignal.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://accounts.google.com https://maxcdn.bootstrapcdn.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src 'self' data: https://*.githubusercontent.com https://*.googleusercontent.com https://*.googleapis.com https://*.google.com https://cdn.onesignal.com; connect-src 'self' https://api.github.com https://*.googleapis.com https://accounts.google.com https://*.googleusercontent.com https://onesignal.com https://*.onesignal.com https://cdn.jsdelivr.net https://docs.google.com; frame-src https://accounts.google.com https://www.google.com;">
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
@@ -301,14 +301,17 @@
                 <h3>🔔 מערכת התראות לגולשים (OneSignal)</h3>
                 <div class="site-settings-grid" style="display: grid; grid-template-columns: 1fr; gap: 15px;">
                     <div class="input-group">
-                        <label><strong>OneSignal App ID (מזהה חיבור):</strong></label>
+                        <label><strong>OneSignal App ID (מזהה חיבור האתר):</strong></label>
                         <input type="text" id="site-onesignal-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr">
-                        <small style="color: #7f8c8d;">נדרש לרישום גולשים. נשמר ב-GitHub ונמצא בלוח סביבת OneSignal ב-Keys & IDs.</small>
+                        <small style="color: #7f8c8d;">נדרש להרשמת גולשים לאתר. נשמר באופן פומבי עבור משתמשים. <a href="https://dashboard.onesignal.com/apps" target="_blank" style="color:#3498db; text-decoration:underline;">היכנסו כאן להעתקת המזהה</a>.</small>
                     </div>
                     <div class="input-group">
-                        <label><strong>REST API Key (לשליחת התראות):</strong></label>
+                        <label><strong>REST API Key (מפתח תקשורת לשליחת התראות):</strong></label>
                         <input type="password" id="site-onesignal-rest" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr">
-                        <small style="color: #e74c3c;">זהו מפתח סודי! יִשָּׁמֵר <strong>אך ורק במחשב זה</strong> (בדפדפן שלך) ולא בשרת.</small>
+                        <small style="color: #e74c3c;">זהו מפתח <strong>סודי</strong> המפעיל את הרשאות השליחה. יִשָּׁמֵר <strong>מקומית בדפדפן שלך בלבד</strong> למטרות אבטחה מוגברת. מנהלים משניים <strong>אינם חייבים</strong> להקליד אותו כדי לעבוד על האתר - אם המפתח לא הוזן, תתבצע קפיצה (Skip) על בדיקת ומשלוח פוש ללא שגיאות מעצבנות.</small>
+                    </div>
+                    <div class="form-actions" style="margin-top:10px;">
+                        <button id="save-onesignal-btn" class="premium-btn small secondary" style="background: #e67e22; border-color: #e67e22; color: #fff;"><i class="fas fa-plug"></i> בדיקת חיבור ושמירת מפתחות מקומית</button>
                     </div>
                 </div>
             </div>
@@ -353,8 +356,11 @@
         
         <!-- [חדש] סקשן משימות מנהל -->
         <section id="tasks-section" style="display:none;">
-            <div class="admin-card">
+            <div class="section-header">
+                <button class="back-to-dashboard-btn premium-btn small"><i class="fas fa-arrow-right"></i> חזרה ללוח הבקרה</button>
                 <h2>📋 משימות לביצוע</h2>
+            </div>
+            <div class="admin-card">
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <input type="text" id="new-task-input" placeholder="מה המשימה הבאה?" class="premium-input" style="flex: 1;">
                     <button id="add-task-btn" class="premium-btn"><i class="fas fa-plus"></i> הוסף</button>
