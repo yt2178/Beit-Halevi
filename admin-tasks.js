@@ -8,6 +8,9 @@ import {
 
 let allTasks = [];
 let tasksSha = null;
+let hasUnsavedChanges = false;
+const LOCAL_TASKS_KEY = 'admin_local_tasks_backup';
+let syncInterval = null;
 
 // DOM helpers
 const getTasksListContainer = () => document.getElementById('tasks-list');
@@ -27,28 +30,53 @@ export async function loadAndRenderTasks() {
             cache: 'no-store'
         });
         
+        let gitHubTasks = [];
         if (res.ok) {
             const data = await res.json();
             tasksSha = data.sha;
-            allTasks = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
+            gitHubTasks = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
         } else if (res.status === 404) {
-            // קובץ לא קיים - התחל עם רשימה ריקה
-            allTasks = [];
+            gitHubTasks = [];
             tasksSha = null;
         } else {
             throw new Error('Failed to fetch tasks');
         }
         
-        renderTasks();
+        allTasks = gitHubTasks;
+
+        // בדוק שחזור מקומי
+        const localRaw = localStorage.getItem(LOCAL_TASKS_KEY);
+        if (localRaw) {
+            try {
+                const localTasks = JSON.parse(localRaw);
+                if (localTasks.length > 0 && confirm("נמצאו משימות שלא נשמרו לשרת (שמירה מקומית). האם ברצונך לשחזר רשימה זו?")) {
+                    allTasks = localTasks;
+                    hasUnsavedChanges = true;
+                } else {
+                    localStorage.removeItem(LOCAL_TASKS_KEY);
+                }
+            } catch(e) {}
+        }
         
+        renderTasks();
+
         // [חדש] עדכון באדג' (Badge) של האפליקציה במידה ונתמך
         if ('setAppBadge' in navigator) {
             const openTasks = allTasks.filter(t => !t.completed).length;
             if (openTasks > 0) navigator.setAppBadge(openTasks).catch(() => {});
             else navigator.clearAppBadge().catch(() => {});
         }
+
+        // התחל שמירה מקומית כל 10 שניות
+        if (syncInterval) clearInterval(syncInterval);
+        syncInterval = setInterval(() => {
+            if (hasUnsavedChanges) {
+                localStorage.setItem(LOCAL_TASKS_KEY, JSON.stringify(allTasks));
+            }
+        }, 10000);
+
     } catch (err) {
-        tasksListContainer.innerHTML = `<p style="text-align:center; color:red;">שגיאה בטעינת משימות: ${err.message}</p>`;
+        container.innerHTML = `<p style="text-align:center; color:red;">שגיאה בטעינת משימות: ${err.message}</p>`;
     }
 }
 
@@ -107,73 +135,58 @@ function renderTasks() {
     });
 }
 
-async function addTask() {
+function addTask() {
     const input = getNewTaskInput();
     const text = input ? input.value.trim() : '';
     if (!text) return;
     
-    const newTask = {
+    allTasks.unshift({
         text,
         completed: false,
         createdAt: new Date().toISOString()
-    };
+    });
     
-    const transformFn = (latestTasks) => {
-        latestTasks.unshift(newTask);
-        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
-    };
-
     if (input) input.value = '';
-    await saveTasks(`Add task: ${text}`, transformFn);
-    await loadAndRenderTasks(); 
+    hasUnsavedChanges = true;
+    renderTasks();
 }
 
-async function toggleTask(index) {
-    const taskToToggle = allTasks[index];
-    if (!taskToToggle) return;
-
-    const transformFn = (latestTasks) => {
-        const latestIdx = latestTasks.findIndex(t => t.text === taskToToggle.text && t.createdAt === taskToToggle.createdAt);
-        if (latestIdx !== -1) {
-            latestTasks[latestIdx].completed = !latestTasks[latestIdx].completed;
-        }
-        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
-    };
-
-    await saveTasks(`Toggle task: ${taskToToggle.text}`, transformFn);
-    await loadAndRenderTasks();
+function toggleTask(index) {
+    if (allTasks[index]) {
+        allTasks[index].completed = !allTasks[index].completed;
+        hasUnsavedChanges = true;
+        renderTasks();
+    }
 }
 
-async function deleteTask(index) {
-    const taskToDelete = allTasks[index];
-    if (!taskToDelete) return;
-
-    const transformFn = (latestTasks) => {
-        const latestIdx = latestTasks.findIndex(t => t.text === taskToDelete.text && t.createdAt === taskToDelete.createdAt);
-        if (latestIdx !== -1) {
-            latestTasks.splice(latestIdx, 1);
-        }
-        return encodeToBase64(JSON.stringify(latestTasks, null, 2));
-    };
-
-    await saveTasks(`Delete task: ${taskToDelete.text}`, transformFn);
-    await loadAndRenderTasks();
+function deleteTask(index) {
+    if (allTasks[index]) {
+        allTasks.splice(index, 1);
+        hasUnsavedChanges = true;
+        renderTasks();
+    }
 }
 
-async function saveTasks(message, transformFn) {
+export async function forceSyncTasks() {
+    if (!hasUnsavedChanges) return;
+
     showStatus('מעדכן משימות ב-GitHub...', 50);
     const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${TASKS_JSON_PATH}`;
     
     try {
         const payload = {
-            message,
+            message: "עדכון משימות לביצוע",
             branch: 'main'
         };
         
+        const transformFn = () => encodeToBase64(JSON.stringify(allTasks, null, 2));
+
         const res = await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, tasksSha, 3, transformFn);
         if (res.ok) {
             const data = await res.json();
             tasksSha = data.content.sha;
+            hasUnsavedChanges = false;
+            localStorage.removeItem(LOCAL_TASKS_KEY); // מחיקת השמירה המקומית
             hideStatus();
         } else {
             throw new Error('Failed to save tasks');
@@ -195,6 +208,23 @@ function initTasksListeners() {
             if (e.key === 'Enter') addTask();
         });
     }
+
+    // שמירה בשינוי מצב ראות או סגירת הדף
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === 'hidden' && hasUnsavedChanges) {
+            forceSyncTasks();
+        }
+    });
+
+    // סנכרון בעת חזרה מדף המשימות לפאנל הניהול הראשי
+    const dashboardsBtns = document.querySelectorAll('.back-to-dashboard-btn, #bnav-dashboard');
+    dashboardsBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (document.getElementById('tasks-section').style.display !== 'none' && hasUnsavedChanges) {
+                forceSyncTasks();
+            }
+        });
+    });
 }
 
 if (document.readyState === 'loading') {
@@ -202,3 +232,4 @@ if (document.readyState === 'loading') {
 } else {
     initTasksListeners();
 }
+

@@ -243,10 +243,6 @@ function getFinalSlug(title, date) {
     return `${date}-${titleSlug}`;
 }
 
-// ============================================================
-// 6. פונקציות ראשיות (Main Functions)
-// ============================================================
-
 // הצגת/הסתרת פאנל הניהול
 function showAdminPanel() {
     if (GITHUB_TOKEN && GITHUB_USERNAME) {
@@ -276,6 +272,13 @@ function showAdminPanel() {
 
         // [חדש] עדכון תצוגת תפריט תחתון
     }
+}
+
+function logout() {
+    updateGithubAuth('');
+    localStorage.removeItem('admin_user_code');
+    localStorage.removeItem('admin_github_username');
+    location.reload();
 }
 
 function navigateTo(sectionId) {

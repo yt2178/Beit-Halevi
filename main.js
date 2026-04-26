@@ -275,17 +275,21 @@ if (hebrewYearDisplay) {
             if (config.oneSignalAppId) {
                 window.OneSignalDeferred = window.OneSignalDeferred || [];
                 window.OneSignalDeferred.push(function (OneSignal) {
-                    OneSignal.init({
-                        appId: config.oneSignalAppId,
-                        safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
-                        notifyButton: {
-                            enable: false, // נשתמש בכפתור שלנו
-                        },
-                        allowLocalhostAsSecureOrigin: true,
-                        // [תיקון] הגדרות נתיב עבור GitHub Pages
-                        serviceWorkerParam: { scope: '/Beit-Halevi/' },
-                        serviceWorkerPath: '/Beit-Halevi/OneSignalSDKWorker.js',
-                    });
+                    try {
+                        OneSignal.init({
+                            appId: config.oneSignalAppId,
+                            safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
+                            notifyButton: {
+                                enable: false, // נשתמש בכפתור שלנו
+                            },
+                            allowLocalhostAsSecureOrigin: true,
+                            // [תיקון] הגדרות נתיב עבור GitHub Pages
+                            serviceWorkerParam: { scope: '/Beit-Halevi/' },
+                            serviceWorkerPath: '/Beit-Halevi/OneSignalSDKWorker.js',
+                        }).catch(e => console.warn("OneSignal init error ignored:", e));
+                    } catch(e) {
+                         console.warn("OneSignal try-catch:", e);
+                    }
 
                     // [חדש] פונקציה לעדכון מצב הכפתור
                     function updateSubscribeUI() {
