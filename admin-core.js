@@ -189,9 +189,8 @@ export async function googleLogin() {
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
     try {
-        const url = new URL("https://www.googleapis.com/drive/v3/files");
-        url.searchParams.append("q", `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-        const searchRes = await fetch(url.toString(), { headers: { "Authorization": "Bearer " + token } });
+        const query = encodeURIComponent(`name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}`, { headers: { "Authorization": "Bearer " + token } });
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
@@ -216,9 +215,7 @@ export async function uploadFileToDrive(file, token) {
     form.append("file", file);
 
     // Retry + timeout support for Drive uploads
-    const url = new URL("https://www.googleapis.com/upload/drive/v3/files");
-    url.searchParams.append("uploadType", "multipart");
-    const uploadUrlStr = url.toString();
+    const uploadUrlStr = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     const maxAttempts = 2;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();

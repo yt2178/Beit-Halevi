@@ -58,6 +58,14 @@ async function compressImage(file, maxWidth = 1600, quality = 0.8) {
 let currentPreviewIndex = 0;
 let previewImagesList = [];
 
+function updatePreviewArrows() {
+    const prevBtn = document.getElementById('modal-prev-btn'); // שמאל - חץ למעבר לבא
+    const nextBtn = document.getElementById('modal-next-btn'); // ימין - חץ למעבר לקודם
+    
+    if (prevBtn) prevBtn.style.display = (currentPreviewIndex < previewImagesList.length - 1) ? 'block' : 'none';
+    if (nextBtn) nextBtn.style.display = (currentPreviewIndex > 0) ? 'block' : 'none';
+}
+
 function showLargePreview(index) {
     previewImagesList = Array.from(document.querySelectorAll('#albumPreview .album-preview-item img')).map(img => img.src);
     if (previewImagesList.length === 0) return;
@@ -67,18 +75,20 @@ function showLargePreview(index) {
     const img = document.getElementById('preview-large-img');
     if (modal && img) {
         img.src = previewImagesList[currentPreviewIndex];
+        updatePreviewArrows();
         modal.style.display = 'flex';
     }
 }
 
 function navigatePreview(direction) {
     if (previewImagesList.length === 0) return;
-    currentPreviewIndex += direction;
-    if (currentPreviewIndex < 0) currentPreviewIndex = previewImagesList.length - 1;
-    if (currentPreviewIndex >= previewImagesList.length) currentPreviewIndex = 0;
+    const newIndex = currentPreviewIndex + direction;
+    if (newIndex < 0 || newIndex >= previewImagesList.length) return; // ללא לופ בחצים
     
+    currentPreviewIndex = newIndex;
     const img = document.getElementById('preview-large-img');
     if (img) img.src = previewImagesList[currentPreviewIndex];
+    updatePreviewArrows();
 }
 
 export function initGalleryAdminEvents() {
@@ -89,6 +99,16 @@ export function initGalleryAdminEvents() {
             const modal = document.getElementById('image-preview-modal');
             if (modal) modal.style.display = 'none';
         };
+    }
+    
+    const modal = document.getElementById('image-preview-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            // יציאה במידה ולחצו על הרקע מחוץ לתמונה
+            if (e.target === modal || e.target.classList.contains('modal-content')) {
+                modal.style.display = 'none';
+            }
+        });
     }
 
     // מאזיני חיצים לתצוגה המקדימה
@@ -392,8 +412,13 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
         setAsThumbnail();
     });
 
-    // לחיצה על התמונה עצמה גם מגדירה כעיקרית
-    img.addEventListener('click', setAsThumbnail);
+    // לחיצה על התמונה פותחת את המסך המלא
+    img.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const allItems = Array.from(albumPreview.querySelectorAll('.album-preview-item'));
+        const index = allItems.indexOf(wrapper);
+        showLargePreview(index !== -1 ? index : 0);
+    });
 
     // כפתור מחיקה
     const removeBtn = document.createElement('button');
@@ -423,20 +448,6 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 
     controls.appendChild(thumbBtn);
     controls.appendChild(removeBtn);
-
-    // [חדש] כפתור תצוגה מקדימה גדולה
-    const viewBtn = document.createElement('button');
-    viewBtn.type = 'button';
-    viewBtn.className = 'preview-btn view';
-    viewBtn.title = 'הצג תמונה גדולה';
-    viewBtn.innerHTML = '👁';
-    viewBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const allItems = Array.from(albumPreview.querySelectorAll('.album-preview-item'));
-        const index = allItems.indexOf(wrapper);
-        showLargePreview(index !== -1 ? index : 0);
-    });
-    controls.appendChild(viewBtn);
 
     wrapper.appendChild(controls);
 
