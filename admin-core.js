@@ -32,6 +32,9 @@ export let GITHUB_TOKEN = localStorage.getItem(GITHUB_TOKEN_KEY);
 export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
 window.tokenClient = null;
 
+let cachedGoogleToken = null;
+let tokenExpiry = 0;
+
 export function updateGithubAuth(token, username) {
     GITHUB_TOKEN = token;
     GITHUB_USERNAME = username;
@@ -125,6 +128,10 @@ window.initGoogleLogin = initGoogleLogin; // Export to window for global access
 
 export async function googleLogin() {
     return new Promise((resolve, reject) => {
+        if (cachedGoogleToken && Date.now() < tokenExpiry) {
+            return resolve(cachedGoogleToken);
+        }
+
         if (!window.tokenClient) {
             console.log("tokenClient not found, attempting to initialize...");
             initGoogleLogin();
@@ -151,6 +158,8 @@ export async function googleLogin() {
                 }
             } else if (tokenResponse.access_token) {
                 console.log("Success! Access token obtained.");
+                cachedGoogleToken = tokenResponse.access_token;
+                tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3599) * 1000) - 60000;
                 resolve(tokenResponse.access_token);
             } else {
                 reject(new Error("לא התקבל Access Token מגוגל."));
@@ -166,7 +175,7 @@ export async function googleLogin() {
         // Explicitly passing the scope here is the RECOMMENDED fix for "Missing required parameter: scope"
         try {
             window.tokenClient.requestAccessToken({
-                prompt: 'select_account',
+                prompt: '',
                 scope: scopeStr
             });
             console.log("requestAccessToken called.");
