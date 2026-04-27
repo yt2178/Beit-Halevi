@@ -419,20 +419,26 @@ async function handleGallerySubmit(e) {
     // בדיקה בטוחה של קבצים כדי למנוע קריסה
     const albumThumbnailFile = (albumThumbnailInput.files && albumThumbnailInput.files.length > 0) ? albumThumbnailInput.files[0] : null;
     const albumImages = albumImagesInput.files;
+    
+    const submitBtn = galleryForm.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
 
     if (!albumTitle) {
         showStatus('נא להזין שם לאלבום', null, true);
+        if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
     if (!albumThumbnailFile && !albumThumbnailUrlInput?.value) {
         showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
+        if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
     const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
     if (albumImages.length === 0 && existingImagesCount === 0) {
         showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
+        if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
@@ -501,6 +507,7 @@ async function handleGallerySubmit(e) {
 
         if (!thumbnailUrl && finalImages.length === 0) {
             showStatus('שגיאה: אין תמונות באלבום. אנא הוסף לפחות תמונה אחת.', null, true);
+            if (submitBtn) submitBtn.disabled = false;
             return;
         }
 
@@ -515,6 +522,7 @@ async function handleGallerySubmit(e) {
 
         // 4. עדכון המערך
         const isUpdate = editingAlbumIndex !== null;
+        const savedEditingAlbumIndex = editingAlbumIndex;
         if (isUpdate) {
             galleryArray[editingAlbumIndex] = newAlbum;
             editingAlbumIndex = null;
@@ -526,8 +534,8 @@ async function handleGallerySubmit(e) {
 
         // 5. שמירה ב-GitHub
         const transformFn = (latestContent) => {
-            if (editingAlbumIndex !== null) {
-                latestContent[editingAlbumIndex] = newAlbum;
+            if (savedEditingAlbumIndex !== null) {
+                latestContent[savedEditingAlbumIndex] = newAlbum;
             } else {
                 latestContent.push(newAlbum);
             }
@@ -561,5 +569,7 @@ async function handleGallerySubmit(e) {
     } catch (err) {
         // ✅ Fix: הסר console.error
         showStatus('שגיאה בתהליך השמירה: ' + err.message, null, true);
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
     }
 }
