@@ -598,11 +598,11 @@ async function loadAndRenderMessages() {
 
             const replyBtn = document.createElement('a');
             replyBtn.className = 'premium-btn small secondary reply-btn';
-            replyBtn.target = "_blank"; // פתיחה בחלון חדש עוזרת לדפדפנים מסוימים לטפל ב-mailto
+            replyBtn.target = "_blank";
             const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
             const mailBody = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
-            replyBtn.href = `mailto:${email}?subject=${subject}&body=${mailBody}`;
-            replyBtn.title = "לחץ כאן כדי להשיב באמצעות אפליקציית המייל שלך";
+            replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
+            replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
             replyBtn.style.textDecoration = 'none';
             replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
             replyBtn.style.marginLeft = '8px';
