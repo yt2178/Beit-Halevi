@@ -23,8 +23,8 @@ jobs:
           ONESIGNAL_APP_ID: ${{ secrets.ONESIGNAL_APP_ID }}
           ONESIGNAL_REST_API_KEY: ${{ secrets.ONESIGNAL_REST_API_KEY }}
         run: |
-          # Get list of changed files in this push
-          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          # Get list of changed files safely
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD || true)
           echo "Changed files: $CHANGED_FILES"
 
           BASE_URL="https://yt2178.github.io/Beit-Halevi"
@@ -32,48 +32,51 @@ jobs:
           # Handle news.json changes
           if echo "$CHANGED_FILES" | grep -q 'data/news.json'; then
             echo "Processing news.json change..."
-            # Extract the newest item (first one in the array)
             TITLE=$(jq -r '.[0].data.title' data/news.json)
             DATE=$(jq -r '.[0].data.date' data/news.json)
-            # Clean slug logic (bash version)
-            CLEAN_TITLE=$(echo "$TITLE" | tr ' ' '-' | sed 's/[^a-zA-Z0-9א-ת-]//g')
+            # Reliable slug creation across environments matching application code
+            CLEAN_TITLE=$(node -e "console.log(process.argv[1].replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, ''))" "$TITLE")
             SLUG="${DATE}-${CLEAN_TITLE}"
             
             MESSAGE="חדשות ועדכונים: ${TITLE}"
             URL="${BASE_URL}/#news/${SLUG}"
             
             echo "Sending news notification: $MESSAGE"
+            # Use jq to safely escape titles that might contain quotes
+            jq -n \
+              --arg app_id "$ONESIGNAL_APP_ID" \
+              --arg title "חדשות ועדכונים" \
+              --arg content "$TITLE" \
+              --arg url "$URL" \
+              '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+              
             curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
                  -H "Content-Type: application/json; charset=utf-8" \
-                 -d "{
-                   \"app_id\": \"$ONESIGNAL_APP_ID\",
-                   \"headings\": {\"he\": \"חדשות ועדכונים\"},
-                   \"contents\": {\"he\": \"${TITLE}\"},
-                   \"url\": \"$URL\",
-                   \"included_segments\": [\"All\"]
-                 }"
+                 -d @payload.json -sSw "\nHTTP status: %{http_code}\n"
           fi
 
           # Handle gallery.json changes
           if echo "$CHANGED_FILES" | grep -q 'data/gallery.json'; then
             echo "Processing gallery.json change..."
             ALBUM_TITLE=$(jq -r '.[0].data.title' data/gallery.json)
-            # Clean slug logic
-            CLEAN_ALBUM=$(echo "$ALBUM_TITLE" | tr ' ' '-' | sed 's/[^a-zA-Z0-9א-ת-]//g')
+            # Reliable slug creation across environments
+            CLEAN_ALBUM=$(node -e "console.log(process.argv[1].replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, ''))" "$ALBUM_TITLE")
             
             MESSAGE="אלבום חדש בגלריה: ${ALBUM_TITLE}"
             URL="${BASE_URL}/#gallery/${CLEAN_ALBUM}"
             
             echo "Sending gallery notification: $MESSAGE"
+            # Use jq to safely escape titles that might contain quotes
+            jq -n \
+              --arg app_id "$ONESIGNAL_APP_ID" \
+              --arg title "גלריית תמונות" \
+              --arg content "$ALBUM_TITLE" \
+              --arg url "$URL" \
+              '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+              
             curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
                  -H "Content-Type: application/json; charset=utf-8" \
-                 -d "{
-                   \"app_id\": \"$ONESIGNAL_APP_ID\",
-                   \"headings\": {\"he\": \"גלריית תמונות\"},
-                   \"contents\": {\"he\": \"${ALBUM_TITLE}\"},
-                   \"url\": \"$URL\",
-                   \"included_segments\": [\"All\"]
-                 }"
+                 -d @payload.json -sSw "\nHTTP status: %{http_code}\n"
           fi
