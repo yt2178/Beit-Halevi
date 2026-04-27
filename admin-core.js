@@ -189,10 +189,9 @@ export async function googleLogin() {
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
     try {
-        const searchRes = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q=name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-            { headers: { "Authorization": "Bearer " + token } }
-        );
+        const url = new URL("https://www.googleapis.com/drive/v3/files");
+        url.searchParams.append("q", `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+        const searchRes = await fetch(url.toString(), { headers: { "Authorization": "Bearer " + token } });
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
@@ -217,13 +216,15 @@ export async function uploadFileToDrive(file, token) {
     form.append("file", file);
 
     // Retry + timeout support for Drive uploads
-    const uploadUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+    const url = new URL("https://www.googleapis.com/upload/drive/v3/files");
+    url.searchParams.append("uploadType", "multipart");
+    const uploadUrlStr = url.toString();
     const maxAttempts = 2;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
-            const res = await fetch(uploadUrl, {
+            const res = await fetch(uploadUrlStr, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
                 body: form,

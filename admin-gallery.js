@@ -54,18 +54,35 @@ async function compressImage(file, maxWidth = 1600, quality = 0.8) {
     });
 }
 
-// [חדש] פונקציה להצגת תמונה בתצוגה מקדימה גדולה במודאל הניהול
-function showLargePreview(src) {
+// [חדש] לוגיקה לניווט בתצוגה המקדימה
+let currentPreviewIndex = 0;
+let previewImagesList = [];
+
+function showLargePreview(index) {
+    previewImagesList = Array.from(document.querySelectorAll('#albumPreview .album-preview-item img')).map(img => img.src);
+    if (previewImagesList.length === 0) return;
+    
+    currentPreviewIndex = index;
     const modal = document.getElementById('image-preview-modal');
     const img = document.getElementById('preview-large-img');
     if (modal && img) {
-        img.src = src;
+        img.src = previewImagesList[currentPreviewIndex];
         modal.style.display = 'flex';
     }
 }
 
+function navigatePreview(direction) {
+    if (previewImagesList.length === 0) return;
+    currentPreviewIndex += direction;
+    if (currentPreviewIndex < 0) currentPreviewIndex = previewImagesList.length - 1;
+    if (currentPreviewIndex >= previewImagesList.length) currentPreviewIndex = 0;
+    
+    const img = document.getElementById('preview-large-img');
+    if (img) img.src = previewImagesList[currentPreviewIndex];
+}
+
 export function initGalleryAdminEvents() {
-    // מאזין לסגירת מודאל תצוגה מקדימה לתמונות (אם קיים בדף הניהול)
+    // מאזין לסגירת מודאל תצוגה מקדימה לתמונות
     const closeBtn = document.getElementById('close-preview-modal');
     if (closeBtn) {
         closeBtn.onclick = () => {
@@ -73,6 +90,21 @@ export function initGalleryAdminEvents() {
             if (modal) modal.style.display = 'none';
         };
     }
+
+    // מאזיני חיצים לתצוגה המקדימה
+    const prevBtn = document.getElementById('modal-prev-btn');
+    const nextBtn = document.getElementById('modal-next-btn');
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); navigatePreview(1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); navigatePreview(-1); });
+
+    document.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('image-preview-modal');
+        if (modal && modal.style.display === 'flex') {
+            if (e.key === 'ArrowRight') navigatePreview(-1);
+            if (e.key === 'ArrowLeft') navigatePreview(1);
+            if (e.key === 'Escape') modal.style.display = 'none';
+        }
+    });
 }
 
 /* ----------------- אלמנטים ----------------- */
@@ -81,7 +113,6 @@ let galleryForm, albumTitleInput, albumThumbnailInput, albumImagesInput, gallery
 document.addEventListener('DOMContentLoaded', () => {
     galleryForm = document.getElementById('add-album-form');
     albumTitleInput = document.getElementById('albumTitleInput');
-    albumThumbnailInput = document.getElementById('albumThumbnailInput');
     albumImagesInput = document.getElementById('albumImagesInput');
     galleryStatusMessage = document.getElementById('gallery-status-message');
     galleryListContainer = document.getElementById('gallery-list-container');
@@ -334,7 +365,7 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     const thumbBtn = document.createElement('button');
     thumbBtn.type = 'button';
     thumbBtn.className = 'preview-btn';
-    thumbBtn.title = 'הגדר כתמונת שער';
+    thumbBtn.title = 'בחירת תמונת שער לאלבום';
     thumbBtn.innerHTML = '⭐';
 
     const setAsThumbnail = () => {
@@ -401,7 +432,9 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     viewBtn.innerHTML = '👁';
     viewBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        showLargePreview(img.src);
+        const allItems = Array.from(albumPreview.querySelectorAll('.album-preview-item'));
+        const index = allItems.indexOf(wrapper);
+        showLargePreview(index !== -1 ? index : 0);
     });
     controls.appendChild(viewBtn);
 
@@ -416,8 +449,6 @@ async function handleGallerySubmit(e) {
     // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
     const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
-    // בדיקה בטוחה של קבצים כדי למנוע קריסה
-    const albumThumbnailFile = (albumThumbnailInput.files && albumThumbnailInput.files.length > 0) ? albumThumbnailInput.files[0] : null;
     const albumImages = albumImagesInput.files;
     
     const submitBtn = galleryForm.querySelector('button[type="submit"]');
@@ -429,15 +460,15 @@ async function handleGallerySubmit(e) {
         return;
     }
 
-    if (!albumThumbnailFile && !albumThumbnailUrlInput?.value) {
-        showStatus('נא לבחור תמונת כיסוי לאלבום', null, true);
+    const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
+    if (albumImages.length === 0 && existingImagesCount === 0) {
+        alert('נא לבחור לפחות תמונה אחת לאלבום.');
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
-    const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
-    if (albumImages.length === 0 && existingImagesCount === 0) {
-        showStatus('נא לבחור לפחות תמונה אחת לאלבום', null, true);
+    if (!albumThumbnailUrlInput?.value) {
+        alert('יש לבחור תמונת שער מתוך התמונות שהעלית, או להעלות חדשה, על ידי לחיצה על הכוכבית.');
         if (submitBtn) submitBtn.disabled = false;
         return;
     }

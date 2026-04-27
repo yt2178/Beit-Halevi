@@ -49,11 +49,15 @@
         <div id="toast-container"></div>
 
         <!-- [חדש] מודאל תצוגה מקדימה לתמונות גדולה -->
-        <div id="image-preview-modal" class="news-modal" style="display:none;">
-            <div class="modal-content" style="max-width: 90vw; padding: 10px;">
-                <span id="close-preview-modal" class="modal-close">&times;</span>
-                <img id="preview-large-img" src="" style="width:100%; height:auto; border-radius: 8px;">
+        <div id="image-preview-modal" class="news-modal" style="display:none; align-items:center; justify-content:center;">
+            <div class="modal-content" style="position:relative; max-width: 90vw; background:transparent; border:none; box-shadow:none; padding: 0; text-align: center;">
+                <span id="close-preview-modal" class="modal-close" style="position:fixed; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; z-index:100;">&times;</span>
+                <button id="modal-prev-btn" style="position:fixed; left:20px; top:50%; transform:translateY(-50%); font-size:30px; background:transparent; border:none; color:white; cursor:pointer; z-index:100; padding:10px;"><i class="fas fa-chevron-left"></i></button>
+                <img id="preview-large-img" src="" style="max-width:100%; max-height:85vh; border-radius: 8px; object-fit:contain;">
+                <button id="modal-next-btn" style="position:fixed; right:20px; top:50%; transform:translateY(-50%); font-size:30px; background:transparent; border:none; color:white; cursor:pointer; z-index:100; padding:10px;"><i class="fas fa-chevron-right"></i></button>
             </div>
+            <!-- שדה מוסתר לשמירת בחירת שער מכיוון שהקלט נמחק -->
+            <input type="hidden" id="albumThumbnailUrl">
         </div>
 
         <section id="login-section">
@@ -196,14 +200,7 @@
                 <h3>הוספת אלבום חדש</h3>
                 <form id="add-album-form">
                     <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
-                    <div class="thumbnail-input-group">
-                        <label for="albumThumbnailInput" class="file-upload-label cover-label" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #f8f9fa; border: 2px dashed #cbd5e1; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
-                            <i class="fas fa-image" style="font-size: 1.5rem; color: #3498db;"></i>
-                            <span style="font-weight: 600;">בחר תמונת שער לאלבום (יוצג בדף הבית)</span>
-                            <input type="file" id="albumThumbnailInput" accept="image/*" style="display:none;">
-                            <input type="hidden" id="albumThumbnailUrl">
-                        </label>
-                    </div>
+
                     <div class="file-upload-wrapper">
                         <label for="albumImagesInput" class="file-upload-label">
                             <i class="fas fa-cloud-upload-alt"></i>
