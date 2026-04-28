@@ -4,7 +4,7 @@
 html {
     scroll-padding-top: 60px;
     scroll-behavior: smooth;
-    overflow-y: auto; /* Ensure vertical scroll */
+    /* Removed overflow-y: auto to prevent double scrollbars in RTL */
 }
 
 body {
@@ -223,8 +223,10 @@ body {
     color: var(--text-color);
     line-height: 1.7;
     font-size: 16px;
+    overflow-y: auto; /* Handle all vertical scrolling here */
     overflow-x: hidden;
     position: relative;
+    width: 100%;
     -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
 }
 

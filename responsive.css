@@ -5,11 +5,13 @@
 
 html {
     max-width: 100vw;
-    overflow-x: clip; /* Modern alternative to hidden for html */
+    overflow-x: clip; 
+    height: 100%; /* Force height for body scroll */
 }
 
 body {
     overflow-x: hidden;
+    min-height: 100%;
 }
 
 /* --- ׳˜׳™׳₪׳•׳’׳¨׳₪׳™׳” ׳–׳•׳¨׳׳× ׳¢׳ clamp() --- */
