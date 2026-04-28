@@ -9,7 +9,7 @@ import {
 export let currentNewsIndex = 0;
 export function closeNewsModal() {
     newsModal.classList.remove('active');
-    document.body.style.overflow = '';
+    document.body.classList.remove('no-scroll');
     newsModal.removeAttribute('aria-modal');
     // ניקוי ה-hash לכתובת הבסיס של #news
     window.history.pushState(null, null, '#');
@@ -69,7 +69,7 @@ export function openNewsModal(newsItem) {
     newsNextBtn.style.display = (currentNewsIndex > 0) ? 'flex' : 'none';
 
     newsModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('no-scroll');
     newsModal.setAttribute('aria-modal', 'true');
     const modalCloseBtn = newsModal.querySelector('.modal-close');
     focusLock(newsModal, modalCloseBtn);

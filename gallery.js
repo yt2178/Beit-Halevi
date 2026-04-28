@@ -51,8 +51,8 @@ export function openGridOverlay(albumData) {
                     showLightboxImage(true);
                     gridOverlay.classList.remove('active');
                     lightbox.classList.add('active');
-                    gridOverlay.setAttribute('aria-modal', 'true');
-                    focusLock(gridOverlay, gridCloseBtn);
+                    lightbox.setAttribute('aria-modal', 'true');
+                    focusLock(lightbox, lightboxCloseBtn);
                 });
                 thumbnailGrid.appendChild(thumb);
 
@@ -63,6 +63,7 @@ export function openGridOverlay(albumData) {
         }, 300); // 300ms השהייה קטנה
     }
     gridOverlay.classList.add('active');
+    document.body.classList.add('no-scroll');
 }
 
 // [חדש] לוגיקה לכפתורי שיתוף והורדה של כל האלבום
@@ -194,6 +195,10 @@ export function showLightboxImage(isFirstLoad = false) {
 // [שינוי] פונקציה לסגירת ה-Lightbox ועדכון ה-URL
 export function closeLightbox() {
     lightbox.classList.remove('active');
+    // אם ה-Grid עדיין פתוח (זה קורה רק אם נכנסנו דרך ה-Grid), לא משחררים את ה-scroll
+    if (!gridOverlay.classList.contains('active')) {
+        document.body.classList.remove('no-scroll');
+    }
     // [שינוי] במקום hash '#', נחזיר ל-hash של האלבום אם הוא פתוח ברקע
     const albumSlug = currentAlbumData ? currentAlbumData.slug : '';
     window.history.pushState(null, null, albumSlug ? `#gallery/${albumSlug}` : '#');
@@ -238,6 +243,7 @@ export function openAlbumFromSlug(albumSlug, imageIndex) {
         setTimeout(() => {
             gridOverlay.classList.remove('active');
             lightbox.classList.add('active');
+            document.body.classList.add('no-scroll');
             showLightboxImage(true); // true = pushState (כניסה חדשה)
         }, 50);
     }
@@ -270,6 +276,7 @@ export function initGalleryEvents() {
     if (lightbox) lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
     if (gridCloseBtn) gridCloseBtn.addEventListener('click', () => {
         gridOverlay.classList.remove('active');
+        document.body.classList.remove('no-scroll');
         currentAlbumImages = [];
         gridOverlay.removeAttribute('aria-modal');
         window.history.pushState(null, null, '#');

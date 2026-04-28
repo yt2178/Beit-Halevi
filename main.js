@@ -369,6 +369,7 @@ if (hebrewYearDisplay) {
                  }
             }
             subscribeModal.classList.add('active');
+            document.body.classList.add('no-scroll');
         });
     }
 
@@ -376,6 +377,7 @@ if (hebrewYearDisplay) {
     if (subscribeCloseBtn && subscribeModal) {
         subscribeCloseBtn.addEventListener('click', () => {
             subscribeModal.classList.remove('active');
+            document.body.classList.remove('no-scroll');
         });
     }
 
@@ -384,6 +386,7 @@ if (hebrewYearDisplay) {
         window.addEventListener('click', (e) => {
             if (e.target === subscribeModal) {
                 subscribeModal.classList.remove('active');
+                document.body.classList.remove('no-scroll');
             }
         });
     }
@@ -403,7 +406,10 @@ if (hebrewYearDisplay) {
                         await OneSignal.User.PushSubscription.optIn();
                         // alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים."); (OneSignal כבר נותן חיווי)
                     }
-                    if (subscribeModal) subscribeModal.classList.remove('active');
+                    if (subscribeModal) {
+                        subscribeModal.classList.remove('active');
+                        document.body.classList.remove('no-scroll');
+                    }
                 });
                 return;
             }
@@ -441,7 +447,10 @@ if (hebrewYearDisplay) {
                 });
 
                 alert("נרשמת בהצלחה להתראות! 🔔\n\nתקבל עדכונים כאשר:\n• יתווספו חדשות חדשות\n• יתווספו תמונות האירועים החדשים\n\nאתה יכול לבטל זאת בכל עת בהגדרות הדפדפן.");
-                if (subscribeModal) subscribeModal.classList.remove('active');
+                if (subscribeModal) {
+                    subscribeModal.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                }
             } else if (permission === 'denied') {
                 alert("ביטלת הרשמה להתראות. כדי להפעיל אותן מאוחר יותר, עדכן את הגדרות הדפדפן.");
             }

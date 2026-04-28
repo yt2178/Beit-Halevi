@@ -1,10 +1,11 @@
-﻿/* ============================================================
+/* ============================================================
    RESPONSIVE SYSTEM - COMPLETE MOBILE-FIRST OVERHAUL
    Breakpoints: 320px | 375px | 480px | 600px | 768px | 1024px
    ============================================================ */
 
 html {
     max-width: 100vw;
+    overflow-x: clip; /* Modern alternative to hidden for html */
 }
 
 body {
@@ -714,7 +715,7 @@ nav a,
 }
 
 html, body {
-    overflow-x: hidden;
+    /* overflow-x: hidden; הסרנו כפילות שגורמת לתקיעות במובייל */
     max-width: 100vw;
     width: 100%;
     position: relative;
