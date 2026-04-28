@@ -1,6 +1,9 @@
 title: ישיבת בית הלוי - ראש העין
 description: האתר הרשמי של ישיבת בית הלוי בראש העין בראשות הגה"צ אבנר עפג'ין שליט"א. באתר תוכלו למצוא חדשות, עדכונים, גלריות תמונות מאירועים בישיבה ועוד.
+url: "https://yt2178.github.io"
+baseurl: "/Beit-Halevi"
 lang: he
 direction: rtl
-# Disable Jekyll processing for folders starting with underscores if needed, 
-# but here we just want to override the default site metadata.
+markdown: kramdown
+highlighter: rouge
+plugins: [jekyll-feed, jekyll-seo-tag] # Standard GitHub Pages plugins
