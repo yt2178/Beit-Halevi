@@ -54,7 +54,8 @@ export async function loadSiteConfig() {
                 document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
             }
             if (document.getElementById('site-onesignal-rest')) {
-                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
+                const globalRestEnc = currentSiteConfig.oneSignalRestKey_enc;
+                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || (globalRestEnc ? atob(globalRestEnc) : '');
             }
 
             const onesignalBtn = document.getElementById('save-onesignal-btn');
@@ -66,31 +67,11 @@ export async function loadSiteConfig() {
                 if (restKey) localStorage.setItem('onesignal_rest_key', restKey);
                 else localStorage.removeItem('onesignal_rest_key');
 
-                if (!appId || appId.length < 20) {
-                    showStatus('App ID לא נראה תקין. אנא בדוק אותו בחשבון OneSignal.', null, true);
-                    return;
-                }
-                
-                showStatus('בודק קישור ל-OneSignal...', 50);
-                if (restKey) {
-                    try {
-                        const osUrl = "https://onesignal.com/api/v1/apps/" + appId;
-                        const res = await window.fetch(osUrl, {
-                            headers: { 'Authorization': "Basic " + restKey }
-                        });
-                        if (res.ok) {
-                            showStatus('✅ חיבור OneSignal תקין ומאפשר שליחת התראות!', 100);
-                            setTimeout(hideStatus, 3000);
-                        } else {
-                            showStatus('❌ חיבור נכשל. מפתח ה-REST API המקומי שגוי.', null, true);
-                        }
-                    } catch (err) {
-                         showStatus('❌ שגיאת רשת בבדיקת חיבור OneSignal.', null, true);
-                    }
-                } else {
-                    showStatus('✅ App ID נשמר. (יכולת שליחת פוש מושבתת ממחשב זה. זה תקין למנהלים כותבים)', 100);
-                    setTimeout(hideStatus, 3500);
-                }
+                currentSiteConfig.oneSignalAppId = appId;
+                currentSiteConfig.oneSignalRestKey_enc = restKey ? btoa(restKey) : '';
+
+                showStatus('שומר הגדרות OneSignal באופן גלובלי...', 50);
+                await saveAllSiteSettings();
             };
 
             renderEditableTextsList(currentSiteConfig.texts);
@@ -248,6 +229,7 @@ export async function saveAllSiteSettings() {
             latestConfig.theme = currentSiteConfig.theme;
             latestConfig.primaryColor = currentSiteConfig.primaryColor;
             latestConfig.oneSignalAppId = currentSiteConfig.oneSignalAppId;
+            latestConfig.oneSignalRestKey_enc = currentSiteConfig.oneSignalRestKey_enc || '';
             latestConfig.texts = Object.assign({}, latestConfig.texts, currentSiteConfig.texts);
             return encodeToBase64(JSON.stringify(latestConfig, null, 2));
         };

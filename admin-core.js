@@ -417,16 +417,26 @@ export async function sendPushNotification(title, message) {
     
     try {
         const configElement = document.getElementById('site-onesignal-id');
+        const configRestElement = document.getElementById('site-onesignal-rest');
+        
         if (configElement && configElement.value) {
             appIdStr = configElement.value.trim();
-        } else {
-            // גיבוי לטעינה מהקובץ אם השדה לא נמצא
+        }
+        
+        // [שיפור] אם אין מפתח מקומי, נסה לקחת מהשדה (שעשוי להכיל מפתח גלובלי)
+        if (!restKey && configRestElement && configRestElement.value) {
+            restKey = configRestElement.value.trim();
+        }
+
+        if (!appIdStr || !restKey) {
+            // גיבוי לטעינה מהקובץ אם השדה לא נמצא או חסר מפתח
             const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
             const res = await window.fetch(resUrl);
             if (res.ok) {
                 const data = await res.json();
                 const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
-                appIdStr = config.oneSignalAppId;
+                if (!appIdStr) appIdStr = config.oneSignalAppId;
+                if (!restKey && config.oneSignalRestKey_enc) restKey = atob(config.oneSignalRestKey_enc);
             }
         }
     } catch (e) {
