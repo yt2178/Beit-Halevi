@@ -336,7 +336,7 @@ export async function makeFilePublic(fileId, token) {
     } catch (e) {
         console.error("DEBUG: makeFilePublic error:", e);
     }
-    return "https://lh3.googleusercontent.com/d/" + fileId + "=w1000";
+    return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w1000";
 }
 
 export async function getFileWebViewLink(fileId, token) {
