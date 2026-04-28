@@ -189,8 +189,10 @@ export async function googleLogin() {
 export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
     try {
-        const query = encodeURIComponent(`name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-        const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}`, { headers: { "Authorization": "Bearer " + token } });
+        const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+        const targetUrl = "https://www.googleapis.com/drive/v3/files?q=" + query;
+        console.log("DEBUG: getFolderId fetch URL is:", targetUrl);
+        const searchRes = await fetch(targetUrl, { headers: { "Authorization": "Bearer " + token } });
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
@@ -221,6 +223,7 @@ export async function uploadFileToDrive(file, token) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
+            console.log("DEBUG: uploadFileToDrive fetch URL is:", uploadUrlStr);
             const res = await fetch(uploadUrlStr, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
