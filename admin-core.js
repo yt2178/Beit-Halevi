@@ -191,12 +191,13 @@ export async function getFolderId(token) {
     try {
         const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
         const targetUrl = "https://www.googleapis.com/drive/v3/files?q=" + query;
-        console.log("DEBUG: getFolderId fetch URL is:", targetUrl);
-        const searchRes = await fetch(targetUrl, { headers: { "Authorization": "Bearer " + token } });
+        console.log("DEBUG: Final Google Search URL:", targetUrl);
+        const searchRes = await window.fetch(targetUrl, { headers: { "Authorization": "Bearer " + token } });
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
-        const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+        const createUrl = "https://www.googleapis.com/drive/v3/files";
+        const createRes = await window.fetch(createUrl, {
             method: "POST",
             headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
             body: JSON.stringify({ name: FOLDER_NAME, mimeType: "application/vnd.google-apps.folder" })
@@ -205,6 +206,7 @@ export async function getFolderId(token) {
         await makeFilePublic(createData.id, token);
         return createData.id;
     } catch (err) {
+        console.error("DEBUG: getFolderId error:", err);
         return "root";
     }
 }
@@ -216,15 +218,14 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    // Retry + timeout support for Drive uploads
     const uploadUrlStr = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     const maxAttempts = 2;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
-            console.log("DEBUG: uploadFileToDrive fetch URL is:", uploadUrlStr);
-            const res = await fetch(uploadUrlStr, {
+            console.log("DEBUG: Final Google Upload URL:", uploadUrlStr);
+            const res = await window.fetch(uploadUrlStr, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
                 body: form,
@@ -233,8 +234,7 @@ export async function uploadFileToDrive(file, token) {
             clearTimeout(timeoutId);
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
-                if (attempt === maxAttempts) throw new Error(`Drive upload failed: ${res.status} ${text}`);
-                // otherwise retry
+                if (attempt === maxAttempts) throw new Error("Drive upload failed: " + res.status + " " + text);
                 continue;
             }
             const data = await res.json();
@@ -242,7 +242,6 @@ export async function uploadFileToDrive(file, token) {
         } catch (err) {
             clearTimeout(timeoutId);
             if (attempt === maxAttempts) throw err;
-            // small backoff
             await new Promise(r => setTimeout(r, 800));
         }
     }
@@ -316,12 +315,13 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
 }
 
 export async function makeFilePublic(fileId, token) {
-    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    const permUrl = "https://www.googleapis.com/drive/v3/files/" + fileId + "/permissions";
+    await window.fetch(permUrl, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
         body: JSON.stringify({ role: "reader", type: "anyone" })
     });
-    return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
+    return "https://lh3.googleusercontent.com/d/" + fileId + "=w1000";
 }
 
 // [חדש] פונקציה לאימות הטוקן מול GitHub

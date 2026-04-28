@@ -163,11 +163,11 @@ export async function loadAndRenderGallery() {
     // שימוש במשתנים הגלובליים מ-admin.js
     if (typeof GITHUB_TOKEN === 'undefined' || !GITHUB_TOKEN) return;
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
 
     try {
-        const response = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const response = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
@@ -308,13 +308,13 @@ async function deleteAlbum(indexToDelete) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את האלבום?')) return;
 
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
-        const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
+        const fileResponse = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
-        if (!fileResponse.ok) throw new Error('Failed to fetch gallery JSON');
+        if (!fileResponse.ok) throw new Error("Failed to fetch gallery JSON");
 
         const fileData = await fileResponse.json();
         const galleryArray = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
@@ -493,9 +493,9 @@ async function handleGallerySubmit(e) {
 
         // 1. השגת הקובץ הנוכחי
         showStatus('ניגש למאגר הנתונים ב-GitHub...', 35);
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${GALLERY_JSON_PATH}`;
-        const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + GALLERY_JSON_PATH;
+        const fileResponse = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
