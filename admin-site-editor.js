@@ -28,9 +28,9 @@ const EDITABLE_TEXTS = [
 
 export async function loadSiteConfig() {
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
-        const res = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
+        const res = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN }
         });
 
         if (res.ok) {
@@ -74,8 +74,9 @@ export async function loadSiteConfig() {
                 showStatus('בודק קישור ל-OneSignal...', 50);
                 if (restKey) {
                     try {
-                        const res = await fetch(`https://onesignal.com/api/v1/apps/${appId}`, {
-                            headers: { 'Authorization': `Basic ${restKey}` }
+                        const osUrl = "https://onesignal.com/api/v1/apps/" + appId;
+                        const res = await window.fetch(osUrl, {
+                            headers: { 'Authorization': "Basic " + restKey }
                         });
                         if (res.ok) {
                             showStatus('✅ חיבור OneSignal תקין ומאפשר שליחת התראות!', 100);
@@ -239,7 +240,7 @@ export async function saveAllSiteSettings() {
         localStorage.removeItem('onesignal_rest_key');
     }
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
 
     try {
         const transformFn = (latestConfig) => {

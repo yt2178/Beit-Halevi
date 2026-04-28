@@ -407,11 +407,11 @@ async function handleBulkDelete() {
 
 async function performDelete(slugs) {
     showStatus(`מוחק ${slugs.length} פריטים...`, 50);
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
-        const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const fileResponse = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
@@ -450,11 +450,11 @@ async function performDelete(slugs) {
 async function loadAndRenderNewsList() {
     if (!GITHUB_TOKEN) return;
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
-        const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const fileResponse = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
@@ -475,9 +475,9 @@ async function loadAndRenderHistory() {
     if (!container) return;
 
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
-        const response = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
+        const response = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
@@ -537,8 +537,9 @@ async function loadAndRenderMessages() {
         // [שינוי] טעינת רשימת הודעות שנמחקו מ-GitHub
         let deletedMessages = [];
         try {
-            const delRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/deleted_messages.json`, {
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            const delUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/data/deleted_messages.json";
+            const delRes = await window.fetch(delUrl, {
+                headers: { 'Authorization': "token " + GITHUB_TOKEN }
             });
             if (delRes.ok) {
                 const delData = await delRes.json();
@@ -546,7 +547,7 @@ async function loadAndRenderMessages() {
             }
         } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
 
-        const response = await fetch(MESSAGES_SHEET_URL);
+        const response = await window.fetch(MESSAGES_SHEET_URL);
         if (!response.ok) throw new Error('Failed to load messages sheet');
 
         const csvData = await response.text();
@@ -640,8 +641,8 @@ async function handleDeleteMessage(messageId) {
         let deletedMessages = [];
         let sha = null;
 
-        const res = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const res = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 
@@ -698,12 +699,12 @@ function parseCSV(text) {
 // עריכת ידיעה קיימת
 async function handleEditNews(slug) {
     showStatus('טוען ידיעה לעריכה...', 30);
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
-        const fileResponse = await fetch(API_URL, {
+        const fileResponse = await window.fetch(API_URL, {
             headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Authorization': "token " + GITHUB_TOKEN,
                 'Content-Type': 'application/json'
             },
             cache: 'no-store'
@@ -764,11 +765,11 @@ async function handleSaveNews(e) {
         data: { title, date, body },
     };
 
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${JSON_FILE_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + JSON_FILE_PATH;
 
     try {
-        const fileResponse = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const fileResponse = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
 

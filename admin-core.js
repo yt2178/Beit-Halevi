@@ -260,10 +260,10 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
         if (sha) bodyObj.sha = sha;
 
         try {
-            const res = await fetch(API_URL, {
+            const res = await window.fetch(API_URL, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `token ${token}`,
+                    'Authorization': "token " + token,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(bodyObj),
@@ -276,8 +276,8 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
             if (res.status === 409 || res.status === 422 || (res.status === 500 && attempt < maxRetries)) {
                 console.warn(`Conflict/Error (${res.status}) on attempt ${attempt}. Refetching latest...`);
                 try {
-                    const latest = await fetch(API_URL, {
-                        headers: { 'Authorization': `token ${token}` },
+                    const latest = await window.fetch(API_URL, {
+                        headers: { 'Authorization': "token " + token },
                         cache: 'no-store'
                     });
                     if (latest.ok) {
@@ -327,9 +327,9 @@ export async function makeFilePublic(fileId, token) {
 // [חדש] פונקציה לאימות הטוקן מול GitHub
 export async function verifyGitHubToken(token) {
     try {
-        const response = await fetch('https://api.github.com/user', {
+        const response = await window.fetch('https://api.github.com/user', {
             headers: {
-                'Authorization': `token ${token}`
+                'Authorization': "token " + token
             }
         });
 
@@ -348,11 +348,11 @@ export async function verifyGitHubToken(token) {
 export async function logEvent(action, type = 'general') {
     if (!GITHUB_TOKEN || !GITHUB_USERNAME) return;
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${HISTORY_JSON_PATH}`;
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + HISTORY_JSON_PATH;
         let historyArray = [];
         let sha = null;
 
-        const response = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+        const response = await window.fetch(API_URL, { headers: { 'Authorization': "token " + GITHUB_TOKEN } });
         if (response.ok) {
             const fileData = await response.json();
             sha = fileData.sha;
@@ -389,7 +389,8 @@ export async function sendPushNotification(title, message) {
             appIdStr = configElement.value.trim();
         } else {
             // גיבוי לטעינה מהקובץ אם השדה לא נמצא
-            const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${SITE_CONFIG_PATH}`);
+            const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
+            const res = await window.fetch(resUrl);
             if (res.ok) {
                 const data = await res.json();
                 const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
@@ -414,11 +415,11 @@ export async function sendPushNotification(title, message) {
             url: "https://yt2178.github.io/Beit-Halevi/"
         };
 
-        const response = await fetch("https://onesignal.com/api/v1/notifications", {
+        const response = await window.fetch("https://onesignal.com/api/v1/notifications", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Basic ${restKey}`
+                "Authorization": "Basic " + restKey
             },
             body: JSON.stringify(payload)
         });

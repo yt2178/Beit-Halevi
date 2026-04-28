@@ -24,9 +24,9 @@ export async function loadAndRenderTasks() {
     container.innerHTML = '<p style="text-align:center;">טוען משימות...</p>';
     
     try {
-        const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${TASKS_JSON_PATH}`;
-        const res = await fetch(API_URL, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` },
+        const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + TASKS_JSON_PATH;
+        const res = await window.fetch(API_URL, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN },
             cache: 'no-store'
         });
         
@@ -171,7 +171,7 @@ export async function forceSyncTasks() {
     if (!hasUnsavedChanges) return;
 
     showStatus('מעדכן משימות ב-GitHub...', 50);
-    const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${TASKS_JSON_PATH}`;
+    const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + TASKS_JSON_PATH;
     
     try {
         const payload = {
