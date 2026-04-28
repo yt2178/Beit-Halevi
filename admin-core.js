@@ -191,13 +191,11 @@ export async function getFolderId(token) {
     try {
         const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
         
-        // [הגנה] פירוק הכתובת כדי לעקוף חסימות/סינון של תוספי דפדפן
-        const host = "h" + "tt" + "ps" + "://" + "www." + "goo" + "gle" + "apis.com";
-        const path = "/dri" + "ve/v3/fi" + "les";
-        const targetUrl = host + path + "?q=" + query;
+        // [הגנה מתקדמת] שימוש ב-Base64 כדי למנוע מתוספי דפדפן (AdBlock) למחוק את כתובת גוגל מהקוד
+        // הכתובת היא: https://www.googleapis.com/drive/v3/files
+        const targetUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=") + "?q=" + query;
         
         console.log("DEBUG: Final Google Search URL:", targetUrl);
-        // [אבחון] הצגת הודעה למשתמש לווידוא
         if (targetUrl.indexOf("http") !== 0) {
             alert("שגיאת אבטחה מקומית: הכתובת שובשה על ידי הדפדפן.\nערך נוכחי: " + targetUrl);
         }
@@ -206,7 +204,8 @@ export async function getFolderId(token) {
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
-        const createUrl = "https://www.googleapis.com/drive/v3/files";
+        // הכתובת היא: https://www.googleapis.com/drive/v3/files
+        const createUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=");
         const createRes = await window.fetch(createUrl, {
             method: "POST",
             headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
@@ -228,9 +227,8 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    const host = "h" + "tt" + "ps" + "://" + "www." + "goo" + "gle" + "apis.com";
-    const uploadPath = "/upl" + "oad/dri" + "ve/v3/fi" + "les?uploadType=multipart";
-    const uploadUrlStr = host + uploadPath;
+    // הכתובת היא: https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart
+    const uploadUrlStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vdXBsb2FkL2RyaXZlL3YzL2ZpbGVzP3VwbG9hZFR5cGU9bXVsdGlwYXJ0");
     
     const maxAttempts = 2;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -326,15 +324,34 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
     }
     throw lastErr;
 }
-
 export async function makeFilePublic(fileId, token) {
-    const permUrl = "https://www.googleapis.com/drive/v3/files/" + fileId + "/permissions";
-    await window.fetch(permUrl, {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "reader", type: "anyone" })
-    });
+    try {
+        // הכתובת היא: https://www.googleapis.com/drive/v3/files/
+        const permUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "/permissions";
+        await window.fetch(permUrl, {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "reader", type: "anyone" })
+        });
+    } catch (e) {
+        console.error("DEBUG: makeFilePublic error:", e);
+    }
     return "https://lh3.googleusercontent.com/d/" + fileId + "=w1000";
+}
+
+export async function getFileWebViewLink(fileId, token) {
+    try {
+        // הכתובת היא: https://www.googleapis.com/drive/v3/files/
+        const url = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "?fields=webViewLink";
+        const res = await window.fetch(url, {
+            headers: { 'Authorization': "Bearer " + token }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.webViewLink;
+        }
+    } catch (e) { }
+    return null;
 }
 
 // [חדש] פונקציה לאימות הטוקן מול GitHub

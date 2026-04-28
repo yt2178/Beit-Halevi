@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-v20';
+const CACHE_NAME = 'beit-halevi-v21';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -41,11 +41,9 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // ׳˜׳¢׳™׳ ׳× ׳ ׳›׳¡׳™׳ ׳׳§׳•׳׳™׳™׳ - ׳”׳•׳₪׳¨׳“ ׳›׳“׳™ ׳׳ ׳׳”׳›׳©׳™׳ ׳”׳›׳
             const internalPromise = Promise.all(
                 ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.warn("Failed to cache internal asset:", url, err)))
             );
-            // ׳˜׳¢׳™׳ ׳× ׳ ׳›׳¡׳™׳ ׳—׳™׳¦׳•׳ ׳™׳™׳ - ׳₪׳—׳•׳× ׳§׳¨׳™׳˜׳™, ׳׳ ׳™׳›׳©׳™׳ ׳׳× ׳”׳›׳
             const externalPromise = Promise.all(
                 EXTERNAL_ASSETS.map(url => cache.add(url).catch(err => console.warn("Failed to cache external asset:", url, err)))
             );
