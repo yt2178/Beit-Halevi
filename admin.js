@@ -545,7 +545,7 @@ async function loadAndRenderMessages() {
                 const delData = await delRes.json();
                 deletedMessages = JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
             }
-        } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
+        } catch (e) { }
 
         const response = await window.fetch(MESSAGES_SHEET_URL);
         if (!response.ok) throw new Error('Failed to load messages sheet');
