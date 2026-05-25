@@ -297,6 +297,68 @@ function navigateTo(sectionId) {
     }
 }
 
+// יצירת פריט ידיעה בודד
+function createNewsItemElement(item) {
+    const slug = generateSlug(item.data.title, item.data.date);
+    const newsDiv = document.createElement('div');
+    newsDiv.className = 'news-item-admin';
+    newsDiv.dataset.slug = slug;
+
+    // [חדש] תיבת בחירה (Checkbox) למחיקה מרובה
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'news-item-checkbox';
+    checkbox.dataset.slug = slug;
+    checkbox.addEventListener('change', (e) => {
+        if (e.target.checked) selectedNewsSlugs.push(slug);
+        else selectedNewsSlugs = selectedNewsSlugs.filter(s => s !== slug);
+        updateBulkActionsUI();
+    });
+    newsDiv.appendChild(checkbox);
+
+    // ✅ Fix XSS: תוכן דינמי מנוקה דרך textContent
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'item-details';
+
+    const titleH3 = document.createElement('h3');
+    titleH3.textContent = item.data.title;  // Safe!
+
+    const dateP = document.createElement('p');
+    dateP.textContent = 'פורסם ב: ' + item.data.date;  // Safe!
+
+    const iconI = document.createElement('i');
+    iconI.className = 'fas fa-file-alt item-icon';
+
+    detailsDiv.appendChild(iconI);
+    const contentDiv = document.createElement('div');
+    contentDiv.appendChild(titleH3);
+    contentDiv.appendChild(dateP);
+    detailsDiv.appendChild(contentDiv);
+    newsDiv.appendChild(detailsDiv);
+
+    // ✅ Fix XSS: בנה את כפתורי בעדכונים בטוח
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'item-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-news-btn premium-btn small';
+    editBtn.dataset.slug = slug;
+    editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+    editBtn.addEventListener('click', () => handleEditNews(slug));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-news-btn premium-btn small danger';
+    deleteBtn.dataset.slug = slug;
+    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
+
+    actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(deleteBtn);
+    newsDiv.appendChild(actionsDiv);
+
+    return newsDiv;
+}
+
 // רינדור רשימת הידיעות
 function renderNewsList(newsArray) {
     const container = document.getElementById('news-list-container');
@@ -319,64 +381,7 @@ function renderNewsList(newsArray) {
     }
 
     newsArray.forEach(item => {
-        const slug = generateSlug(item.data.title, item.data.date);
-        const newsDiv = document.createElement('div');
-        newsDiv.className = 'news-item-admin';
-        newsDiv.dataset.slug = slug;
-        
-        // [חדש] תיבת בחירה (Checkbox) למחיקה מרובה
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'news-item-checkbox';
-        checkbox.dataset.slug = slug;
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) selectedNewsSlugs.push(slug);
-            else selectedNewsSlugs = selectedNewsSlugs.filter(s => s !== slug);
-            updateBulkActionsUI();
-        });
-        newsDiv.appendChild(checkbox);
-
-        // ✅ Fix XSS: תוכן דינמי מנוקה דרך textContent
-        const detailsDiv = document.createElement('div');
-        detailsDiv.className = 'item-details';
-
-        const titleH3 = document.createElement('h3');
-        titleH3.textContent = item.data.title;  // Safe!
-
-        const dateP = document.createElement('p');
-        dateP.textContent = 'פורסם ב: ' + item.data.date;  // Safe!
-
-        const iconI = document.createElement('i');
-        iconI.className = 'fas fa-file-alt item-icon';
-
-        detailsDiv.appendChild(iconI);
-        const contentDiv = document.createElement('div');
-        contentDiv.appendChild(titleH3);
-        contentDiv.appendChild(dateP);
-        detailsDiv.appendChild(contentDiv);
-        newsDiv.appendChild(detailsDiv);
-
-        // ✅ Fix XSS: בנה את כפתורי בעדכונים בטוח
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'item-actions';
-
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit-news-btn premium-btn small';
-        editBtn.dataset.slug = slug;
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
-        editBtn.addEventListener('click', () => handleEditNews(slug));
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-news-btn premium-btn small danger';
-        deleteBtn.dataset.slug = slug;
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
-        deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
-
-        actionsDiv.appendChild(editBtn);
-        actionsDiv.appendChild(deleteBtn);
-        newsDiv.appendChild(actionsDiv);
-
-        container.appendChild(newsDiv);
+        container.appendChild(createNewsItemElement(item));
     });
 }
 
