@@ -523,6 +523,80 @@ function getIconForType(type) {
     }
 }
 
+async function fetchDeletedMessages() {
+    try {
+        const delUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/data/deleted_messages.json";
+        const delRes = await window.fetch(delUrl, {
+            headers: { 'Authorization': "token " + GITHUB_TOKEN }
+        });
+        if (delRes.ok) {
+            const delData = await delRes.json();
+            return JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
+        }
+    } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
+    return [];
+}
+
+async function fetchMessagesFromSheet() {
+    const response = await window.fetch(MESSAGES_SHEET_URL);
+    if (!response.ok) throw new Error('Failed to load messages sheet');
+    const csvData = await response.text();
+    return parseCSV(csvData);
+}
+
+function createMessageCardElement(timestamp, name, email, body, messageId) {
+    const div = document.createElement('div');
+    div.className = 'message-card';
+
+    // ✅ Fix XSS: בנה DOM elements בטוח במקום innerHTML
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'message-header';
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'message-info';
+    const nameH4 = document.createElement('h4');
+    nameH4.textContent = name;
+    const emailP = document.createElement('p');
+    emailP.textContent = email;
+    infoDiv.appendChild(nameH4);
+    infoDiv.appendChild(emailP);
+
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'message-date';
+    dateDiv.textContent = timestamp;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-msg-btn premium-btn small danger';
+    deleteBtn.dataset.id = messageId;
+    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    // Listener removed - handled by delegated listener
+
+    const replyBtn = document.createElement('a');
+    replyBtn.className = 'premium-btn small secondary reply-btn';
+    replyBtn.target = "_blank";
+    const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
+    const mailBody = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
+    replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
+    replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
+    replyBtn.style.textDecoration = 'none';
+    replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
+    replyBtn.style.marginLeft = '8px';
+
+    headerDiv.appendChild(infoDiv);
+    headerDiv.appendChild(dateDiv);
+    headerDiv.appendChild(replyBtn);
+    headerDiv.appendChild(deleteBtn);
+
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'message-body';
+    bodyDiv.textContent = body;
+
+    div.appendChild(headerDiv);
+    div.appendChild(bodyDiv);
+
+    return div;
+}
+
 // [חדש] טעינה ורינדור של הודעות (מתוך Google Sheets) - תומך במחיקה מקומית
 async function loadAndRenderMessages() {
     const container = document.getElementById('messages-list-container');
@@ -534,24 +608,8 @@ async function loadAndRenderMessages() {
     }
 
     try {
-        // [שינוי] טעינת רשימת הודעות שנמחקו מ-GitHub
-        let deletedMessages = [];
-        try {
-            const delUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/data/deleted_messages.json";
-            const delRes = await window.fetch(delUrl, {
-                headers: { 'Authorization': "token " + GITHUB_TOKEN }
-            });
-            if (delRes.ok) {
-                const delData = await delRes.json();
-                deletedMessages = JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
-            }
-        } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
-
-        const response = await window.fetch(MESSAGES_SHEET_URL);
-        if (!response.ok) throw new Error('Failed to load messages sheet');
-
-        const csvData = await response.text();
-        const rows = parseCSV(csvData);
+        const deletedMessages = await fetchDeletedMessages();
+        const rows = await fetchMessagesFromSheet();
 
         container.innerHTML = '';
         if (rows.length <= 1) {
@@ -562,7 +620,7 @@ async function loadAndRenderMessages() {
         const messages = rows.slice(1).reverse();
         let visibleCount = 0;
 
-        messages.forEach((row, index) => {
+        messages.forEach((row) => {
             if (row.length < 4) return;
             const [timestamp, name, email, body] = row;
             const messageId = `${timestamp}-${email}`;
@@ -571,55 +629,8 @@ async function loadAndRenderMessages() {
             if (deletedMessages.includes(messageId)) return;
             visibleCount++;
 
-            const div = document.createElement('div');
-            div.className = 'message-card';
-
-            // ✅ Fix XSS: בנה DOM elements בטוח במקום innerHTML
-            const headerDiv = document.createElement('div');
-            headerDiv.className = 'message-header';
-
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'message-info';
-            const nameH4 = document.createElement('h4');
-            nameH4.textContent = name;
-            const emailP = document.createElement('p');
-            emailP.textContent = email;
-            infoDiv.appendChild(nameH4);
-            infoDiv.appendChild(emailP);
-
-            const dateDiv = document.createElement('div');
-            dateDiv.className = 'message-date';
-            dateDiv.textContent = timestamp;
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-msg-btn premium-btn small danger';
-            deleteBtn.dataset.id = messageId;
-            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
-            // Listener removed - handled by delegated listener
-
-            const replyBtn = document.createElement('a');
-            replyBtn.className = 'premium-btn small secondary reply-btn';
-            replyBtn.target = "_blank";
-            const subject = encodeURIComponent("תגובה לפנייתך באתר ישיבת בית הלוי");
-            const mailBody = encodeURIComponent(`שלום ${name},\n\nבהמשך להודעתך באתר:\n"${body}"\n\n---`);
-            replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
-            replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
-            replyBtn.style.textDecoration = 'none';
-            replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
-            replyBtn.style.marginLeft = '8px';
-
-            headerDiv.appendChild(infoDiv);
-            headerDiv.appendChild(dateDiv);
-            headerDiv.appendChild(replyBtn);
-            headerDiv.appendChild(deleteBtn);
-
-            const bodyDiv = document.createElement('div');
-            bodyDiv.className = 'message-body';
-            bodyDiv.textContent = body;
-
-            div.appendChild(headerDiv);
-            div.appendChild(bodyDiv);
-            container.appendChild(div);
+            const messageCard = createMessageCardElement(timestamp, name, email, body, messageId);
+            container.appendChild(messageCard);
         });
 
         if (visibleCount === 0) {
