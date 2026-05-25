@@ -11,14 +11,21 @@ export const BASE_URL = window.location.origin + (window.location.hostname.endsW
 export let allLoadedNews = [];
 export let allLoadedAlbums = [];
 
+const fetchCache = new Map();
+
 // ---- פונקציות טעינה ועיבוד ----
 async function fetchAndParse(path) {
-    // [שינוי קריטי]: עכשיו קורא ל-JSON מוכן במקום לבנות אותו מ-GitHub API
-
-    // אם הנתיב מכיל news, קרא את קובץ news.json
-    if (path.includes('news')) {
-        return fetchStaticJson('news');
+    if (fetchCache.has(path)) {
+        return fetchCache.get(path);
     }
+
+    const fetchPromise = (async () => {
+        // [שינוי קריטי]: עכשיו קורא ל-JSON מוכן במקום לבנות אותו מ-GitHub API
+
+        // אם הנתיב מכיל news, קרא את קובץ news.json
+        if (path.includes("news")) {
+            return fetchStaticJson("news");
+        }
     // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
     if (path.includes('gallery')) {
         let data = await fetchStaticJson('gallery');
@@ -47,7 +54,21 @@ async function fetchAndParse(path) {
     }
 
     // אם הנתיב לא מוכר, החזר שגיאה
-    return { error: true, message: 'נתיב נתונים לא חוקי. יש צורך בקובץ news.json או gallery.json.' };
+    return { error: true, message: "נתיב נתונים לא חוקי. יש צורך בקובץ news.json או gallery.json." };
+    })();
+
+    fetchCache.set(path, fetchPromise);
+
+    try {
+        const result = await fetchPromise;
+        if (result && result.error) {
+            fetchCache.delete(path);
+        }
+        return result;
+    } catch (e) {
+        fetchCache.delete(path);
+        throw e;
+    }
 }
 
 // ---- פונקציית טעינת הגדרות אתר ----
