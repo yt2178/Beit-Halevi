@@ -117,7 +117,8 @@ export async function loadGallery() {
     allLoadedAlbums.forEach((albumData, index) => {
         const albumElement = document.createElement('a');
         albumElement.className = 'album-cover';
-        albumElement.innerHTML = `<img loading="lazy" class="lazy-load" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+        const albumRawHTML = `<img loading="lazy" class="lazy-load" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
+        albumElement.innerHTML = DOMPurify.sanitize(albumRawHTML);
         albumElement.addEventListener('click', (e) => {
             e.preventDefault(); // מונע קפיצה של הדף
             // [שינוי] פותח גלריה ומעדכן את ה-URL
@@ -194,7 +195,8 @@ export async function loadNews(loadMore = false) {
         });
 
         // הצגת תקציר (עד 150 תווים)
-        newsElement.innerHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
+        const rawHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
+        newsElement.innerHTML = DOMPurify.sanitize(rawHTML);
         newsContainer.appendChild(newsElement);
 
         setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);
