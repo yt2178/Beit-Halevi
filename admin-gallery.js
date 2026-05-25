@@ -471,6 +471,47 @@ async function handleGallerySubmit(e) {
         return;
     }
 
+    // בדיקת אורך כותרת
+    if (albumTitle.length < 2 || albumTitle.length > 100) {
+        showStatus('שם האלבום חייב להיות בין 2 ל-100 תווים.', null, true);
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+    }
+
+    // בדיקת URL לתמונת השער אם הוזן ידנית
+    if (albumThumbnailUrlInput && albumThumbnailUrlInput.value) {
+        try {
+            new URL(albumThumbnailUrlInput.value);
+        } catch (e) {
+            // אם זה לא URL תקין וזה לא מקומי (blob)
+            if (!albumThumbnailUrlInput.value.startsWith('blob:')) {
+                showStatus('כתובת תמונת השער אינה תקינה.', null, true);
+                if (submitBtn) submitBtn.disabled = false;
+                return;
+            }
+        }
+    }
+
+    // בדיקת קבצים נבחרים - סוג וגודל
+    for (let i = 0; i < albumImages.length; i++) {
+        const file = albumImages[i];
+
+        // בדיקת סוג קובץ (רק תמונות)
+        if (!file.type.startsWith('image/')) {
+            showStatus(`הקובץ "${file.name}" אינו תמונה. אנא העלה רק קבצי תמונות.`, null, true);
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+
+        // בדיקת גודל קובץ (מקסימום 10MB)
+        const maxSizeInBytes = 10 * 1024 * 1024;
+        if (file.size > maxSizeInBytes) {
+            showStatus(`הקובץ "${file.name}" גדול מדי. הגודל המקסימלי המותר הוא 10MB.`, null, true);
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+    }
+
     const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
     if (albumImages.length === 0 && existingImagesCount === 0) {
         alert('נא לבחור לפחות תמונה אחת לאלבום.');
