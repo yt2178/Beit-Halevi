@@ -40,14 +40,14 @@ def build_gallery_data():
         }
         
         # סורק את קבצי התמונות בתוך האלבום
-        for filename in sorted(os.listdir(album_path)):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                file_path = os.path.join(album_path, filename).replace('\\', '/')
-                
-                if filename.lower().startswith('thumb.'):
-                    album_data['thumbnail'] = file_path
-                else:
-                    album_data['images'].append(file_path)
+        image_files = [f for f in os.listdir(album_path) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+        for filename in sorted(image_files):
+            file_path = os.path.join(album_path, filename).replace('\\', '/')
+
+            if filename.lower().startswith('thumb.'):
+                album_data['thumbnail'] = file_path
+            else:
+                album_data['images'].append(file_path)
 
         # רק אם יש תמונה ראשית ותמונות בפנים, שמור את האלבום
         if album_data['thumbnail'] and album_data['images']:
