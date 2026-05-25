@@ -52,11 +52,6 @@ export function initSearch(newsContainerId, galleryContainerId) {
             clearBtn.style.display = query ? 'block' : 'none';
             filterContent(query);
         });
-        
-        // סגירה בלחיצה על Enter (אופציונלי)
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchInput.blur();
-        });
     }
 
     if (clearBtn) {
