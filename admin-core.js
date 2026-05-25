@@ -305,7 +305,7 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
                         }
 
                         // small backoff before retrying
-                        await new Promise(r => setTimeout(r, 600 * attempt));
+
                         continue;
                     }
                 } catch (e) {
