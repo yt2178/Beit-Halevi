@@ -212,7 +212,6 @@ const logoutBtn = document.getElementById('logout-btn');
 const closeStatusBtn = document.getElementById('close-status-btn');
 
 function handleApiError(err) {
-    // ✅ Fix: בצע logging בעיכול בלבד לא בproduction
     let msg = "שגיאה לא צפויה";
     if (err.message.includes("404")) msg = "הקובץ לא נמצא ב-GitHub";
     if (err.message.includes("401")) msg = "טוקן לא בתוקף או חסר הרשאות";
@@ -323,7 +322,7 @@ function renderNewsList(newsArray) {
         const newsDiv = document.createElement('div');
         newsDiv.className = 'news-item-admin';
         newsDiv.dataset.slug = slug;
-        
+
         // [חדש] תיבת בחירה (Checkbox) למחיקה מרובה
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -418,7 +417,7 @@ async function performDelete(slugs) {
         if (!fileResponse.ok) throw new Error('Failed to fetch JSON');
 
         const fileData = await fileResponse.json();
-        
+
         const transformFn = (latestContent) => {
             const updated = latestContent.filter(item => {
                 const itemSlug = generateSlug(item.data.title, item.data.date);
@@ -464,7 +463,6 @@ async function loadAndRenderNewsList() {
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
         renderNewsList(existingContent);
     } catch (error) {
-        // ✅ Fix: הסר debug error logging
         showStatus('שגיאה בטעינת רשימת הידיעות', null, true);
     }
 }
@@ -495,10 +493,10 @@ async function loadAndRenderHistory() {
         history.forEach(log => {
             const div = document.createElement('div');
             div.className = 'history-item';
-            
+
             // [אבטחה] ניקוי תוכן הפעולה למקרה שמכיל תגים
             const safeAction = DOMPurify.sanitize(log.action);
-            
+
             div.innerHTML = `
                 <div class="history-icon ${log.type || 'general'}">
                     <i class="fas ${getIconForType(log.type)}"></i>
@@ -545,7 +543,7 @@ async function loadAndRenderMessages() {
                 const delData = await delRes.json();
                 deletedMessages = JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
             }
-        } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
+        } catch (e) { }
 
         const response = await window.fetch(MESSAGES_SHEET_URL);
         if (!response.ok) throw new Error('Failed to load messages sheet');
