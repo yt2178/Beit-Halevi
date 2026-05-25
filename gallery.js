@@ -109,15 +109,24 @@ export function setupAlbumControls(albumData) {
             albumDownloadBtn.disabled = true;
             albumDownloadBtn.textContent = 'מוריד... אנא המתן';
 
-            for (let i = 0; i < currentAlbumImages.length; i++) {
-                const img = currentAlbumImages[i];
-                const link = document.createElement('a');
-                link.href = img.src;
-                link.download = `${albumSlug}-${i + 1}.jpg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                await new Promise(resolve => setTimeout(resolve, 300));
+            const batchSize = 10;
+            for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
+                const batch = currentAlbumImages.slice(i, i + batchSize);
+
+                for (let j = 0; j < batch.length; j++) {
+                    const img = batch[j];
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = `${albumSlug}-${i + j + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+
+                // Add delay between batches to prevent browser overload, except after the last batch
+                if (i + batchSize < currentAlbumImages.length) {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
             }
 
             albumDownloadBtn.disabled = false;
