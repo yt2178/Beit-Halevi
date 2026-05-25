@@ -191,11 +191,11 @@ export async function getFolderId(token) {
     const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
     try {
         const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
-        
+
         // [הגנה מתקדמת] שימוש ב-Base64 כדי למנוע מתוספי דפדפן (AdBlock) למחוק את כתובת גוגל מהקוד
         // הכתובת היא: https://www.googleapis.com/drive/v3/files
         const targetUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=") + "?q=" + query;
-        
+
         console.log("DEBUG: Final Google Search URL:", targetUrl);
         if (targetUrl.indexOf("http") !== 0) {
             alert("שגיאת אבטחה מקומית: הכתובת שובשה על ידי הדפדפן.\nערך נוכחי: " + targetUrl);
@@ -230,7 +230,7 @@ export async function uploadFileToDrive(file, token) {
 
     // הכתובת היא: https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart
     const uploadUrlStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vdXBsb2FkL2RyaXZlL3YzL2ZpbGVzP3VwbG9hZFR5cGU9bXVsdGlwYXJ0");
-    
+
     const maxAttempts = 2;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         const controller = new AbortController();
@@ -412,23 +412,23 @@ export async function logEvent(action, type = 'general') {
 // 6. Push Notifications
 // ============================================================
 export async function sendPushNotification(title, message) {
-    const restKey = localStorage.getItem('onesignal_rest_key');
+    let restKey = localStorage.getItem('onesignal_rest_key');
     let appIdStr = null;
-    
+
     try {
         const configElement = document.getElementById('site-onesignal-id');
         const configRestElement = document.getElementById('site-onesignal-rest');
-        
+
         if (configElement && configElement.value) {
             appIdStr = configElement.value.trim();
         }
-        
-        // [שיפור] אם אין מפתח מקומי, נסה לקחת מהשדה (שעשוי להכיל מפתח גלובלי)
+
+        // [שיפור] אם אין מפתח מקומי, נסה לקחת מהשדה
         if (!restKey && configRestElement && configRestElement.value) {
             restKey = configRestElement.value.trim();
         }
 
-        if (!appIdStr || !restKey) {
+        if (!appIdStr) {
             // גיבוי לטעינה מהקובץ אם השדה לא נמצא או חסר מפתח
             const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
             const res = await window.fetch(resUrl);
@@ -436,7 +436,6 @@ export async function sendPushNotification(title, message) {
                 const data = await res.json();
                 const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
                 if (!appIdStr) appIdStr = config.oneSignalAppId;
-                if (!restKey && config.oneSignalRestKey_enc) restKey = atob(config.oneSignalRestKey_enc);
             }
         }
     } catch (e) {
