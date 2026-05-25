@@ -90,6 +90,7 @@ function renderTasks() {
     }
     
     container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     allTasks.forEach((task, index) => {
         const div = document.createElement('div');
         div.className = `task-item ${task.completed ? 'completed' : ''}`;
@@ -131,8 +132,9 @@ function renderTasks() {
         div.appendChild(checkbox);
         div.appendChild(span);
         div.appendChild(deleteBtn);
-        container.appendChild(div);
+        fragment.appendChild(div);
     });
+    container.appendChild(fragment);
 }
 
 function addTask() {
