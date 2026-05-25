@@ -340,7 +340,6 @@ async function deleteAlbum(indexToDelete) {
             throw new Error('Update failed');
         }
     } catch (err) {
-        // ✅ Fix: הסר console.error
         showStatus('שגיאה במחיקת האלבום: ' + err.message, null, true);
     }
 }
@@ -614,7 +613,6 @@ async function handleGallerySubmit(e) {
         }
 
     } catch (err) {
-        // ✅ Fix: הסר console.error
         showStatus('שגיאה בתהליך השמירה: ' + err.message, null, true);
     } finally {
         if (submitBtn) submitBtn.disabled = false;
