@@ -54,8 +54,7 @@ export async function loadSiteConfig() {
                 document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
             }
             if (document.getElementById('site-onesignal-rest')) {
-                const globalRestEnc = currentSiteConfig.oneSignalRestKey_enc;
-                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || (globalRestEnc ? atob(globalRestEnc) : '');
+                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
             }
 
             const onesignalBtn = document.getElementById('save-onesignal-btn');
@@ -63,12 +62,11 @@ export async function loadSiteConfig() {
                 e.preventDefault();
                 const appId = document.getElementById('site-onesignal-id').value.trim();
                 const restKey = document.getElementById('site-onesignal-rest').value.trim();
-                
+
                 if (restKey) localStorage.setItem('onesignal_rest_key', restKey);
                 else localStorage.removeItem('onesignal_rest_key');
 
                 currentSiteConfig.oneSignalAppId = appId;
-                currentSiteConfig.oneSignalRestKey_enc = restKey ? btoa(restKey) : '';
 
                 showStatus('שומר הגדרות OneSignal באופן גלובלי...', 50);
                 await saveAllSiteSettings();
@@ -206,7 +204,7 @@ export async function saveAllSiteSettings() {
     currentSiteConfig.theme = document.getElementById('site-theme-select').value;
     currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
     currentSiteConfig.oneSignalAppId = document.getElementById('site-onesignal-id').value.trim();
-    
+
     // [חדש] שמירת קישור תרומה
     const donationLinkEl = document.getElementById('site-donation-link');
     if (donationLinkEl) {
@@ -229,7 +227,7 @@ export async function saveAllSiteSettings() {
             latestConfig.theme = currentSiteConfig.theme;
             latestConfig.primaryColor = currentSiteConfig.primaryColor;
             latestConfig.oneSignalAppId = currentSiteConfig.oneSignalAppId;
-            latestConfig.oneSignalRestKey_enc = currentSiteConfig.oneSignalRestKey_enc || '';
+            delete latestConfig.oneSignalRestKey_enc;
             latestConfig.texts = Object.assign({}, latestConfig.texts, currentSiteConfig.texts);
             return encodeToBase64(JSON.stringify(latestConfig, null, 2));
         };

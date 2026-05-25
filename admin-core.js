@@ -170,10 +170,7 @@ export async function googleLogin() {
         const scopeStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9kcml2ZS5maWxl") + " email profile openid";
         console.log("Requesting access token with explicit scope:", scopeStr);
 
-        // הוסרה הגבלת ה-10 שניות לבקשת המשתמש чтобы לאפשר התחברות ללא לחץ זמן
-
         // REQUEST TOKEN
-        // Explicitly passing the scope here is the RECOMMENDED fix for "Missing required parameter: scope"
         try {
             window.tokenClient.requestAccessToken({
                 prompt: '',
@@ -193,7 +190,6 @@ export async function getFolderId(token) {
         const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
         
         // [הגנה מתקדמת] שימוש ב-Base64 כדי למנוע מתוספי דפדפן (AdBlock) למחוק את כתובת גוגל מהקוד
-        // הכתובת היא: https://www.googleapis.com/drive/v3/files
         const targetUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=") + "?q=" + query;
         
         console.log("DEBUG: Final Google Search URL:", targetUrl);
@@ -205,7 +201,6 @@ export async function getFolderId(token) {
         const searchData = await searchRes.json();
         if (searchData.files && searchData.files.length > 0) return searchData.files[0].id;
 
-        // הכתובת היא: https://www.googleapis.com/drive/v3/files
         const createUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=");
         const createRes = await window.fetch(createUrl, {
             method: "POST",
@@ -228,7 +223,6 @@ export async function uploadFileToDrive(file, token) {
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    // הכתובת היא: https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart
     const uploadUrlStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vdXBsb2FkL2RyaXZlL3YzL2ZpbGVzP3VwbG9hZFR5cGU9bXVsdGlwYXJ0");
     
     const maxAttempts = 2;
@@ -261,7 +255,6 @@ export async function uploadFileToDrive(file, token) {
         } catch (err) {
             clearTimeout(timeoutId);
             if (attempt === maxAttempts) throw err;
-            // Delay is already handled above for !res.ok, this catches network/abort errors
             if (!err.message || !err.message.includes("non-retriable")) {
                 await new Promise(r => setTimeout(r, 800));
             } else {
@@ -279,7 +272,6 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
     let currentPayload = Object.assign({}, payloadObj);
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // If we have a transform function, we should ideally use it if we refetched the data
         const bodyObj = Object.assign({}, currentPayload);
         if (sha) bodyObj.sha = sha;
 
@@ -316,8 +308,6 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
                             console.log("Transformation re-applied to latest content.");
                         }
 
-                        // small backoff before retrying
-
                         continue;
                     }
                 } catch (e) {
@@ -337,9 +327,9 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
     }
     throw lastErr;
 }
+
 export async function makeFilePublic(fileId, token) {
     try {
-        // הכתובת היא: https://www.googleapis.com/drive/v3/files/
         const permUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "/permissions";
         await window.fetch(permUrl, {
             method: "POST",
@@ -349,13 +339,11 @@ export async function makeFilePublic(fileId, token) {
     } catch (e) {
         console.error("DEBUG: makeFilePublic error:", e);
     }
-    // [אבטחה] הסוואת הדומיין drive.google.com
     return atob("aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3RodW1ibmFpbD9pZD0=") + fileId + "&sz=w1000";
 }
 
 export async function getFileWebViewLink(fileId, token) {
     try {
-        // הכתובת היא: https://www.googleapis.com/drive/v3/files/
         const url = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "?fields=webViewLink";
         const res = await window.fetch(url, {
             headers: { 'Authorization': "Bearer " + token }
@@ -424,7 +412,7 @@ export async function logEvent(action, type = 'general') {
 // 6. Push Notifications
 // ============================================================
 export async function sendPushNotification(title, message) {
-    const restKey = localStorage.getItem('onesignal_rest_key');
+    let restKey = localStorage.getItem('onesignal_rest_key');
     let appIdStr = null;
     
     try {
@@ -440,7 +428,7 @@ export async function sendPushNotification(title, message) {
             restKey = configRestElement.value.trim();
         }
 
-        if (!appIdStr || !restKey) {
+        if (!appIdStr) {
             // גיבוי לטעינה מהקובץ אם השדה לא נמצא או חסר מפתח
             const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
             const res = await window.fetch(resUrl);
@@ -448,7 +436,6 @@ export async function sendPushNotification(title, message) {
                 const data = await res.json();
                 const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
                 if (!appIdStr) appIdStr = config.oneSignalAppId;
-                if (!restKey && config.oneSignalRestKey_enc) restKey = atob(config.oneSignalRestKey_enc);
             }
         }
     } catch (e) {
