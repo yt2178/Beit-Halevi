@@ -213,6 +213,9 @@ const closeStatusBtn = document.getElementById('close-status-btn');
 
 function handleApiError(err) {
     // ✅ Fix: בצע logging בעיכול בלבד לא בproduction
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.error(err);
+    }
     let msg = "שגיאה לא צפויה";
     if (err.message.includes("404")) msg = "הקובץ לא נמצא ב-GitHub";
     if (err.message.includes("401")) msg = "טוקן לא בתוקף או חסר הרשאות";
