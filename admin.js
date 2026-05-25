@@ -40,6 +40,8 @@ function applyTheme(theme) {
         else document.body.classList.remove('dark-theme');
         const btn = document.getElementById('theme-toggle-btn');
         if (btn) btn.textContent = theme === 'dark' ? '☀️ מצב בהיר' : '🌙 מצב כהה';
+        const mobileBtn = document.getElementById('theme-toggle-btn-mobile');
+        if (mobileBtn) mobileBtn.textContent = theme === 'dark' ? '☀️ מצב בהיר' : '🌙 מצב כהה';
         localStorage.setItem(THEME_KEY, theme);
     } catch (e) {
         // ignore localStorage issues
@@ -274,10 +276,19 @@ function showAdminPanel() {
 }
 
 function logout() {
-    updateGithubAuth('');
-    localStorage.removeItem('admin_user_code');
-    localStorage.removeItem('admin_github_username');
-    location.reload();
+    if (confirm('האם אתה בטוח שברצונך לצאת?')) {
+        localStorage.removeItem(GITHUB_TOKEN_KEY);
+        localStorage.removeItem(USER_CODE_KEY);
+        localStorage.removeItem(GITHUB_USERNAME_KEY);
+        updateGithubAuth(null, null);
+        showToast('התנתקת בהצלחה', 1500, 'success');
+        showAdminPanel();
+        
+        // Reset login form
+        if (document.getElementById('login-form')) {
+            document.getElementById('login-form').reset();
+        }
+    }
 }
 
 function navigateTo(sectionId) {
