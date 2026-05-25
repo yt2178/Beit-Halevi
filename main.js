@@ -342,7 +342,7 @@ if (hebrewYearDisplay) {
                 document.head.appendChild(script);
             }
         }
-    } catch (e) { console.log("No site-config.json found yet"); }
+    } catch (e) { console.warn("Failed to load site configuration:", e); }
 
     // [חדש] לוגיקת הרשמה להתראות (FAB ומודאל)
     const fabSubscribeBtn = document.getElementById('fab-subscribe-btn');
