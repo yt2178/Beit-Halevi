@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "**🌐 [לכניסה לאתר](https://yt2178.github.io/Beit-Halevi/)**",
+  "main": "main.js",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yt2178/Beit-Halevi.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/yt2178/Beit-Halevi/issues"
+  },
+  "homepage": "https://github.com/yt2178/Beit-Halevi#readme",
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
+}
