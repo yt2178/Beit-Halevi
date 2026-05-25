@@ -404,7 +404,6 @@ if (hebrewYearDisplay) {
                         alert("ביטלת את הרשמתך להתראות בהצלחה.");
                     } else {
                         await OneSignal.User.PushSubscription.optIn();
-                        // alert("תודה שנרשמת! כעת תוכל לקבל עדכונים אמיתיים."); (OneSignal כבר נותן חיווי)
                     }
                     if (subscribeModal) {
                         subscribeModal.classList.remove('active');
