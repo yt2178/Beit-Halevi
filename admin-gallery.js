@@ -504,22 +504,21 @@ async function handleGallerySubmit(e) {
         const galleryArray = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
 
         // 2. איסוף רשימת התמונות הסופית מה-DOM
-        const finalImages = [];
         const previewItems = albumPreview.querySelectorAll('.album-preview-item');
         const totalItems = previewItems.length;
         let processedCount = 0;
 
-        for (const item of previewItems) {
+        showStatus(`מתחיל עיבוד והעלאה של ${totalItems} תמונות...`, 40);
+
+        const uploadPromises = Array.from(previewItems).map(async (item) => {
             const img = item.querySelector('img');
 
             if (item.dataset.existing === '1') {
-                finalImages.push(img.getAttribute('src'));
                 processedCount++;
+                return img.getAttribute('src');
             } else {
                 const fileObj = selectedFiles.find(f => f.localUrl === img.src);
                 if (fileObj) {
-                    showStatus(`מעבד ודוחס תמונה ${processedCount + 1} מתוך ${totalItems}...`, 40 + (processedCount / totalItems * 40));
-                    
                     let fileToUpload = fileObj.file;
                     const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
                     console.log(`DEBUG: Original file size: ${originalSize}MB`);
@@ -535,14 +534,20 @@ async function handleGallerySubmit(e) {
                         console.warn("Compression failed, uploading original:", compressErr);
                     }
 
-                    showStatus(`מעלה תמונה ${processedCount + 1} מתוך ${totalItems} לדרייב...`, 40 + (processedCount / totalItems * 40));
                     const fileId = await uploadFileToDrive(fileToUpload, googleAccessToken);
                     const publicUrl = await makeFilePublic(fileId, googleAccessToken);
-                    finalImages.push(publicUrl);
+
                     processedCount++;
+                    showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
+
+                    return publicUrl;
                 }
+                return null;
             }
-        }
+        });
+
+        const results = await Promise.all(uploadPromises);
+        const finalImages = results.filter(url => url !== null);
 
         // 3. בניית האובייקט החדש
         // [תיקון] ודא שה-thumbnail תמיד מוגדר - אם לא נבחר, השתמש ב-finalImages[0]
