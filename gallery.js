@@ -85,7 +85,7 @@ export function setupAlbumControls(albumData) {
                 try {
                     await navigator.share(shareData);
                 } catch (error) {
-                    console.log('Error sharing album:', error);
+                    // Silently ignore sharing errors
                 }
             } else {
                 // גיבוי: העתקה ללוח
@@ -93,7 +93,7 @@ export function setupAlbumControls(albumData) {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
                 } catch (error) {
-                    console.log('Error copying to clipboard:', error);
+                    // Silently ignore clipboard errors
                 }
             }
         };
@@ -177,7 +177,7 @@ export function showLightboxImage(isFirstLoad = false) {
                 try {
                     await navigator.share(shareData);
                 } catch (error) {
-                    console.log('Error sharing:', error);
+                    // Silently ignore sharing errors
                 }
             } else {
                 // גיבוי: העתקה ללוח
@@ -185,7 +185,7 @@ export function showLightboxImage(isFirstLoad = false) {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
                 } catch (error) {
-                    console.log('Error copying to clipboard:', error);
+                    // Silently ignore clipboard errors
                 }
             }
         };
