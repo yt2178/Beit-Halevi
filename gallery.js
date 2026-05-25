@@ -209,19 +209,17 @@ export function closeLightbox() {
     }
 }
 
-// [שינוי] פונקציות ניווט בתמונות
 export function showNextImage() {
     if (currentIndex < currentAlbumImages.length - 1) {
         currentIndex++;
-        showLightboxImage(false); // [שינוי] false = replaceState
+        showLightboxImage(false);
     }
 }
 
-// [שינוי] פונקציות ניווט בתמונות
 export function showPrevImage() {
     if (currentIndex > 0) {
         currentIndex--;
-        showLightboxImage(false); // [שינוי] false = replaceState
+        showLightboxImage(false);
     }
 }
 
