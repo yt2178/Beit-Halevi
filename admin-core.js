@@ -246,7 +246,14 @@ export async function uploadFileToDrive(file, token) {
             clearTimeout(timeoutId);
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
+                // Fail fast on non-retriable client errors (400-404, etc.) to save execution time
+                if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+                    throw new Error("Drive upload failed (non-retriable): " + res.status + " " + text);
+                }
                 if (attempt === maxAttempts) throw new Error("Drive upload failed: " + res.status + " " + text);
+
+                // Need a backoff delay for retriable HTTP errors as well to prevent hammering
+                await new Promise(r => setTimeout(r, 800));
                 continue;
             }
             const data = await res.json();
@@ -254,7 +261,12 @@ export async function uploadFileToDrive(file, token) {
         } catch (err) {
             clearTimeout(timeoutId);
             if (attempt === maxAttempts) throw err;
-            await new Promise(r => setTimeout(r, 800));
+            // Delay is already handled above for !res.ok, this catches network/abort errors
+            if (!err.message || !err.message.includes("non-retriable")) {
+                await new Promise(r => setTimeout(r, 800));
+            } else {
+                throw err;
+            }
         }
     }
 }
