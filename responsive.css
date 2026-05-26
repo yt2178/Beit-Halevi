@@ -821,9 +821,7 @@ iframe {
     }
 
     .zmanim-container {
-        padding: 5px !important;
-        margin: 0 !important;
-        font-size: 0.85rem;
+        display: none !important;
     }
 
     .zmanim-item {
