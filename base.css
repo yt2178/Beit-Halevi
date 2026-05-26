@@ -8,7 +8,7 @@ html {
 }
 
 body {
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
     position: relative;
 }
@@ -102,6 +102,16 @@ body.dark-mode {
 body.dark-mode header,
 body.dark-mode nav {
     background-color: var(--dark-primary);
+}
+
+body.dark-mode .top-bar {
+    background-color: #0d0d0d;
+    color: var(--dark-text);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .bsd {
+    color: var(--dark-text);
 }
 
 /* ׳©׳“׳¨׳•׳’: ׳׳¢׳‘׳¨ ׳׳”׳™׳¨ ׳‘׳™׳ ׳׳¦׳‘׳™ ׳×׳¦׳•׳’׳” */
@@ -223,8 +233,7 @@ body {
     color: var(--text-color);
     line-height: 1.7;
     font-size: 16px;
-    overflow-y: auto; /* Handle all vertical scrolling here */
-    overflow-x: hidden;
+    overflow-x: clip;
     position: relative;
     width: 100%;
     -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */

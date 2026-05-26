@@ -76,7 +76,11 @@ export async function loadAndRenderTasks() {
         }, 10000);
 
     } catch (err) {
-        container.innerHTML = `<p style="text-align:center; color:red;">שגיאה בטעינת משימות: ${err.message}</p>`;
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center; color:red;';
+        p.textContent = 'שגיאה בטעינת משימות: ' + err.message;
+        container.innerHTML = '';
+        container.appendChild(p);
     }
 }
 
@@ -154,15 +158,17 @@ function addTask() {
 }
 
 function toggleTask(index) {
-    if (allTasks[index]) {
-        allTasks[index].completed = !allTasks[index].completed;
+    const task = allTasks.at(index);
+    if (task) {
+        task.completed = !task.completed;
         hasUnsavedChanges = true;
         renderTasks();
     }
 }
 
 function deleteTask(index) {
-    if (allTasks[index]) {
+    const task = allTasks.at(index);
+    if (task) {
         allTasks.splice(index, 1);
         hasUnsavedChanges = true;
         renderTasks();

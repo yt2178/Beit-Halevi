@@ -510,21 +510,36 @@ async function loadAndRenderHistory() {
             const div = document.createElement('div');
             div.className = 'history-item';
 
-            // [אבטחה] ניקוי תוכן הפעולה למקרה שמכיל תגים
-            const safeAction = DOMPurify.sanitize(log.action);
+            const iconDiv = document.createElement('div');
+            iconDiv.className = `history-icon ${log.type || 'general'}`;
+            const iconI = document.createElement('i');
+            iconI.className = `fas ${getIconForType(log.type)}`;
+            iconDiv.appendChild(iconI);
 
-            div.innerHTML = `
-                <div class="history-icon ${log.type || 'general'}">
-                    <i class="fas ${getIconForType(log.type)}"></i>
-                </div>
-                <div class="history-time">${log.timestamp}</div>
-                <div class="history-user">${DOMPurify.sanitize(log.user)}</div>
-                <div class="history-action">${safeAction}</div>
-            `;
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'history-time';
+            timeDiv.textContent = log.timestamp;
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'history-user';
+            userDiv.textContent = log.user;
+
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'history-action';
+            actionDiv.textContent = log.action;
+
+            div.appendChild(iconDiv);
+            div.appendChild(timeDiv);
+            div.appendChild(userDiv);
+            div.appendChild(actionDiv);
             container.appendChild(div);
         });
     } catch (err) {
-        container.innerHTML = `<p style="color:red; text-align:center;">שגיאה בטעינת היסטוריה: ${err.message}</p>`;
+        const p = document.createElement('p');
+        p.style.cssText = 'color:red; text-align:center;';
+        p.textContent = 'שגיאה בטעינת היסטוריה: ' + err.message;
+        container.innerHTML = '';
+        container.appendChild(p);
     }
 }
 
@@ -651,7 +666,11 @@ async function loadAndRenderMessages() {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
         }
     } catch (err) {
-        container.innerHTML = `<p style="color:red; text-align:center;">שגיאה בטעינת הודעות: ${err.message}</p>`;
+        const p = document.createElement('p');
+        p.style.cssText = 'color:red; text-align:center;';
+        p.textContent = 'שגיאה בטעינת הודעות: ' + err.message;
+        container.innerHTML = '';
+        container.appendChild(p);
     }
 }
 
@@ -708,7 +727,7 @@ function parseCSV(text) {
         let cur = '';
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
-            const char = line[i];
+            const char = line.charAt(i);
             if (char === '"') inQuotes = !inQuotes;
             else if (char === ',' && !inQuotes) {
                 result.push(cur.trim());

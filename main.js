@@ -4,7 +4,6 @@ import { checkUrlHash, initGalleryEvents } from './gallery.js';
 import { checkNewsHash, initNewsEvents } from './news.js';
 import { getHebrewYear } from './utils.js';
 import { initZmanim } from './zmanim.js';
-import { initSearch } from './search.js';
 
 // ---- משתנים ואלמנטים כלליים ---- 
 export const dateTimeDisplay = document.getElementById('date-time-display');
@@ -104,11 +103,15 @@ if (contactForm) {
     contactForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const button = contactForm.querySelector('button[type="submit"]');
-        const originalButtonHtml = button.innerHTML;
+        const originalChildren = Array.from(button.childNodes);
 
         // 1. מצב "שולח..."
         button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שולח...'; // ספינר מ-Font Awesome
+        button.innerHTML = '';
+        const spinner = document.createElement('i');
+        spinner.className = 'fas fa-spinner fa-spin';
+        button.appendChild(spinner);
+        button.appendChild(document.createTextNode(' שולח...'));
 
         // [ חדש] הסר כל הודעה קודמת
         let statusMessage = contactForm.querySelector('.form-status');
@@ -130,7 +133,8 @@ if (contactForm) {
             statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
             statusMessage.style.color = "green";
             button.disabled = false;
-            button.innerHTML = originalButtonHtml;
+            button.innerHTML = '';
+            originalChildren.forEach(child => button.appendChild(child));
             contactForm.appendChild(statusMessage);
             return;
         }
@@ -159,7 +163,8 @@ if (contactForm) {
 
         // [מתוקן] שחזור הכפתור מיד לאחר השליחה
         button.disabled = false;
-        button.innerHTML = originalButtonHtml;
+        button.innerHTML = '';
+        originalChildren.forEach(child => button.appendChild(child));
         contactForm.appendChild(statusMessage);
 
         // הסרת הודעת הסטטוס בלבד אחרי 5 שניות
@@ -224,9 +229,6 @@ if (hebrewYearDisplay) {
     checkUrlHash();
     checkNewsHash();
     
-    // [חדש] אתחול חיפוש גלובלי
-    initSearch('news-container', 'album-grid-container');
-
     // [חדש] תצפית על תמונות לטעינה חלקה (Lazy Loading Fade-in)
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

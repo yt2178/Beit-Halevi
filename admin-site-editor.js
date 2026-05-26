@@ -26,6 +26,24 @@ const EDITABLE_TEXTS = [
     { key: 'contact_intro', label: '💬 טקסט הקדמה צור קשר' },
 ];
 
+const ALLOWED_TEXT_KEYS = new Set([
+    'about_title', 'about_body', 'donation_title', 'donation_body', 'contact_title', 'contact_intro', 'donation_link'
+]);
+
+function safeGet(obj, key) {
+    if (!obj || typeof key !== 'string' || !ALLOWED_TEXT_KEYS.has(key)) {
+        return undefined;
+    }
+    return Reflect.get(obj, key);
+}
+
+function safeSet(obj, key, val) {
+    if (obj && typeof key === 'string' && ALLOWED_TEXT_KEYS.has(key)) {
+        return Reflect.set(obj, key, val);
+    }
+    return false;
+}
+
 export async function loadSiteConfig() {
     try {
         const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
@@ -103,7 +121,7 @@ function renderEditableTextsList(texts) {
         btn.dataset.key = item.key;
         btn.onclick = (e) => {
             e.preventDefault();
-            openTextEditor(item.key, item.label, texts[item.key] || '');
+            openTextEditor(item.key, item.label, safeGet(texts, item.key) || '');
         };
         container.appendChild(btn);
     });
@@ -123,7 +141,7 @@ function openTextEditor(key, label, currentValue) {
     const saveBtn = document.getElementById('save-site-text');
     saveBtn.onclick = () => {
         const newValue = editor.value;
-        currentSiteConfig.texts[key] = newValue;
+        safeSet(currentSiteConfig.texts, key, newValue);
         updateSitePreview(key, newValue);
         showStatus(`😊 הטקסט עודכן בתצוגה המקדימה`, 100);
         setTimeout(hideStatus, 2000);
@@ -155,12 +173,12 @@ function renderSitePreview(config) {
         const h4 = document.createElement('h4');
         h4.id = titleId;
         h4.style.cssText = 'margin-top: 10px; margin-bottom: 5px; font-size: 1.1rem;';
-        h4.textContent = config.texts?.[keyTitle] || defaultTitle;
+        h4.textContent = safeGet(config.texts, keyTitle) || defaultTitle;
 
         const p = document.createElement('p');
         p.id = bodyId;
         p.style.cssText = 'line-height: 1.6; margin: 0;';
-        p.textContent = config.texts?.[keyBody] || defaultBody;
+        p.textContent = safeGet(config.texts, keyBody) || defaultBody;
 
         section.appendChild(h3);
         section.appendChild(h4);
@@ -176,16 +194,16 @@ function renderSitePreview(config) {
 }
 
 function updateSitePreview(key, value) {
-    const previewMap = {
-        'about_title': '#preview-about-title',
-        'about_body': '#preview-about-body',
-        'donation_title': '#preview-donation-title',
-        'donation_body': '#preview-donation-body',
-        'contact_title': '#preview-contact-title',
-        'contact_intro': '#preview-contact-intro'
-    };
+    const previewMap = new Map([
+        ['about_title', '#preview-about-title'],
+        ['about_body', '#preview-about-body'],
+        ['donation_title', '#preview-donation-title'],
+        ['donation_body', '#preview-donation-body'],
+        ['contact_title', '#preview-contact-title'],
+        ['contact_intro', '#preview-contact-intro']
+    ]);
 
-    const selector = previewMap[key];
+    const selector = previewMap.get(key);
     if (selector) {
         const element = document.querySelector(selector);
         if (element) element.textContent = value || '...';

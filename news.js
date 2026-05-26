@@ -30,7 +30,9 @@ export function openNewsModal(newsItem) {
     
     // [תיקון אבטחה] ניקוי HTML שיוצר מ-Markdown למניעת XSS
     const dirtyHTML = marked.parse(newsItem.body);
-    modalBody.innerHTML = DOMPurify.sanitize(dirtyHTML);
+    modalBody.innerHTML = '';
+    const fragment = document.createRange().createContextualFragment(DOMPurify.sanitize(dirtyHTML));
+    modalBody.appendChild(fragment);
 
     // [חדש] עדכון כותרת הדף
     updateDynamicMetadata(newsItem.title);

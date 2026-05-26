@@ -1,4 +1,4 @@
-﻿.bsd {
+.bsd {
     position: absolute;
     top: 5px;
     right: 10px;
@@ -38,8 +38,7 @@ header {
 }
 
 .sticky-wrapper.scrolled header {
-    padding: 8px 0;
-    transform: scale(0.9);
+    padding: 5px 0;
 }
 
 header h1 {

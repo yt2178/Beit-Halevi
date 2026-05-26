@@ -34,42 +34,102 @@ export async function initZmanim() {
 }
 
 function renderWidgetStructure(container) {
-    container.innerHTML = `
-        <div class="zmanim-widget">
-            <div class="zmanim-layout">
-                <div class="current-date-box">
-                    <span id="hebrew-date">טוען...</span>
-                    <span id="parasha-name" class="parasha-tag"></span>
-                </div>
-                <div class="zmanim-grid" id="zmanim-times">
-                    <div class="zman-item loading"></div>
-                    <div class="zman-item loading"></div>
-                    <div class="zman-item loading"></div>
-                    <div class="zman-item loading"></div>
-                </div>
-                <div class="location-box">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="current-city-name">${currentCity.name}</span>
-                    <button id="change-city-btn" title="החלף עיר"><i class="fas fa-cog"></i></button>
-                </div>
-            </div>
-        </div>
-        <div id="city-modal" class="city-modal">
-            <div class="city-modal-content">
-                <span class="city-close" onclick="document.getElementById('city-modal').classList.remove('active')">&times;</span>
-                <h3>בחר עיר להצגת זמנים</h3>
-                <div class="city-list">
-                    ${POPULAR_CITIES.map(city =>
-                        `<button class="city-option ${city.geonameid === currentCity.geonameid ? 'active' : ''}" 
-                          data-id="${city.geonameid}" data-name="${city.name}">
-                          ${city.name}
-                        </button>`
-                    ).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-
+    container.innerHTML = '';
+    
+    const widget = document.createElement('div');
+    widget.className = 'zmanim-widget';
+    
+    const layout = document.createElement('div');
+    layout.className = 'zmanim-layout';
+    
+    const dateBox = document.createElement('div');
+    dateBox.className = 'current-date-box';
+    
+    const hebrewDate = document.createElement('span');
+    hebrewDate.id = 'hebrew-date';
+    hebrewDate.textContent = 'טוען...';
+    
+    const parasha = document.createElement('span');
+    parasha.id = 'parasha-name';
+    parasha.className = 'parasha-tag';
+    
+    dateBox.appendChild(hebrewDate);
+    dateBox.appendChild(parasha);
+    
+    const grid = document.createElement('div');
+    grid.className = 'zmanim-grid';
+    grid.id = 'zmanim-times';
+    
+    for (let i = 0; i < 4; i++) {
+        const zman = document.createElement('div');
+        zman.className = 'zman-item loading';
+        grid.appendChild(zman);
+    }
+    
+    const locationBox = document.createElement('div');
+    locationBox.className = 'location-box';
+    
+    const mapIcon = document.createElement('i');
+    mapIcon.className = 'fas fa-map-marker-alt';
+    
+    const cityName = document.createElement('span');
+    cityName.id = 'current-city-name';
+    cityName.textContent = currentCity.name;
+    
+    const changeBtn = document.createElement('button');
+    changeBtn.id = 'change-city-btn';
+    changeBtn.title = 'החלף עיר';
+    
+    const cogIcon = document.createElement('i');
+    cogIcon.className = 'fas fa-cog';
+    changeBtn.appendChild(cogIcon);
+    
+    locationBox.appendChild(mapIcon);
+    locationBox.appendChild(cityName);
+    locationBox.appendChild(changeBtn);
+    
+    layout.appendChild(dateBox);
+    layout.appendChild(grid);
+    layout.appendChild(locationBox);
+    widget.appendChild(layout);
+    
+    // Create Modal
+    const modal = document.createElement('div');
+    modal.id = 'city-modal';
+    modal.className = 'city-modal';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'city-modal-content';
+    
+    const closeSpan = document.createElement('span');
+    closeSpan.className = 'city-close';
+    closeSpan.innerHTML = '&times;';
+    closeSpan.onclick = () => document.getElementById('city-modal').classList.remove('active');
+    
+    const modalH3 = document.createElement('h3');
+    modalH3.textContent = 'בחר עיר להצגת זמנים';
+    
+    const cityList = document.createElement('div');
+    cityList.className = 'city-list';
+    
+    POPULAR_CITIES.forEach(city => {
+        const btn = document.createElement('button');
+        btn.className = `city-option ${city.geonameid === currentCity.geonameid ? 'active' : ''}`;
+        btn.dataset.id = city.geonameid;
+        btn.dataset.name = city.name;
+        btn.textContent = city.name;
+        cityList.appendChild(btn);
+    });
+    
+    modalContent.appendChild(closeSpan);
+    modalContent.appendChild(modalH3);
+    modalContent.appendChild(cityList);
+    modal.appendChild(modalContent);
+    
+    container.appendChild(widget);
+    container.appendChild(modal);
+    
+    // Reattach event listeners
     document.querySelectorAll('.city-option').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const newCity = { name: e.target.dataset.name, geonameid: e.target.dataset.id };
@@ -92,8 +152,6 @@ async function loadZmanimData() {
         const today = new Date().toISOString().split('T')[0];
         const cb = Date.now();
         
-        // [תיקון קריטי] שימוש במחרוזת מקודדת כדי למנוע שיבושים של "צנזורה" או באגים בדפדפן
-        // המחרוזת היא "https://www.hebcal.com/zmanim" מקודדת
         const zmanimBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fzmanim");
         const zmanimUrl = zmanimBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
         
@@ -125,15 +183,30 @@ async function loadZmanimData() {
             { label: "צאת הכוכבים", time: times.tzeit50min }
         ];
 
-        timesContainer.innerHTML = importantTimes.map(item => `
-            <div class="zman-item">
-                <span class="zman-label">${item.label}</span>
-                <span class="zman-time">${formatTime(item.time)}</span>
-            </div>
-        `).join('');
+        timesContainer.innerHTML = '';
+        importantTimes.forEach(item => {
+            const zmanItem = document.createElement('div');
+            zmanItem.className = 'zman-item';
+            
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'zman-label';
+            labelSpan.textContent = item.label;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'zman-time';
+            timeSpan.textContent = formatTime(item.time);
+            
+            zmanItem.appendChild(labelSpan);
+            zmanItem.appendChild(timeSpan);
+            timesContainer.appendChild(zmanItem);
+        });
     } catch (error) {
         console.error("Zmanim Error:", error);
-        timesContainer.innerHTML = '<div class="error-msg">שגיאה בטעינת זמנים</div>';
+        timesContainer.innerHTML = '';
+        const errDiv = document.createElement('div');
+        errDiv.className = 'error-msg';
+        errDiv.textContent = 'שגיאה בטעינת זמנים';
+        timesContainer.appendChild(errDiv);
     }
 }
 

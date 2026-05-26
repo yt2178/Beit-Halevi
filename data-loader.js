@@ -111,11 +111,21 @@ export async function loadGallery() {
     
     // Skeleton for albums
     if (!albumContainer.innerHTML || albumContainer.innerHTML.includes('טוען')) {
-        albumContainer.innerHTML = Array(3).fill('<div class="album-cover skeleton-box" style="height:200px;"></div>').join('');
+        albumContainer.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const div = document.createElement('div');
+            div.className = 'album-cover skeleton-box';
+            div.style.height = '200px';
+            albumContainer.appendChild(div);
+        }
     }
 
     if (response === null || response.error) {
-        albumContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת האלבומים.'}</p>`;
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center; color: red;';
+        p.textContent = response?.message || 'שגיאה בטעינת האלבומים.';
+        albumContainer.innerHTML = '';
+        albumContainer.appendChild(p);
         return;
     }
     const items = response;
@@ -138,8 +148,20 @@ export async function loadGallery() {
     allLoadedAlbums.forEach((albumData, index) => {
         const albumElement = document.createElement('a');
         albumElement.className = 'album-cover';
-        const albumRawHTML = `<img loading="lazy" class="lazy-load" src="${cleanPath(albumData.thumbnail)}" alt="אלבום תמונות: ${albumData.title}"><div class="album-title">${albumData.title}</div>`;
-        albumElement.innerHTML = DOMPurify.sanitize(albumRawHTML);
+        
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.className = 'lazy-load';
+        img.src = cleanPath(albumData.thumbnail);
+        img.alt = 'אלבום תמונות: ' + albumData.title;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'album-title';
+        titleDiv.textContent = albumData.title;
+
+        albumElement.appendChild(img);
+        albumElement.appendChild(titleDiv);
+
         albumElement.addEventListener('click', (e) => {
             e.preventDefault(); // מונע קפיצה של הדף
             // [שינוי] פותח גלריה ומעדכן את ה-URL
@@ -163,19 +185,35 @@ export async function loadNews(loadMore = false) {
 
     // הצג סקלטון בזמן הטעינה
     if (!loadMore) {
-        newsContainer.innerHTML = Array(3).fill(`
-            <div class="skeleton-item">
-                <div class="skeleton-box skeleton-title"></div>
-                <div class="skeleton-box skeleton-text"></div>
-                <div class="skeleton-box skeleton-text short"></div>
-            </div>
-        `).join('');
+        newsContainer.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+            const item = document.createElement('div');
+            item.className = 'skeleton-item';
+
+            const title = document.createElement('div');
+            title.className = 'skeleton-box skeleton-title';
+
+            const text1 = document.createElement('div');
+            text1.className = 'skeleton-box skeleton-text';
+
+            const text2 = document.createElement('div');
+            text2.className = 'skeleton-box skeleton-text short';
+
+            item.appendChild(title);
+            item.appendChild(text1);
+            item.appendChild(text2);
+            newsContainer.appendChild(item);
+        }
     }
 
     const response = await fetchAndParse('_posts/news'); // עכשיו קורא ל-news.json
 
     if (response === null || response.error) {
-        newsContainer.innerHTML = `<p style="text-align:center; color: red;">${response?.message || 'שגיאה בטעינת העדכונים. ודא שקובץ data/news.json קיים.'}</p>`;
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center; color: red;';
+        p.textContent = response?.message || 'שגיאה בטעינת העדכונים. ודא שקובץ data/news.json קיים.';
+        newsContainer.innerHTML = '';
+        newsContainer.appendChild(p);
         return;
     }
     const items = response;
@@ -216,8 +254,23 @@ export async function loadNews(loadMore = false) {
         });
 
         // הצגת תקציר (עד 150 תווים)
-        const rawHTML = `<h3>${item.title}</h3><p><strong>פורסם בתאריך: ${formattedDate}</strong></p><div>${marked.parse(item.body).slice(0, 150)}... <span>קרא עוד</span></div>`;
-        newsElement.innerHTML = DOMPurify.sanitize(rawHTML);
+        const h3 = document.createElement('h3');
+        h3.textContent = item.title;
+
+        const p = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = 'פורסם בתאריך: ' + formattedDate;
+        p.appendChild(strong);
+
+        const bodyDiv = document.createElement('div');
+        const parsedHTML = DOMPurify.sanitize(marked.parse(item.body).slice(0, 150) + '... <span>קרא עוד</span>');
+        bodyDiv.innerHTML = '';
+        const fragment = document.createRange().createContextualFragment(parsedHTML);
+        bodyDiv.appendChild(fragment);
+
+        newsElement.appendChild(h3);
+        newsElement.appendChild(p);
+        newsElement.appendChild(bodyDiv);
         newsContainer.appendChild(newsElement);
 
         setTimeout(() => { newsElement.classList.add('visible'); }, 50 + index * 100);

@@ -55,9 +55,9 @@ export async function fetchStaticJson(path) {
 }
 // פונקציות עזר לנעילת הפוקוס
 export function focusLock(modalElement, focusTarget) {
-    const focusable = modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
+    const focusable = Array.from(modalElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'));
+    const first = focusable.at(0);
+    const last = focusable.at(-1);
 
     if (focusTarget) {
         focusTarget.focus();

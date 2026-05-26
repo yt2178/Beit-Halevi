@@ -492,8 +492,7 @@ async function handleGallerySubmit(e) {
     }
 
     // בדיקת קבצים נבחרים - סוג וגודל
-    for (let i = 0; i < albumImages.length; i++) {
-        const file = albumImages[i];
+    for (const file of albumImages) {
 
         // בדיקת סוג קובץ (רק תמונות)
         if (!file.type.startsWith('image/')) {

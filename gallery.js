@@ -111,14 +111,15 @@ export function setupAlbumControls(albumData) {
             for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
                 const batch = currentAlbumImages.slice(i, i + batchSize);
 
-                for (let j = 0; j < batch.length; j++) {
-                    const img = batch[j];
+                let j = 0;
+                for (const img of batch) {
                     const link = document.createElement('a');
                     link.href = img.src;
                     link.download = `${albumSlug}-${i + j + 1}.jpg`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                    j++;
                 }
 
                 // Add delay between batches to prevent browser overload, except after the last batch
