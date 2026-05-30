@@ -105,32 +105,87 @@ export function setupAlbumControls(albumData) {
             }
 
             albumDownloadBtn.disabled = true;
-            albumDownloadBtn.textContent = 'מוריד... אנא המתן';
+            albumDownloadBtn.textContent = 'מכין הורדה...';
 
-            const batchSize = 10;
-            for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
-                const batch = currentAlbumImages.slice(i, i + batchSize);
+            try {
+                // 1. טעינת ספריית JSZip באופן דינמי
+                if (typeof JSZip === 'undefined') {
+                    albumDownloadBtn.textContent = 'טוען מנהל כיווץ...';
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+                        script.onload = resolve;
+                        script.onerror = () => reject(new Error("שגיאה בטעינת ספריית הכיווץ (JSZip)"));
+                        document.head.appendChild(script);
+                    });
+                }
 
-                let j = 0;
-                for (const img of batch) {
+                // 2. הורדת התמונות ברקע ויצירת קובץ ה-ZIP
+                const zip = new JSZip();
+                const folder = zip.folder(albumSlug);
+                let successCount = 0;
+
+                for (let i = 0; i < currentAlbumImages.length; i++) {
+                    const img = currentAlbumImages[i];
+                    albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${currentAlbumImages.length})`;
+                    try {
+                        const res = await fetch(img.src);
+                        if (!res.ok) throw new Error("CORS or HTTP Error");
+                        const blob = await res.blob();
+                        
+                        // גילוי סיומת התמונה
+                        let extension = 'jpg';
+                        if (img.src.includes('png')) extension = 'png';
+                        else if (img.src.includes('gif')) extension = 'gif';
+                        else if (img.src.includes('webp')) extension = 'webp';
+
+                        const filename = `${albumSlug}-${i + 1}.${extension}`;
+                        folder.file(filename, blob);
+                        successCount++;
+                    } catch (err) {
+                        console.warn(`Failed to fetch image for ZIP: ${img.src}`, err);
+                    }
+                }
+
+                // 3. יצירת והורדת קובץ ה-ZIP
+                if (successCount > 0) {
+                    albumDownloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מייצר קובץ ZIP...';
+                    const content = await zip.generateAsync({ type: "blob" });
                     const link = document.createElement('a');
-                    link.href = img.src;
-                    link.download = `${albumSlug}-${i + j + 1}.jpg`;
+                    link.href = URL.createObjectURL(content);
+                    link.download = `${albumSlug}.zip`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    j++;
+                    URL.revokeObjectURL(link.href);
+                } else {
+                    throw new Error("CORS_BLOCK");
                 }
+            } catch (err) {
+                console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
+                alert("עקב הגדרות אבטחה של הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. נא לאשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.");
 
-                // Add delay between batches to prevent browser overload, except after the last batch
-                if (i + batchSize < currentAlbumImages.length) {
-                    await new Promise(resolve => setTimeout(resolve, 300));
+                const batchSize = 5;
+                for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
+                    const batch = currentAlbumImages.slice(i, i + batchSize);
+                    let j = 0;
+                    for (const img of batch) {
+                        const link = document.createElement('a');
+                        link.href = img.src;
+                        link.download = `${albumSlug}-${i + j + 1}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        j++;
+                    }
+                    if (i + batchSize < currentAlbumImages.length) {
+                        await new Promise(resolve => setTimeout(resolve, 800));
+                    }
                 }
+            } finally {
+                albumDownloadBtn.disabled = false;
+                albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
             }
-
-            albumDownloadBtn.disabled = false;
-            albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
-            alert('הורדת התמונות החלה. ייתכן שתצטרך לאשר הורדות נוספות בדפדפן.');
         };
     }
 }
@@ -328,4 +383,4 @@ export function initGalleryEvents() {
             }
         }, { passive: true });
     }
-}
+}
