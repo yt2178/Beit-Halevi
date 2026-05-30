@@ -125,14 +125,16 @@ export function setupAlbumControls(albumData) {
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-                } catch {
+                } catch (err) {
+                    console.error("Error sharing:", err);
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-                } catch {
+                } catch (err) {
+                    console.error("Error copying to clipboard:", err);
                 }
             }
         };
@@ -293,14 +295,16 @@ export function showLightboxImage(isFirstLoad = false) {
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-} catch {
+                } catch (err) {
+                    console.error("Error sharing:", err);
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-} catch {
+                } catch (err) {
+                    console.error("Error copying to clipboard:", err);
                 }
             }
         };
