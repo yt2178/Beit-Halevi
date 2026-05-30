@@ -2,7 +2,7 @@
 
 import {
     REPO_OWNER, REPO_NAME, SITE_CONFIG_PATH,
-    GITHUB_TOKEN, GITHUB_USERNAME,
+    GITHUB_TOKEN,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     logEvent
 } from './admin-core.js';
