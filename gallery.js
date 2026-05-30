@@ -217,22 +217,18 @@ export function setupAlbumControls(albumData) {
                 console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
                 showNotificationToast("⚠️ <strong>הורדה ישירה:</strong> עקב הגדרות הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. אנא אשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.", 6000);
 
-                const batchSize = 5;
-                for (let i = 0; i < imagesToDownload.length; i += batchSize) {
-                    const batch = imagesToDownload.slice(i, i + batchSize);
-                    let j = 0;
-                    for (const img of batch) {
-                        const link = document.createElement('a');
-                        link.href = img.src;
-                        link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
-                        link.download = `${albumSlug}-${i + j + 1}.jpg`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        j++;
-                    }
-                    if (i + batchSize < imagesToDownload.length) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
+                for (let i = 0; i < imagesToDownload.length; i++) {
+                    const img = imagesToDownload[i];
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
+                    link.download = `${albumSlug}-${i + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    if (i < imagesToDownload.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 250));
                     }
                 }
             } finally {
