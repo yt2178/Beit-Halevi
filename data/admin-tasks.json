@@ -1,5 +1,15 @@
 [
   {
+    "text": "גם זה admin-core.js:279   PUT https://api.github.com/repos/yt2178/Beit-Halevi/contents/data/admin-tasks.json 422 (Unprocessable Content) admin-core.js:293 Conflict/Error (422) on attempt 1. Refetching latest...",
+    "completed": false,
+    "createdAt": "2026-05-28T13:35:35.778Z"
+  },
+  {
+    "text": "זה השגיא הבהאלעת אלבום חדש Access to fetch at 'https://onesignal.com/api/v1/notifications' from origin 'https://yt2178.github.io' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. admin-core.js:459  POST https://onesignal.com/api/v1/notifications net::ERR_FAILED 400 (Bad Request) sendPushNotification @ admin-core.js:459 handleGallerySubmit @ admin-gallery.js:651 admin-core.js:474 Error sending push notification: TypeError: Failed to fetch     at sendPushNotification (admin-core.js:459:39)     at HTMLFormElement.handleGallerySubmit (admin-gallery.js:651:17) sendPushNotification @ admin-core.js:474 await in sendPushNotification handleGallerySubmit @ admin-gallery.js:651 1a813697-9461-4c11-a8e9-5496fb6ddd80:1  GET blob:https://yt2178.github.io/1a813697-9461-4c11-a8e9-5496fb6ddd80 net::ERR_FILE_NOT_FOUND",
+    "completed": false,
+    "createdAt": "2026-05-28T13:34:13.169Z"
+  },
+  {
     "text": "יש בעיה בהעלאת אלבום חדש שהתמונת אלבום לא מוגדרת טוב וצריך לערוך את האלבום שוב ולבחור שוב תמונת אלבום ואז זה מסתדר",
     "completed": false,
     "createdAt": "2026-05-05T12:39:48.359Z"
