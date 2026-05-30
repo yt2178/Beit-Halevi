@@ -39,6 +39,13 @@ let tokenExpiry = 0;
 export function updateGithubAuth(token, username) {
     GITHUB_TOKEN = token;
     GITHUB_USERNAME = username;
+
+    if (token) {
+        localStorage.setItem('ghToken', token);
+    }
+    if (username) {
+        localStorage.setItem('ghUsername', username);
+    }
 }
 
 // ============================================================
