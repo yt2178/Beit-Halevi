@@ -552,12 +552,14 @@ async function handleGallerySubmit(e) {
 
         showStatus(`מתחיל עיבוד והעלאה של ${totalItems} תמונות...`, 40);
 
-        const uploadPromises = Array.from(previewItems).map(async (item) => {
+        const results = [];
+        const previewItemsArray = Array.from(previewItems);
+        for (const item of previewItemsArray) {
             const img = item.querySelector('img');
 
             if (item.dataset.existing === '1') {
                 processedCount++;
-                return img.getAttribute('src');
+                results.push(img.getAttribute('src'));
             } else {
                 const fileObj = selectedFiles.find(f => f.localUrl === img.src);
                 if (fileObj) {
@@ -582,18 +584,17 @@ async function handleGallerySubmit(e) {
                     processedCount++;
                     showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
 
-                    return publicUrl;
+                    results.push(publicUrl);
+                } else {
+                    results.push(null);
                 }
-                return null;
             }
-        });
-
-        const results = await Promise.all(uploadPromises);
+        }
         const finalImages = results.filter(url => url !== null);
 
         // 3. בניית האובייקט החדש
         let thumbnailUrl = "";
-        const previewItemsArray = Array.from(previewItems);
+        // const previewItemsArray = Array.from(previewItems); // already defined above
         const thumbnailIndex = previewItemsArray.findIndex(item => item.classList.contains('is-thumbnail'));
         
         if (thumbnailIndex !== -1 && results[thumbnailIndex]) {
