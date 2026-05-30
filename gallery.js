@@ -1,5 +1,5 @@
 // ---- גלריה.js ----
-import { BASE_URL, allLoadedAlbums } from './data-loader.js';
+import { allLoadedAlbums } from './data-loader.js';
 import { cleanPath, focusLock } from './utils.js';
 import {
     gridOverlay, lightbox, downloadBtn, lightboxCloseBtn,
