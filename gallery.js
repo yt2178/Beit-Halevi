@@ -141,6 +141,10 @@ export function setupAlbumControls(albumData) {
     // 2. כפתור הורדת הכל (הודעה צפה ללא אישור מציק)
     if (albumDownloadBtn) {
         albumDownloadBtn.onclick = async () => {
+            // [תיקון קריטי] שמירת עותק מקומי של רשימת התמונות בתחילת התהליך
+            // מונע קריסה או הורדה של קובץ ZIP חלקי במקרה שהמשתמש סוגר את הגלריה תוך כדי ההכנה.
+            const imagesToDownload = [...currentAlbumImages];
+            
             showNotificationToast("🚀 <strong>ההורדה החלה!</strong> אנו מכינים את קובץ הארכיון עבורך, הקבצים יירדו למכשירך בעוד מספר שניות...");
 
             albumDownloadBtn.disabled = true;
@@ -164,9 +168,9 @@ export function setupAlbumControls(albumData) {
                 const folder = zip.folder(albumSlug);
                 let successCount = 0;
 
-                for (let i = 0; i < currentAlbumImages.length; i++) {
-                    const img = currentAlbumImages[i];
-                    albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${currentAlbumImages.length})`;
+                for (let i = 0; i < imagesToDownload.length; i++) {
+                    const img = imagesToDownload[i];
+                    albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${imagesToDownload.length})`;
                     try {
                         let downloadUrl = img.src;
                         
@@ -211,11 +215,11 @@ export function setupAlbumControls(albumData) {
                 }
             } catch (err) {
                 console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
-                alert("עקב הגדרות אבטחה של הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. נא לאשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.");
+                showNotificationToast("⚠️ <strong>הורדה ישירה:</strong> עקב הגדרות הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. אנא אשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.", 6000);
 
                 const batchSize = 5;
-                for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
-                    const batch = currentAlbumImages.slice(i, i + batchSize);
+                for (let i = 0; i < imagesToDownload.length; i += batchSize) {
+                    const batch = imagesToDownload.slice(i, i + batchSize);
                     let j = 0;
                     for (const img of batch) {
                         const link = document.createElement('a');
@@ -227,7 +231,7 @@ export function setupAlbumControls(albumData) {
                         document.body.removeChild(link);
                         j++;
                     }
-                    if (i + batchSize < currentAlbumImages.length) {
+                    if (i + batchSize < imagesToDownload.length) {
                         await new Promise(resolve => setTimeout(resolve, 800));
                     }
                 }
