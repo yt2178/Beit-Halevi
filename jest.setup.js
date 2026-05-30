@@ -1,4 +1,7 @@
 import { jest } from '@jest/globals';
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 global.IntersectionObserver = class IntersectionObserver {
     constructor() {}
