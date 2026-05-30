@@ -8,7 +8,7 @@ import {
     GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, googleLogin, logEvent,
-    GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification,
+    sendPushNotification,
     uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
 import { putWithShaRetry } from './admin-core.js';
