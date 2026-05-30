@@ -3,7 +3,7 @@ import {
     REPO_OWNER, REPO_NAME, TASKS_JSON_PATH,
     GITHUB_TOKEN,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
-    logEvent, putWithShaRetry
+    putWithShaRetry
 } from './admin-core.js';
 
 let allTasks = [];
