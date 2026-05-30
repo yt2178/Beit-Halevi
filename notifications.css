@@ -1,4 +1,4 @@
-﻿.notifications-section {
+.notifications-section {
     padding: 4rem 1.5rem;
     margin: 0 auto;
     max-width: 1200px;
@@ -138,6 +138,7 @@
     transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
