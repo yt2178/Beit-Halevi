@@ -38,15 +38,18 @@ async function compressImage(file, maxWidth = 1600, quality = 0.8) {
 
                 canvas.toBlob((blob) => {
                     if (blob) {
-                        const compressedFile = new File([blob], file.name, {
-                            type: 'image/jpeg',
+                        // המרת הסיומת ל-webp
+                        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                        const newName = `${baseName}.webp`;
+                        const compressedFile = new File([blob], newName, {
+                            type: 'image/webp',
                             lastModified: Date.now(),
                         });
                         resolve(compressedFile);
                     } else {
                         reject(new Error("Canvas toBlob failed"));
                     }
-                }, 'image/jpeg', quality);
+                }, 'image/webp', quality);
             };
             img.onerror = err => reject(err);
         };

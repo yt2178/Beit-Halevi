@@ -67,6 +67,46 @@ export function openGridOverlay(albumData) {
 }
 
 // [חדש] פונקציה להצגת דיאלוג בחירת העדפת הורדה
+// פונקציית עזר להצגת הודעת סטטוס מעוצבת צפה
+function showNotificationToast(message, duration = 4500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10005; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 420px;';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: toastSlideUp 0.3s ease-out; direction: rtl; text-align: center; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4;';
+    toast.innerHTML = message;
+    container.appendChild(toast);
+
+    if (!document.getElementById('toast-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-animation-style';
+        style.innerHTML = `
+            @keyframes toastSlideUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .toast-fade-out {
+                opacity: 0 !important;
+                transform: translateY(-20px) !important;
+                transition: all 0.4s ease-out !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    setTimeout(() => {
+        toast.classList.add('toast-fade-out');
+        setTimeout(() => {
+            toast.remove();
+            if (container.children.length === 0) container.remove();
+        }, 400);
+    }, duration);
+}
+
 // [חדש] לוגיקה לכפתורי שיתוף והורדה של כל האלבום
 export function setupAlbumControls(albumData) {
     const albumSlug = albumData.slug;
@@ -98,12 +138,10 @@ export function setupAlbumControls(albumData) {
         };
     }
 
-    // 2. כפתור הורדת הכל (עם אישור)
+    // 2. כפתור הורדת הכל (הודעה צפה ללא אישור מציק)
     if (albumDownloadBtn) {
         albumDownloadBtn.onclick = async () => {
-            if (!confirm(`האם אתה בטוח שברצונך להוריד ${currentAlbumImages.length} תמונות מהאלבום "${albumData.title}"?`)) {
-                return;
-            }
+            showNotificationToast("🚀 <strong>ההורדה החלה!</strong> אנו מכינים את קובץ הארכיון עבורך, הקבצים יירדו למכשירך בעוד מספר שניות...");
 
             albumDownloadBtn.disabled = true;
             albumDownloadBtn.textContent = 'מכין הורדה...';
