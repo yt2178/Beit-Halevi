@@ -3,12 +3,12 @@
 // ============================================================
 
 import {
-    REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH, SITE_CONFIG_PATH,
+    REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH,
     MESSAGES_SHEET_URL,
-    GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
+    GITHUB_TOKEN, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
-    initGoogleLogin, googleLogin, logEvent,
-    GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification,
+    initGoogleLogin, logEvent,
+    sendPushNotification,
     uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
 import { putWithShaRetry } from './admin-core.js';
@@ -191,7 +191,6 @@ function setDefaultNewsDate() {
 
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
-const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
 // [חדש] ניהול בחירה מרובה
 let selectedNewsSlugs = [];
