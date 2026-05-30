@@ -7,7 +7,7 @@ import {
     MESSAGES_SHEET_URL,
     GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
-    initGoogleLogin, googleLogin, logEvent,
+    initGoogleLogin, logEvent,
     GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification,
     uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
