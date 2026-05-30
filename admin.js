@@ -191,7 +191,6 @@ function setDefaultNewsDate() {
 
 export let editingNewsSlug = null;
 export let editingNewsSHA = null;
-const cancelNewsBtn = document.getElementById('cancel-news-edit');
 
 // [חדש] ניהול בחירה מרובה
 let selectedNewsSlugs = [];
