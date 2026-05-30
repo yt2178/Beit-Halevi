@@ -405,7 +405,9 @@ export async function logEvent(action, type = 'general') {
             branch: 'main'
         };
         await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 3);
-    } catch (err) { }
+    } catch (err) {
+        console.error('Failed to log event:', err);
+    }
 }
 
 // ============================================================
