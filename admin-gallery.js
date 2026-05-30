@@ -4,7 +4,7 @@ import {
     uploadFileToDrive, makeFilePublic,
     googleLogin,
     showStatus, hideStatus,
-    logEvent, putWithShaRetry, sendPushNotification
+    logEvent, putWithShaRetry
 } from './admin-core.js';
 
 let editingAlbumIndex = null; // לאחסן אם עורכים אלבום קיים
@@ -654,9 +654,9 @@ async function handleGallerySubmit(e) {
             
             // [חדש] התראה על הוספת/עדכון אלבום
             if (!isUpdate) {
-                sendPushNotification(albumTitleInput.value, "אלבום תמונות חדש הועלה לגלריית הישיבה. מוזמנים לצפות!", false);
+                // Push notifications are now handled server-side via GitHub Actions.
             } else {
-                sendPushNotification(albumTitleInput.value, "אלבום תמונות עודכן בגלריית הישיבה. מוזמנים לצפות בעדכון!", true);
+                // Push notifications are now handled server-side via GitHub Actions.
             }
             
             resetGalleryForm();

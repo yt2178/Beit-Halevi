@@ -8,7 +8,7 @@ import {
     GITHUB_TOKEN, GITHUB_USERNAME, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, googleLogin, logEvent,
-    GOOGLE_CLIENT_ID, GOOGLE_SCOPES, sendPushNotification,
+    GOOGLE_CLIENT_ID, GOOGLE_SCOPES,
     uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
 import { putWithShaRetry } from './admin-core.js';
@@ -862,9 +862,9 @@ async function handleSaveNews(e) {
             logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
 
             if (!editingNewsSlug) {
-                sendPushNotification(title, "ידיעה חדשה התפרסמה באתר ישיבת בית הלוי! ככנסו לקרוא.", false);
+                // Push notifications are now handled server-side via GitHub Actions.
             } else {
-                sendPushNotification(title, "ידיעה עודכנה באתר ישיבת בית הלוי! ככנסו לקרוא את העדכון.", true);
+                // Push notifications are now handled server-side via GitHub Actions.
             }
 
             resetNewsForm();

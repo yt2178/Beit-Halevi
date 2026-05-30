@@ -71,18 +71,11 @@ export async function loadSiteConfig() {
             if (document.getElementById('site-onesignal-id')) {
                 document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
             }
-            if (document.getElementById('site-onesignal-rest')) {
-                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
-            }
 
             const onesignalBtn = document.getElementById('save-onesignal-btn');
             if(onesignalBtn) onesignalBtn.onclick = async (e) => {
                 e.preventDefault();
                 const appId = document.getElementById('site-onesignal-id').value.trim();
-                const restKey = document.getElementById('site-onesignal-rest').value.trim();
-
-                if (restKey) localStorage.setItem('onesignal_rest_key', restKey);
-                else localStorage.removeItem('onesignal_rest_key');
 
                 currentSiteConfig.oneSignalAppId = appId;
 
@@ -228,15 +221,6 @@ export async function saveAllSiteSettings() {
     if (donationLinkEl) {
         currentSiteConfig.texts.donation_link = donationLinkEl.value.trim();
     }
-
-    // שמירה מקומית בלבד של ה-REST API KEY
-    const restKey = document.getElementById('site-onesignal-rest')?.value.trim();
-    if (restKey) {
-        localStorage.setItem('onesignal_rest_key', restKey);
-    } else {
-        localStorage.removeItem('onesignal_rest_key');
-    }
-
     const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
 
     try {
