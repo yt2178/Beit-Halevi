@@ -1,5 +1,5 @@
 // main.js
-import { applySiteConfig, loadNews, loadGallery, allLoadedNews, allLoadedAlbums, BASE_URL } from './data-loader.js';
+import { applySiteConfig, loadNews, loadGallery, BASE_URL } from './data-loader.js';
 import { checkUrlHash, initGalleryEvents } from './gallery.js';
 import { checkNewsHash, initNewsEvents } from './news.js';
 import { getHebrewYear } from './utils.js';
