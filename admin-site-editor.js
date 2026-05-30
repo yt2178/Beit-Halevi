@@ -94,7 +94,9 @@ export async function loadSiteConfig() {
             renderSitePreview(currentSiteConfig);
             return config;
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('Error loading site config:', error);
+    }
 
     // ערכי ברירת מחדל
     currentSiteConfig = {
