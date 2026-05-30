@@ -308,21 +308,33 @@ if (hebrewYearDisplay) {
                     function updateSubscribeUI() {
                         const isSubscribed = OneSignal.User.PushSubscription.optedIn;
                         const subBtn = document.getElementById('subscribe-btn');
-                        const modalP = document.querySelector('#subscribe-modal p');
+                        const unsubBtn = document.getElementById('unsubscribe-btn');
+                        const modalP = document.getElementById('subscribe-modal-desc');
                         const fabBtn = document.getElementById('fab-subscribe-btn');
+                        const optNew = document.getElementById('sub-opt-new');
+                        const optUpdate = document.getElementById('sub-opt-update');
+
+                        // Set checkboxes based on saved preference or tags
+                        const subscribeNewVal = localStorage.getItem('subscribe_new') !== 'false';
+                        const subscribeUpdatesVal = localStorage.getItem('subscribe_updates') !== 'false';
+                        
+                        if (optNew) optNew.checked = subscribeNewVal;
+                        if (optUpdate) optUpdate.checked = subscribeUpdatesVal;
 
                         if (isSubscribed) {
                             if (subBtn) {
-                                subBtn.innerHTML = '<i class="fas fa-bell-slash"></i> בטל הרשמה';
-                                subBtn.style.backgroundColor = '#e74c3c'; // צבע אדום
+                                subBtn.innerHTML = '<i class="fas fa-save"></i> עדכן הגדרות';
+                                subBtn.style.backgroundColor = '#2ecc71'; // צבע ירוק
                             }
-                            if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! לחץ למטה אם ברצונך לבטל.";
-                            if (fabBtn) fabBtn.style.display = 'none'; // הסתר את הכפתור המעצבן
+                            if (unsubBtn) unsubBtn.style.display = 'block';
+                            if (modalP) modalP.textContent = "אתה רשום להתראות האתר! כאן תוכל לעדכן את תחומי העניין שלך או לבטל את ההרשמה לגמרי.";
+                            if (fabBtn) fabBtn.style.display = 'none'; // הסתר כפתור FAB
                         } else {
                             if (subBtn) {
                                 subBtn.innerHTML = '<i class="fas fa-bell"></i> הרשם עכשיו';
-                                subBtn.style.backgroundColor = ''; // חזור לצבע המקורי
+                                subBtn.style.backgroundColor = ''; // צבע מקורי
                             }
+                            if (unsubBtn) unsubBtn.style.display = 'none';
                             if (modalP) modalP.textContent = "קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.";
                             if (fabBtn) fabBtn.style.display = 'flex';
                         }
@@ -399,13 +411,31 @@ if (hebrewYearDisplay) {
             if (window.OneSignalDeferred) {
                 window.OneSignalDeferred.push(async function (OneSignal) {
                     const isSubscribed = OneSignal.User.PushSubscription.optedIn;
+                    const optNew = document.getElementById('sub-opt-new');
+                    const optUpdate = document.getElementById('sub-opt-update');
+                    
+                    const subscribeNew = optNew ? optNew.checked : true;
+                    const subscribeUpdates = optUpdate ? optUpdate.checked : true;
+                    
+                    localStorage.setItem('subscribe_new', subscribeNew ? 'true' : 'false');
+                    localStorage.setItem('subscribe_updates', subscribeUpdates ? 'true' : 'false');
                     
                     if (isSubscribed) {
-                        await OneSignal.User.PushSubscription.optOut();
-                        alert("ביטלת את הרשמתך להתראות בהצלחה.");
+                        // Update existing subscription tags
+                        OneSignal.User.addTags({
+                            subscribe_new: subscribeNew ? "true" : "false",
+                            subscribe_updates: subscribeUpdates ? "true" : "false"
+                        });
+                        alert("הגדרות ההתראות עודכנו בהצלחה!");
                     } else {
+                        // Subscribe first
                         await OneSignal.User.PushSubscription.optIn();
+                        OneSignal.User.addTags({
+                            subscribe_new: subscribeNew ? "true" : "false",
+                            subscribe_updates: subscribeUpdates ? "true" : "false"
+                        });
                     }
+                    
                     if (subscribeModal) {
                         subscribeModal.classList.remove('active');
                         document.body.classList.remove('no-scroll');
@@ -416,6 +446,23 @@ if (hebrewYearDisplay) {
 
             // מערכת ההתראות לא נטענה
             alert("מערכת ההתראות אינה פעילה כרגע.");
+        });
+    }
+
+    const unsubscribeBtn = document.getElementById('unsubscribe-btn');
+    if (unsubscribeBtn) {
+        unsubscribeBtn.addEventListener('click', async () => {
+            if (window.OneSignalDeferred) {
+                window.OneSignalDeferred.push(async function (OneSignal) {
+                    await OneSignal.User.PushSubscription.optOut();
+                    alert("ביטלת את הרשמתך להתראות בהצלחה.");
+                    if (subscribeModal) {
+                        subscribeModal.classList.remove('active');
+                        document.body.classList.remove('no-scroll');
+                    }
+                });
+                return;
+            }
         });
     }
 

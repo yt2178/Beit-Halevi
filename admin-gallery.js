@@ -589,11 +589,14 @@ async function handleGallerySubmit(e) {
         const finalImages = results.filter(url => url !== null);
 
         // 3. בניית האובייקט החדש
-        // [תיקון] ודא שה-thumbnail תמיד מוגדר - אם לא נבחר, השתמש ב-finalImages[0]
-        let thumbnailUrl = albumThumbnailUrlInput?.value || finalImages[0] || "";
-
-        if (!thumbnailUrl && finalImages.length > 0) {
-            thumbnailUrl = finalImages[0];
+        let thumbnailUrl = "";
+        const previewItemsArray = Array.from(previewItems);
+        const thumbnailIndex = previewItemsArray.findIndex(item => item.classList.contains('is-thumbnail'));
+        
+        if (thumbnailIndex !== -1 && results[thumbnailIndex]) {
+            thumbnailUrl = results[thumbnailIndex];
+        } else {
+            thumbnailUrl = finalImages[0] || "";
         }
 
         if (!thumbnailUrl && finalImages.length === 0) {
@@ -646,9 +649,11 @@ async function handleGallerySubmit(e) {
             setTimeout(hideStatus, 1500);
             logEvent(`${isUpdate ? 'עדכן' : 'הוסיף'} אלבום: ${albumTitleInput.value}`, 'gallery');
             
-            // [חדש] התראה על הוספת אלבום חדש לגמרי
+            // [חדש] התראה על הוספת/עדכון אלבום
             if (!isUpdate) {
-                sendPushNotification(albumTitleInput.value, "אלבום תמונות חדש הועלה לגלריית הישיבה. מוזמנים לצפות!");
+                sendPushNotification(albumTitleInput.value, "אלבום תמונות חדש הועלה לגלריית הישיבה. מוזמנים לצפות!", false);
+            } else {
+                sendPushNotification(albumTitleInput.value, "אלבום תמונות עודכן בגלריית הישיבה. מוזמנים לצפות בעדכון!", true);
             }
             
             resetGalleryForm();

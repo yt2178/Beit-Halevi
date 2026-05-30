@@ -411,7 +411,7 @@ export async function logEvent(action, type = 'general') {
 // ============================================================
 // 6. Push Notifications
 // ============================================================
-export async function sendPushNotification(title, message) {
+export async function sendPushNotification(title, message, isUpdate = false) {
     let restKey = localStorage.getItem('onesignal_rest_key');
     let appIdStr = null;
     
@@ -450,11 +450,20 @@ export async function sendPushNotification(title, message) {
     try {
         const payload = {
             app_id: appIdStr,
-            included_segments: ["Subscribed Users"],
             headings: { "en": title, "he": title },
             contents: { "en": message, "he": message },
             url: "https://yt2178.github.io/Beit-Halevi/"
         };
+
+        if (isUpdate) {
+            // Target users who subscribed to updates (subscribe_updates == "true")
+            payload.filters = [
+                { "field": "tag", "key": "subscribe_updates", "relation": "=", "value": "true" }
+            ];
+        } else {
+            // Target all subscribed users
+            payload.included_segments = ["Subscribed Users"];
+        }
 
         const response = await window.fetch("https://onesignal.com/api/v1/notifications", {
             method: "POST",

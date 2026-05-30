@@ -179,10 +179,27 @@
                     <i class="fas fa-bell"></i>
                 </div>
                 <h2>הישאר מעודכן!</h2>
-                <p>קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.</p>
-                <button id="subscribe-btn" class="notification-button">
-                    <i class="fas fa-bell"></i> הרשם עכשיו
-                </button>
+                <p id="subscribe-modal-desc">קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.</p>
+                
+                <div class="subscribe-options">
+                    <label class="subscribe-option-label">
+                        <input type="checkbox" id="sub-opt-new" checked>
+                        <span>פוסטים ואלבומים חדשים</span>
+                    </label>
+                    <label class="subscribe-option-label">
+                        <input type="checkbox" id="sub-opt-update" checked>
+                        <span>שינויים ועדכונים בקיים</span>
+                    </label>
+                </div>
+
+                <div class="subscribe-actions" style="display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%;">
+                    <button id="subscribe-btn" class="notification-button" style="width: 100%; margin: 0;">
+                        <i class="fas fa-bell"></i> הרשם עכשיו
+                    </button>
+                    <button id="unsubscribe-btn" class="premium-btn small danger" style="display: none; background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.9rem; text-decoration: underline; min-height: auto; min-width: auto; padding: 0;">
+                        בטל הרשמה להתראות
+                    </button>
+                </div>
             </div>
         </div>
     </main>
