@@ -43,7 +43,7 @@ function applyTheme(theme) {
         const mobileBtn = document.getElementById('theme-toggle-btn-mobile');
         if (mobileBtn) mobileBtn.textContent = theme === 'dark' ? '☀️ מצב בהיר' : '🌙 מצב כהה';
         localStorage.setItem(THEME_KEY, theme);
-    } catch (e) {
+    } catch {
         // ignore localStorage issues
     }
 }
