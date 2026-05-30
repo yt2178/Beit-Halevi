@@ -345,6 +345,7 @@ if (hebrewYearDisplay) {
                     
                     // בדיקה ראשונית כשהדף עולה
                     updateSubscribeUI();
+                    window.oneSignalInitialized = true;
                 });
 
                 // טעינת הסקריפט של OneSignal
@@ -356,6 +357,30 @@ if (hebrewYearDisplay) {
             }
         }
     } catch (e) { console.warn("Failed to load site configuration:", e); }
+
+    // פונקציית עזר להצגת הודעת סטטוס מעוצבת צפה
+    function showToast(message) {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.cssText = 'position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10005; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 420px;';
+            document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: toastSlideUp 0.3s ease-out; direction: rtl; text-align: center; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4;';
+        toast.innerHTML = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
+            toast.style.transition = 'all 0.4s ease-out';
+            setTimeout(() => {
+                toast.remove();
+                if (container.children.length === 0) container.remove();
+            }, 400);
+        }, 4500);
+    }
 
     // [חדש] לוגיקת הרשמה להתראות (FAB ומודאל)
     const fabSubscribeBtn = document.getElementById('fab-subscribe-btn');
@@ -407,61 +432,80 @@ if (hebrewYearDisplay) {
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
-            // אם OneSignal נטען
-            if (window.OneSignalDeferred) {
-                window.OneSignalDeferred.push(async function (OneSignal) {
+            const optNew = document.getElementById('sub-opt-new');
+            const optUpdate = document.getElementById('sub-opt-update');
+            const subscribeNew = optNew ? optNew.checked : true;
+            const subscribeUpdates = optUpdate ? optUpdate.checked : true;
+            
+            localStorage.setItem('subscribe_new', subscribeNew ? 'true' : 'false');
+            localStorage.setItem('subscribe_updates', subscribeUpdates ? 'true' : 'false');
+
+            // [חדש] פולבק להתראות דפדפן מקומיות אם OneSignal נחסם או נכשל באתחול
+            if (window.oneSignalInitialized && typeof OneSignal !== 'undefined') {
+                try {
                     const isSubscribed = OneSignal.User.PushSubscription.optedIn;
-                    const optNew = document.getElementById('sub-opt-new');
-                    const optUpdate = document.getElementById('sub-opt-update');
-                    
-                    const subscribeNew = optNew ? optNew.checked : true;
-                    const subscribeUpdates = optUpdate ? optUpdate.checked : true;
-                    
-                    localStorage.setItem('subscribe_new', subscribeNew ? 'true' : 'false');
-                    localStorage.setItem('subscribe_updates', subscribeUpdates ? 'true' : 'false');
-                    
                     if (isSubscribed) {
-                        // Update existing subscription tags
                         OneSignal.User.addTags({
                             subscribe_new: subscribeNew ? "true" : "false",
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
-                        alert("הגדרות ההתראות עודכנו בהצלחה!");
+                        showToast("🔔 הגדרות ההתראות עודכנו בהצלחה!");
                     } else {
-                        // Subscribe first
                         await OneSignal.User.PushSubscription.optIn();
                         OneSignal.User.addTags({
                             subscribe_new: subscribeNew ? "true" : "false",
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
+                        showToast("🚀 נרשמת בהצלחה להתראות האתר!");
                     }
-                    
-                    if (subscribeModal) {
-                        subscribeModal.classList.remove('active');
-                        document.body.classList.remove('no-scroll');
-                    }
-                });
-                return;
+                } catch (err) {
+                    console.warn("OneSignal integration error, falling back to native:", err);
+                    await triggerNativeNotificationFallback();
+                }
+            } else {
+                await triggerNativeNotificationFallback();
             }
 
-            // מערכת ההתראות לא נטענה
-            alert("מערכת ההתראות אינה פעילה כרגע.");
+            if (subscribeModal) {
+                subscribeModal.classList.remove('active');
+                document.body.classList.remove('no-scroll');
+            }
         });
+    }
+
+    async function triggerNativeNotificationFallback() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                showToast("🔔 <strong>ההרשמה הצליחה!</strong> הגדרות העדכונים שלך נשמרו בהצלחה במכשיר זה.");
+            } else if (permission === 'denied') {
+                showToast("⚠️ <strong>ההרשמה נחסמה:</strong> יש לאשר קבלת התראות בהגדרות הדפדפן שלך.");
+            } else {
+                showToast("⚠️ הרשמת ההתראות לא אושרה.");
+            }
+        } else {
+            showToast("❌ מערכת ההתראות אינה נתמכת בדפדפן זה.");
+        }
     }
 
     const unsubscribeBtn = document.getElementById('unsubscribe-btn');
     if (unsubscribeBtn) {
         unsubscribeBtn.addEventListener('click', async () => {
-            if (window.OneSignalDeferred) {
-                window.OneSignalDeferred.push(async function (OneSignal) {
+            localStorage.setItem('subscribe_new', 'false');
+            localStorage.setItem('subscribe_updates', 'false');
+
+            if (window.oneSignalInitialized && typeof OneSignal !== 'undefined') {
+                try {
                     await OneSignal.User.PushSubscription.optOut();
-                    alert("ביטלת את הרשמתך להתראות בהצלחה.");
-                    if (subscribeModal) {
-                        subscribeModal.classList.remove('active');
-                        document.body.classList.remove('no-scroll');
-                    }
-                });
-                return;
+                } catch (e) {
+                    console.warn("OneSignal optOut error:", e);
+                }
+            }
+            showToast("ביטלת את הרשמתך להתראות בהצלחה.");
+            
+            if (subscribeModal) {
+                subscribeModal.classList.remove('active');
+                document.body.classList.remove('no-scroll');
             }
         });
     }
