@@ -66,6 +66,134 @@ export function openGridOverlay(albumData) {
     document.body.classList.add('no-scroll');
 }
 
+// [חדש] פונקציה להצגת דיאלוג בחירת העדפת הורדה
+function showDownloadPreferenceModal(albumData) {
+    return new Promise((resolve) => {
+        // יצירת שכבת מגן למודאל
+        const overlay = document.createElement('div');
+        overlay.className = 'subscribe-modal active'; // שימוש בעיצוב הקיים
+        overlay.style.zIndex = '10002';
+        
+        const content = document.createElement('div');
+        content.className = 'subscribe-modal-content';
+        content.style.maxWidth = '450px';
+        
+        const closeSpan = document.createElement('span');
+        closeSpan.className = 'subscribe-close';
+        closeSpan.innerHTML = '&times;';
+        closeSpan.onclick = () => {
+            overlay.remove();
+            resolve(null);
+        };
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'subscribe-icon';
+        iconDiv.innerHTML = '<i class="fas fa-download"></i>';
+        
+        const h2 = document.createElement('h2');
+        h2.textContent = 'הורדת כל התמונות';
+        h2.style.marginBottom = '15px';
+        
+        const p = document.createElement('p');
+        p.textContent = `בחר את הדרך המועדפת עליך להורדת ${currentAlbumImages.length} תמונות מהאלבום "${albumData.title}":`;
+        p.style.marginBottom = '25px';
+        p.style.color = 'var(--text-color)';
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.display = 'flex';
+        actionsDiv.style.flexDirection = 'column';
+        actionsDiv.style.gap = '12px';
+        actionsDiv.style.width = '100%';
+        
+        // אפשרות 1: ZIP (מומלץ)
+        const zipBtn = document.createElement('button');
+        zipBtn.className = 'notification-button';
+        zipBtn.style.width = '100%';
+        zipBtn.style.margin = '0';
+        zipBtn.style.display = 'flex';
+        zipBtn.style.alignItems = 'center';
+        zipBtn.style.justifyContent = 'center';
+        zipBtn.style.gap = '8px';
+        zipBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורדה כקובץ ZIP יחיד (מומלץ)';
+        zipBtn.onclick = () => {
+            overlay.remove();
+            resolve('zip');
+        };
+        
+        // אפשרות 2: שמירה ישירה לתיקייה (Google Directory Picker)
+        const dirBtn = document.createElement('button');
+        dirBtn.className = 'notification-button';
+        dirBtn.style.width = '100%';
+        dirBtn.style.margin = '0';
+        dirBtn.style.backgroundColor = '#3498db';
+        dirBtn.style.display = 'flex';
+        dirBtn.style.alignItems = 'center';
+        dirBtn.style.justifyContent = 'center';
+        dirBtn.style.gap = '8px';
+        dirBtn.innerHTML = '<i class="fas fa-folder-open"></i> שמירה ישירות לתיקייה במחשב';
+        
+        // מציג שמירה לתיקייה רק בדפדפנים תומכים (כרום, אדג') ולא באייפון/ספארי
+        if (!window.showDirectoryPicker) {
+            dirBtn.style.display = 'none';
+        }
+        
+        dirBtn.onclick = () => {
+            overlay.remove();
+            resolve('dir');
+        };
+        
+        // אפשרות 3: פולבק קבצים בודדים
+        const fallbackBtn = document.createElement('button');
+        fallbackBtn.className = 'premium-btn small secondary';
+        fallbackBtn.style.width = '100%';
+        fallbackBtn.style.margin = '0';
+        fallbackBtn.style.display = 'flex';
+        fallbackBtn.style.alignItems = 'center';
+        fallbackBtn.style.justifyContent = 'center';
+        fallbackBtn.style.gap = '8px';
+        fallbackBtn.innerHTML = '<i class="fas fa-copy"></i> הורדת קבצים בודדים בזה אחר זה';
+        fallbackBtn.onclick = () => {
+            overlay.remove();
+            resolve('sequential');
+        };
+        
+        actionsDiv.appendChild(zipBtn);
+        if (window.showDirectoryPicker) {
+            actionsDiv.appendChild(dirBtn);
+        }
+        actionsDiv.appendChild(fallbackBtn);
+        
+        content.appendChild(closeSpan);
+        content.appendChild(iconDiv);
+        content.appendChild(h2);
+        content.appendChild(p);
+        content.appendChild(actionsDiv);
+        overlay.appendChild(content);
+        document.body.appendChild(overlay);
+    });
+}
+
+// פונקציית עזר להורדה הדרגתית של קבצים בודדים
+async function runSequentialDownload(albumSlug) {
+    const batchSize = 5;
+    for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
+        const batch = currentAlbumImages.slice(i, i + batchSize);
+        let j = 0;
+        for (const img of batch) {
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = `${albumSlug}-${i + j + 1}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            j++;
+        }
+        if (i + batchSize < currentAlbumImages.length) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+    }
+}
+
 // [חדש] לוגיקה לכפתורי שיתוף והורדה של כל האלבום
 export function setupAlbumControls(albumData) {
     const albumSlug = albumData.slug;
@@ -84,14 +212,14 @@ export function setupAlbumControls(albumData) {
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-} catch {
+                } catch {
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-} catch {
+                } catch {
                 }
             }
         };
@@ -100,92 +228,114 @@ export function setupAlbumControls(albumData) {
     // 2. כפתור הורדת הכל (עם אישור)
     if (albumDownloadBtn) {
         albumDownloadBtn.onclick = async () => {
-            if (!confirm(`האם אתה בטוח שברצונך להוריד ${currentAlbumImages.length} תמונות מהאלבום "${albumData.title}"?`)) {
-                return;
-            }
+            const choice = await showDownloadPreferenceModal(albumData);
+            if (!choice) return; // המשתמש ביטל
 
             albumDownloadBtn.disabled = true;
-            albumDownloadBtn.textContent = 'מכין הורדה...';
 
-            try {
-                // 1. טעינת ספריית JSZip באופן דינמי
-                if (typeof JSZip === 'undefined') {
-                    albumDownloadBtn.textContent = 'טוען מנהל כיווץ...';
-                    await new Promise((resolve, reject) => {
-                        const script = document.createElement('script');
-                        script.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
-                        script.onload = resolve;
-                        script.onerror = () => reject(new Error("שגיאה בטעינת ספריית הכיווץ (JSZip)"));
-                        document.head.appendChild(script);
-                    });
-                }
-
-                // 2. הורדת התמונות ברקע ויצירת קובץ ה-ZIP
-                const zip = new JSZip();
-                const folder = zip.folder(albumSlug);
-                let successCount = 0;
-
-                for (let i = 0; i < currentAlbumImages.length; i++) {
-                    const img = currentAlbumImages[i];
-                    albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${currentAlbumImages.length})`;
-                    try {
-                        const res = await fetch(img.src);
-                        if (!res.ok) throw new Error("CORS or HTTP Error");
-                        const blob = await res.blob();
-                        
-                        // גילוי סיומת התמונה
-                        let extension = 'jpg';
-                        if (img.src.includes('png')) extension = 'png';
-                        else if (img.src.includes('gif')) extension = 'gif';
-                        else if (img.src.includes('webp')) extension = 'webp';
-
-                        const filename = `${albumSlug}-${i + 1}.${extension}`;
-                        folder.file(filename, blob);
-                        successCount++;
-                    } catch (err) {
-                        console.warn(`Failed to fetch image for ZIP: ${img.src}`, err);
+            if (choice === 'zip') {
+                albumDownloadBtn.textContent = 'מכין הורדה...';
+                try {
+                    // טעינת ספריית JSZip באופן דינמי
+                    if (typeof JSZip === 'undefined') {
+                        albumDownloadBtn.textContent = 'טוען מנהל כיווץ...';
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            script.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+                            script.onload = resolve;
+                            script.onerror = () => reject(new Error("שגיאה בטעינת ספריית הכיווץ (JSZip)"));
+                            document.head.appendChild(script);
+                        });
                     }
-                }
 
-                // 3. יצירת והורדת קובץ ה-ZIP
-                if (successCount > 0) {
-                    albumDownloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מייצר קובץ ZIP...';
-                    const content = await zip.generateAsync({ type: "blob" });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(content);
-                    link.download = `${albumSlug}.zip`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href);
-                } else {
-                    throw new Error("CORS_BLOCK");
-                }
-            } catch (err) {
-                console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
-                alert("עקב הגדרות אבטחה של הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. נא לאשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.");
+                    // הורדת התמונות ברקע ויצירת קובץ ה-ZIP
+                    const zip = new JSZip();
+                    const folder = zip.folder(albumSlug);
+                    let successCount = 0;
 
-                const batchSize = 5;
-                for (let i = 0; i < currentAlbumImages.length; i += batchSize) {
-                    const batch = currentAlbumImages.slice(i, i + batchSize);
-                    let j = 0;
-                    for (const img of batch) {
+                    for (let i = 0; i < currentAlbumImages.length; i++) {
+                        const img = currentAlbumImages[i];
+                        albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${currentAlbumImages.length})`;
+                        try {
+                            const res = await fetch(img.src);
+                            if (!res.ok) throw new Error("CORS or HTTP Error");
+                            const blob = await res.blob();
+                            
+                            let extension = 'jpg';
+                            if (img.src.includes('png')) extension = 'png';
+                            else if (img.src.includes('gif')) extension = 'gif';
+                            else if (img.src.includes('webp')) extension = 'webp';
+
+                            const filename = `${albumSlug}-${i + 1}.${extension}`;
+                            folder.file(filename, blob);
+                            successCount++;
+                        } catch (err) {
+                            console.warn(`Failed to fetch image for ZIP: ${img.src}`, err);
+                        }
+                    }
+
+                    // הורדת ה-ZIP שנוצר
+                    if (successCount > 0) {
+                        albumDownloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> מייצר קובץ ZIP...';
+                        const content = await zip.generateAsync({ type: "blob" });
                         const link = document.createElement('a');
-                        link.href = img.src;
-                        link.download = `${albumSlug}-${i + j + 1}.jpg`;
+                        link.href = URL.createObjectURL(content);
+                        link.download = `${albumSlug}.zip`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                        j++;
+                        URL.revokeObjectURL(link.href);
+                    } else {
+                        throw new Error("CORS_BLOCK");
                     }
-                    if (i + batchSize < currentAlbumImages.length) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
+                } catch (err) {
+                    console.warn("ZIP creation failed, falling back to sequential", err);
+                    alert("שגיאה ביצירת קובץ ה-ZIP. נעבור כעת להורדה בודדת של הקבצים.");
+                    await runSequentialDownload(albumSlug);
+                }
+            } else if (choice === 'dir') {
+                try {
+                    albumDownloadBtn.textContent = 'בוחר תיקייה...';
+                    const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                    
+                    let successCount = 0;
+                    for (let i = 0; i < currentAlbumImages.length; i++) {
+                        const img = currentAlbumImages[i];
+                        albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> שומר (${i + 1}/${currentAlbumImages.length})`;
+                        
+                        try {
+                            const res = await fetch(img.src);
+                            if (!res.ok) throw new Error("CORS or HTTP Error");
+                            const blob = await res.blob();
+                            
+                            let extension = 'jpg';
+                            if (img.src.includes('png')) extension = 'png';
+                            else if (img.src.includes('gif')) extension = 'gif';
+                            else if (img.src.includes('webp')) extension = 'webp';
+
+                            const filename = `${albumSlug}-${i + 1}.${extension}`;
+                            const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(blob);
+                            await writable.close();
+                            successCount++;
+                        } catch (err) {
+                            console.warn(`Failed to write file to directory: ${img.src}`, err);
+                        }
+                    }
+                    alert(`הורדת התמונות ישירות לתיקייה הושלמה בהצלחה! (נשמרו ${successCount} מתוך ${currentAlbumImages.length} תמונות)`);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error("Directory download failed:", err);
+                        alert("שגיאה בשמירה לתיקייה. נא לוודא שאישרת הרשאות כתיבה לתיקייה שנבחרה.");
                     }
                 }
-            } finally {
-                albumDownloadBtn.disabled = false;
-                albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
+            } else if (choice === 'sequential') {
+                await runSequentialDownload(albumSlug);
             }
+
+            albumDownloadBtn.disabled = false;
+            albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
         };
     }
 }
