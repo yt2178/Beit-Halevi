@@ -55,7 +55,9 @@ export async function loadAndRenderTasks() {
                 } else {
                     localStorage.removeItem(LOCAL_TASKS_KEY);
                 }
-            } catch(e) {}
+            } catch (e) {
+                console.error("Error parsing local tasks:", e);
+            }
         }
         
         renderTasks();
