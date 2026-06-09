@@ -459,7 +459,6 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 async function handleGallerySubmit(e) {
     e.preventDefault();
 
-    // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
     const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
     const albumImages = albumImagesInput.files;
