@@ -723,17 +723,17 @@ function parseCSV(text) {
     const lines = text.split('\n');
     return lines.map(line => {
         const result = [];
-        let cur = '';
+        let cur = [];
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
             const char = line.charAt(i);
             if (char === '"') inQuotes = !inQuotes;
             else if (char === ',' && !inQuotes) {
-                result.push(cur.trim());
-                cur = '';
-            } else cur += char;
+                result.push(cur.join('').trim());
+                cur = [];
+            } else cur.push(char);
         }
-        result.push(cur.trim());
+        result.push(cur.join('').trim());
         return result;
     });
 }
