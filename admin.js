@@ -17,14 +17,7 @@ import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js
 import { loadAndRenderTasks } from './admin-tasks.js';
 import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
-const ADMIN_USER_CODES = {
-    "12589": "ידידיה תפילין",
-    "112233": "הרב יאיר חלבי",
-    "11223344": "הרב יוסף חיים סנו"
-};
-
 const GITHUB_TOKEN_KEY = 'admin_github_token';
-const USER_CODE_KEY = 'admin_user_code';
 const GITHUB_USERNAME_KEY = 'admin_github_username';
 
 // Theme & Drafts keys
@@ -277,7 +270,6 @@ function showAdminPanel() {
 function logout() {
     if (confirm('האם אתה בטוח שברצונך לצאת?')) {
         localStorage.removeItem(GITHUB_TOKEN_KEY);
-        localStorage.removeItem(USER_CODE_KEY);
         localStorage.removeItem(GITHUB_USERNAME_KEY);
         updateGithubAuth(null, null);
         showToast('התנתקת בהצלחה', 1500, 'success');
@@ -1008,37 +1000,31 @@ document.addEventListener('click', (e) => {
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const userCodeInput = document.getElementById('admin-usercode').value;
         const tokenInput = document.getElementById('github-token').value.trim();
 
         showStatus('מבצע אימות מול GitHub...', 40);
 
-        if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-            if (tokenInput) {
-                const verifiedLogin = await verifyGitHubToken(tokenInput);
+        if (tokenInput) {
+            const verifiedLogin = await verifyGitHubToken(tokenInput);
 
-                if (verifiedLogin) {
-                    const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
-                    localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
-                    updateGithubAuth(tokenInput, adminDisplayName);
+            if (verifiedLogin) {
+                const adminDisplayName = verifiedLogin;
+                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
+                updateGithubAuth(tokenInput, adminDisplayName);
 
-                    localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
-                    localStorage.setItem(USER_CODE_KEY, userCodeInput);
+                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
 
-                    showStatus('התחברות הצליחה! ברוך הבא.', 100);
-                    logEvent('התחבר למערכת', 'login');
-                    setTimeout(() => {
-                        hideStatus();
-                        showAdminPanel();
-                    }, 1000);
-                } else {
-                    showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
-                }
+                showStatus('התחברות הצליחה! ברוך הבא.', 100);
+                logEvent('התחבר למערכת', 'login');
+                setTimeout(() => {
+                    hideStatus();
+                    showAdminPanel();
+                }, 1000);
             } else {
-                showStatus('נדרש Token כדי להמשיך.', null, true);
+                showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
             }
         } else {
-            showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
+            showStatus('נדרש Token כדי להמשיך.', null, true);
         }
     });
 }

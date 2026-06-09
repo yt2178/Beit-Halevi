@@ -23,7 +23,6 @@ export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
 
 // Storage Keys
 export const GITHUB_TOKEN_KEY = 'admin_github_token';
-export const USER_CODE_KEY = 'admin_user_code';
 export const GITHUB_USERNAME_KEY = 'admin_github_username';
 
 // ============================================================
@@ -367,7 +366,7 @@ export async function verifyGitHubToken(token) {
 
         if (response.ok) {
             const userData = await response.json();
-            return userData.login; // מחזיר את שם המשתמש האמיתי
+            return userData.name || userData.login; // מחזיר את שם המשתמש האמיתי
         } else {
             return null;
         }
