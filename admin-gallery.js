@@ -552,6 +552,7 @@ async function handleGallerySubmit(e) {
 
         showStatus(`מתחיל עיבוד והעלאה של ${totalItems} תמונות...`, 40);
 
+        const selectedFilesMap = new Map(selectedFiles.map(f => [f.localUrl, f]));
         const uploadPromises = Array.from(previewItems).map(async (item) => {
             const img = item.querySelector('img');
 
@@ -559,7 +560,7 @@ async function handleGallerySubmit(e) {
                 processedCount++;
                 return img.getAttribute('src');
             } else {
-                const fileObj = selectedFiles.find(f => f.localUrl === img.src);
+                const fileObj = selectedFilesMap.get(img.src);
                 if (fileObj) {
                     let fileToUpload = fileObj.file;
                     const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
