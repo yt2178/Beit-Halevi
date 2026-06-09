@@ -245,7 +245,7 @@ function getFinalSlug(title, date) {
 
 // הצגת/הסתרת פאנל הניהול
 function showAdminPanel() {
-    if (GITHUB_TOKEN && GITHUB_USERNAME) {
+    if (GITHUB_TOKEN) {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'block';
 
