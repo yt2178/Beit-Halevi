@@ -120,7 +120,6 @@ export function initGoogleLogin() {
                 console.log("GIS Global Callback Response:", tokenResponse);
             },
         });
-        console.log("Google Token Client initialized successfully.");
     } catch (err) {
         console.error("GIS Init Failed:", err);
     }
