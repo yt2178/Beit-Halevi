@@ -352,13 +352,17 @@ function createNewsItemElement(item) {
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-news-btn premium-btn small';
     editBtn.dataset.slug = slug;
-    editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+    const editIcon = document.createElement('i');
+    editIcon.className = 'fas fa-edit';
+    editBtn.replaceChildren(editIcon, document.createTextNode(' ערוך'));
     editBtn.addEventListener('click', () => handleEditNews(slug));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-news-btn premium-btn small danger';
     deleteBtn.dataset.slug = slug;
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fas fa-trash-alt';
+    deleteBtn.replaceChildren(deleteIcon, document.createTextNode(' מחק'));
     deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
 
     actionsDiv.appendChild(editBtn);
@@ -373,19 +377,26 @@ function renderNewsList(newsArray) {
     const container = document.getElementById('news-list-container');
     if (!container) return;
 
-    container.innerHTML = '';
+    container.replaceChildren();
 
     // [חדש] איפוס בחירה כשמרנדרים מחדש
     selectedNewsSlugs = [];
     updateBulkActionsUI();
 
     if (newsArray.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-newspaper"></i>
-                <p>אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!</p>
-            </div>
-        `;
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+
+        const emptyIcon = document.createElement('i');
+        emptyIcon.className = 'fas fa-newspaper';
+
+        const emptyText = document.createElement('p');
+        emptyText.textContent = 'אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!';
+
+        emptyStateDiv.appendChild(emptyIcon);
+        emptyStateDiv.appendChild(emptyText);
+
+        container.appendChild(emptyStateDiv);
         return;
     }
 
@@ -499,9 +510,14 @@ async function loadAndRenderHistory() {
         const fileData = await response.json();
         const history = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
 
-        container.innerHTML = '';
+        container.replaceChildren();
         if (history.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>אין פעולות מתועדות</p></div>';
+            const emptyStateDiv = document.createElement('div');
+            emptyStateDiv.className = 'empty-state';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין פעולות מתועדות';
+            emptyStateDiv.appendChild(emptyText);
+            container.appendChild(emptyStateDiv);
             return;
         }
 
@@ -537,8 +553,7 @@ async function loadAndRenderHistory() {
         const p = document.createElement('p');
         p.style.cssText = 'color:red; text-align:center;';
         p.textContent = 'שגיאה בטעינת היסטוריה: ' + err.message;
-        container.innerHTML = '';
-        container.appendChild(p);
+        container.replaceChildren(p);
     }
 }
 
@@ -596,7 +611,9 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-msg-btn premium-btn small danger';
     deleteBtn.dataset.id = messageId;
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    const deleteMsgIcon = document.createElement('i');
+    deleteMsgIcon.className = 'fas fa-trash-alt';
+    deleteBtn.replaceChildren(deleteMsgIcon, document.createTextNode(' מחק'));
     // Listener removed - handled by delegated listener
 
     const replyBtn = document.createElement('a');
@@ -607,7 +624,9 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
     replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
     replyBtn.style.textDecoration = 'none';
-    replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
+    const replyIcon = document.createElement('i');
+    replyIcon.className = 'fas fa-reply';
+    replyBtn.replaceChildren(replyIcon, document.createTextNode(' השב'));
     replyBtn.style.marginLeft = '8px';
 
     headerDiv.appendChild(infoDiv);
@@ -631,7 +650,15 @@ async function loadAndRenderMessages() {
     if (!container) return;
 
     if (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין")) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>טרם הוגדר קישור לגיליון ההודעות ב-admin.js</p></div>';
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+        const emptyIcon = document.createElement('i');
+        emptyIcon.className = 'fas fa-exclamation-triangle';
+        const emptyText = document.createElement('p');
+        emptyText.textContent = 'טרם הוגדר קישור לגיליון ההודעות ב-admin.js';
+        emptyStateDiv.appendChild(emptyIcon);
+        emptyStateDiv.appendChild(emptyText);
+        container.replaceChildren(emptyStateDiv);
         return;
     }
 
@@ -639,9 +666,17 @@ async function loadAndRenderMessages() {
         const deletedMessages = await fetchDeletedMessages();
         const rows = await fetchMessagesFromSheet();
 
-        container.innerHTML = '';
+        container.replaceChildren();
         if (rows.length <= 1) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+            const emptyStateDiv = document.createElement('div');
+            emptyStateDiv.className = 'empty-state';
+            const emptyIcon = document.createElement('i');
+            emptyIcon.className = 'fas fa-envelope-open';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין הודעות להצגה';
+            emptyStateDiv.appendChild(emptyIcon);
+            emptyStateDiv.appendChild(emptyText);
+            container.appendChild(emptyStateDiv);
             return;
         }
 
@@ -662,14 +697,21 @@ async function loadAndRenderMessages() {
         });
 
         if (visibleCount === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+            const emptyStateDiv = document.createElement('div');
+            emptyStateDiv.className = 'empty-state';
+            const emptyIcon = document.createElement('i');
+            emptyIcon.className = 'fas fa-envelope-open';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין הודעות להצגה';
+            emptyStateDiv.appendChild(emptyIcon);
+            emptyStateDiv.appendChild(emptyText);
+            container.appendChild(emptyStateDiv);
         }
     } catch (err) {
         const p = document.createElement('p');
         p.style.cssText = 'color:red; text-align:center;';
         p.textContent = 'שגיאה בטעינת הודעות: ' + err.message;
-        container.innerHTML = '';
-        container.appendChild(p);
+        container.replaceChildren(p);
     }
 }
 
