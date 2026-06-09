@@ -108,8 +108,6 @@ export function initGoogleLogin() {
     }
 
     const scopeStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9kcml2ZS5maWxl") + " email profile openid";
-    console.log("Initializing GIS with Client ID:", GOOGLE_CLIENT_ID);
-    console.log("Scope string being used for init:", scopeStr);
 
     try {
         window.tokenClient = google.accounts.oauth2.initTokenClient({
