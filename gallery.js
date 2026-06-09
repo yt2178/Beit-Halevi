@@ -78,7 +78,7 @@ function showNotificationToast(message, duration = 4500) {
     }
     const toast = document.createElement('div');
     toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: toastSlideUp 0.3s ease-out; direction: rtl; text-align: center; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4;';
-    toast.innerHTML = message;
+    toast.textContent = message;
     container.appendChild(toast);
 
     if (!document.getElementById('toast-animation-style')) {
