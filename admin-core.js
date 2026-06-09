@@ -143,8 +143,6 @@ export async function googleLogin() {
         }
 
         window.tokenClient.callback = (tokenResponse) => {
-            console.log("Received Token Response in googleLogin:", tokenResponse);
-
             if (tokenResponse.error) {
                 console.error("Google Auth Error:", tokenResponse);
 
