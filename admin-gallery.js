@@ -521,13 +521,13 @@ async function handleGallerySubmit(e) {
 
     const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
     if (albumImages.length === 0 && existingImagesCount === 0) {
-        alert('נא לבחור לפחות תמונה אחת לאלבום.');
+        showStatus('נא לבחור לפחות תמונה אחת לאלבום.', null, true);
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
     if (!albumThumbnailUrlInput?.value) {
-        alert('יש לבחור תמונת שער מתוך התמונות שהעלית, או להעלות חדשה, על ידי לחיצה על הכוכבית.');
+        showStatus('יש לבחור תמונת שער מתוך התמונות שהעלית, או להעלות חדשה, על ידי לחיצה על הכוכבית.', null, true);
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
