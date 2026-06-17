@@ -149,7 +149,6 @@ export async function googleLogin() {
                     reject(new Error(`שגיאת אימות גוגל: ${errorMsg}`));
                 }
             } else if (tokenResponse.access_token) {
-                console.log("Success! Access token obtained.");
                 cachedGoogleToken = tokenResponse.access_token;
                 tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3599) * 1000) - 60000;
                 resolve(tokenResponse.access_token);
