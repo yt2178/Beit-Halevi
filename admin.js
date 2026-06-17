@@ -280,6 +280,8 @@ function logout() {
         // Reset login form
         if (document.getElementById('login-form')) {
             document.getElementById('login-form').reset();
+            const customGroup = document.getElementById('custom-admin-name-group');
+            if (customGroup) customGroup.style.display = 'none';
         }
     }
 }
@@ -914,6 +916,47 @@ async function initAdmin() {
 
     showAdminPanel();
 
+    // אתחול בחירת שם מנהל
+    const adminNameSelect = document.getElementById('admin-name-select');
+    const customAdminNameGroup = document.getElementById('custom-admin-name-group');
+    const customAdminNameInput = document.getElementById('custom-admin-name');
+
+    if (adminNameSelect) {
+        adminNameSelect.addEventListener('change', () => {
+            if (adminNameSelect.value === 'custom') {
+                if (customAdminNameGroup) customAdminNameGroup.style.display = 'block';
+                if (customAdminNameInput) customAdminNameInput.required = true;
+            } else {
+                if (customAdminNameGroup) customAdminNameGroup.style.display = 'none';
+                if (customAdminNameInput) {
+                    customAdminNameInput.required = false;
+                    customAdminNameInput.value = '';
+                }
+            }
+        });
+
+        // שחזור שם מנהל שמור
+        const savedAdminName = localStorage.getItem('saved_admin_display_name') || localStorage.getItem('admin_github_username');
+        if (savedAdminName) {
+            let isPredefined = false;
+            for (let option of adminNameSelect.options) {
+                if (option.value === savedAdminName) {
+                    adminNameSelect.value = savedAdminName;
+                    isPredefined = true;
+                    break;
+                }
+            }
+            if (!isPredefined && savedAdminName.trim() !== '') {
+                adminNameSelect.value = 'custom';
+                if (customAdminNameGroup) customAdminNameGroup.style.display = 'block';
+                if (customAdminNameInput) {
+                    customAdminNameInput.value = savedAdminName;
+                    customAdminNameInput.required = true;
+                }
+            }
+        }
+    }
+
     // ניווט
     document.getElementById('nav-news-btn')?.addEventListener('click', () => navigateTo('news-section'));
     document.getElementById('nav-gallery-btn')?.addEventListener('click', () => navigateTo('gallery-section'));
@@ -1016,7 +1059,24 @@ document.addEventListener('click', (e) => {
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const adminNameSelect = document.getElementById('admin-name-select');
+        const customAdminNameInput = document.getElementById('custom-admin-name');
         const tokenInput = document.getElementById('github-token').value.trim();
+
+        let adminDisplayName = '';
+        if (adminNameSelect) {
+            if (adminNameSelect.value === 'custom') {
+                adminDisplayName = customAdminNameInput ? customAdminNameInput.value.trim() : '';
+            } else {
+                adminDisplayName = adminNameSelect.value;
+            }
+        }
+
+        if (!adminDisplayName) {
+            showStatus('אנא בחר שם מנהל או הקלד שם.', null, true);
+            return;
+        }
 
         showStatus('מבצע אימות מול GitHub...', 40);
 
@@ -1024,7 +1084,8 @@ if (loginForm) {
             const verifiedLogin = await verifyGitHubToken(tokenInput);
 
             if (verifiedLogin) {
-                const adminDisplayName = verifiedLogin;
+                // שמירת השם בצורה מקומית קבועה ושמירה עבור סשן ה-API
+                localStorage.setItem('saved_admin_display_name', adminDisplayName);
                 localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 updateGithubAuth(tokenInput, adminDisplayName);
 

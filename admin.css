@@ -1438,3 +1438,31 @@ body.dark-theme .news-item-admin {
     width: auto;
     padding: 5px 12px;
 }
+
+/* Styling for admin select dropdowns */
+select {
+    width: 100%;
+    padding: 14px 15px;
+    border-radius: 12px;
+    border: 2px solid #edf2f7;
+    background: #f8fafc;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+.input-group select {
+    padding-right: 45px;
+    padding-left: 45px;
+}
+select:focus {
+    border-color: var(--secondary-color);
+    background: white;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+body.dark-theme select {
+    background: #0b1220;
+    color: var(--text-main);
+    border-color: rgba(255, 255, 255, 0.03);
+}

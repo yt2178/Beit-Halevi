@@ -64,6 +64,20 @@
             <div class="login-card">
                 <h2>כניסת מנהלים</h2>
                 <form id="login-form" onsubmit="return false;">
+                    <div class="input-group">
+                        <i class="fas fa-user input-icon"></i>
+                        <select id="admin-name-select" required>
+                            <option value="" disabled selected>בחר שם מנהל...</option>
+                            <option value="ידידיה תפילין">ידידיה תפילין</option>
+                            <option value="הרב יאיר חלבי">הרב יאיר חלבי</option>
+                            <option value="הרב יוסף חיים סנו">הרב יוסף חיים סנו</option>
+                            <option value="custom">אחר (הקלד שם מותאם אישית)...</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="custom-admin-name-group" style="display: none;">
+                        <i class="fas fa-user-edit input-icon"></i>
+                        <input type="text" id="custom-admin-name" placeholder="הקלד שם מנהל">
+                    </div>
                     <!-- token (password) עבור password manager -->
                     <div class="input-group">
                         <i class="fas fa-key input-icon"></i>
