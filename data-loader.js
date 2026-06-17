@@ -1,5 +1,5 @@
 // data-loader.js
-import { cleanPath, parseFrontMatter, fetchStaticJson, focusLock } from './utils.js';
+import { cleanPath, fetchStaticJson } from './utils.js';
 import { openGridOverlay, checkUrlHash } from './gallery.js';
 import { openNewsModal, checkNewsHash } from './news.js';
 // ---- קבועים גלובליים ----
