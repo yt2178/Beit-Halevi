@@ -11,7 +11,7 @@ export const BASE_URL = window.location.origin + (window.location.hostname.endsW
 export let allLoadedNews = [];
 export let allLoadedAlbums = [];
 
-const fetchCache = new Map();
+export const fetchCache = new Map(); // Export for testing
 
 // ---- פונקציות טעינה ועיבוד ----
 async function fetchAndParse(path) {

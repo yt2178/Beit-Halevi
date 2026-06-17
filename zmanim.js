@@ -6,7 +6,13 @@ const DEFAULT_CITY = {
     geonameid: "293690"
 };
 
-let currentCity = JSON.parse(localStorage.getItem('zmanim_city')) || DEFAULT_CITY;
+let currentCity = DEFAULT_CITY;
+try {
+    if (typeof localStorage !== 'undefined') {
+        currentCity = JSON.parse(localStorage.getItem('zmanim_city')) || DEFAULT_CITY;
+    }
+} catch (e) { }
+
 
 const POPULAR_CITIES = [
     { name: "ראש העין", geonameid: "293690" },
