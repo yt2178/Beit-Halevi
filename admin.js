@@ -445,9 +445,10 @@ async function performDelete(slugs) {
         const fileData = await fileResponse.json();
 
         const transformFn = (latestContent) => {
+            const slugsSet = new Set(slugs);
             const updated = latestContent.filter(item => {
                 const itemSlug = generateSlug(item.data.title, item.data.date);
-                return !slugs.includes(itemSlug);
+                return !slugsSet.has(itemSlug);
             });
             return encodeToBase64(JSON.stringify(updated, null, 2));
         };
