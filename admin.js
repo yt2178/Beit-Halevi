@@ -631,7 +631,16 @@ async function loadAndRenderMessages() {
     if (!container) return;
 
     if (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין")) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>טרם הוגדר קישור לגיליון ההודעות ב-admin.js</p></div>';
+        container.innerHTML = '';
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-exclamation-triangle';
+        const p = document.createElement('p');
+        p.textContent = 'טרם הוגדר קישור לגיליון ההודעות ב-admin.js';
+        emptyState.appendChild(icon);
+        emptyState.appendChild(p);
+        container.appendChild(emptyState);
         return;
     }
 
