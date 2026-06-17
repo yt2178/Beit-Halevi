@@ -194,12 +194,19 @@ function renderGalleryList(galleryArray, sha) {
     galleryListContainer.innerHTML = '';
 
     if (galleryArray.length === 0) {
-        galleryListContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-images"></i>
-                <p>אין אלבומים להצגה. התחל ביצירת האלבום הראשון!</p>
-            </div>
-        `;
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-images';
+
+        const text = document.createElement('p');
+        text.textContent = 'אין אלבומים להצגה. התחל ביצירת האלבום הראשון!';
+
+        emptyStateDiv.appendChild(icon);
+        emptyStateDiv.appendChild(text);
+
+        galleryListContainer.appendChild(emptyStateDiv);
         return;
     }
 
