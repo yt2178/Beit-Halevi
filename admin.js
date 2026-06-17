@@ -609,7 +609,10 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-msg-btn premium-btn small danger';
     deleteBtn.dataset.id = messageId;
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fas fa-trash-alt';
+    deleteBtn.appendChild(deleteIcon);
+    deleteBtn.appendChild(document.createTextNode(' מחק'));
     // Listener removed - handled by delegated listener
 
     const replyBtn = document.createElement('a');
@@ -620,7 +623,10 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
     replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
     replyBtn.style.textDecoration = 'none';
-    replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
+    const replyIcon = document.createElement('i');
+    replyIcon.className = 'fas fa-reply';
+    replyBtn.appendChild(replyIcon);
+    replyBtn.appendChild(document.createTextNode(' השב'));
     replyBtn.style.marginLeft = '8px';
 
     headerDiv.appendChild(infoDiv);
