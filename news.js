@@ -1,5 +1,5 @@
 // news.js
-import { BASE_URL, allLoadedNews } from './data-loader.js';
+import { allLoadedNews } from './data-loader.js';
 import { focusLock } from './utils.js';
 import {
     newsModal, modalTitle, modalDate, modalBody,

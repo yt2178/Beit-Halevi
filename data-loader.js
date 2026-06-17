@@ -1,5 +1,5 @@
 // data-loader.js
-import { cleanPath, parseFrontMatter, fetchStaticJson, focusLock } from './utils.js';
+import { cleanPath, fetchStaticJson } from './utils.js';
 import { openGridOverlay, checkUrlHash } from './gallery.js';
 import { openNewsModal, checkNewsHash } from './news.js';
 // ---- קבועים גלובליים ----
@@ -11,7 +11,7 @@ export const BASE_URL = window.location.origin + (window.location.hostname.endsW
 export let allLoadedNews = [];
 export let allLoadedAlbums = [];
 
-const fetchCache = new Map();
+export const fetchCache = new Map(); // Export for testing
 
 // ---- פונקציות טעינה ועיבוד ----
 async function fetchAndParse(path) {
@@ -263,10 +263,19 @@ export async function loadNews(loadMore = false) {
         p.appendChild(strong);
 
         const bodyDiv = document.createElement('div');
-        const parsedHTML = DOMPurify.sanitize(marked.parse(item.body).slice(0, 150) + '... <span>קרא עוד</span>');
-        bodyDiv.innerHTML = '';
-        const fragment = document.createRange().createContextualFragment(parsedHTML);
-        bodyDiv.appendChild(fragment);
+
+        // [תיקון אבטחה] ניקוי מלא של ה-HTML ואז חילוץ טקסט נקי כדי למנוע XSS מקיטוע של תגיות
+        const cleanFullHTML = DOMPurify.sanitize(marked.parse(item.body));
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = cleanFullHTML;
+        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+        const truncatedText = plainText.slice(0, 150);
+        bodyDiv.textContent = truncatedText + '... ';
+
+        const readMoreSpan = document.createElement('span');
+        readMoreSpan.textContent = 'קרא עוד';
+        bodyDiv.appendChild(readMoreSpan);
 
         newsElement.appendChild(h3);
         newsElement.appendChild(p);

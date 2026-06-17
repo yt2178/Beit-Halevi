@@ -1,5 +1,5 @@
 // ---- גלריה.js ----
-import { BASE_URL, allLoadedAlbums } from './data-loader.js';
+import { allLoadedAlbums } from './data-loader.js';
 import { cleanPath, focusLock } from './utils.js';
 import {
     gridOverlay, lightbox, downloadBtn, lightboxCloseBtn,
@@ -78,7 +78,7 @@ function showNotificationToast(message, duration = 4500) {
     }
     const toast = document.createElement('div');
     toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: toastSlideUp 0.3s ease-out; direction: rtl; text-align: center; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4;';
-    toast.innerHTML = message;
+    toast.textContent = message;
     container.appendChild(toast);
 
     if (!document.getElementById('toast-animation-style')) {
@@ -125,14 +125,16 @@ export function setupAlbumControls(albumData) {
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-                } catch {
+                } catch (err) {
+                    console.error("Error sharing:", err);
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-                } catch {
+                } catch (err) {
+                    console.error("Error copying to clipboard:", err);
                 }
             }
         };
@@ -217,22 +219,18 @@ export function setupAlbumControls(albumData) {
                 console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
                 showNotificationToast("⚠️ <strong>הורדה ישירה:</strong> עקב הגדרות הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. אנא אשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.", 6000);
 
-                const batchSize = 5;
-                for (let i = 0; i < imagesToDownload.length; i += batchSize) {
-                    const batch = imagesToDownload.slice(i, i + batchSize);
-                    let j = 0;
-                    for (const img of batch) {
-                        const link = document.createElement('a');
-                        link.href = img.src;
-                        link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
-                        link.download = `${albumSlug}-${i + j + 1}.jpg`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        j++;
-                    }
-                    if (i + batchSize < imagesToDownload.length) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
+                for (let i = 0; i < imagesToDownload.length; i++) {
+                    const img = imagesToDownload[i];
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
+                    link.download = `${albumSlug}-${i + 1}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    if (i < imagesToDownload.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 250));
                     }
                 }
             } finally {
@@ -293,14 +291,16 @@ export function showLightboxImage(isFirstLoad = false) {
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
-} catch {
+                } catch (err) {
+                    console.error("Error sharing:", err);
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-} catch {
+                } catch (err) {
+                    console.error("Error copying to clipboard:", err);
                 }
             }
         };

@@ -131,7 +131,7 @@ export function initGalleryAdminEvents() {
 }
 
 /* ----------------- אלמנטים ----------------- */
-let galleryForm, albumTitleInput, albumThumbnailInput, albumImagesInput, galleryStatusMessage, galleryListContainer, albumPreview;
+let galleryForm, albumTitleInput, albumImagesInput, galleryStatusMessage, galleryListContainer, albumPreview;
 
 document.addEventListener('DOMContentLoaded', () => {
     galleryForm = document.getElementById('add-album-form');
@@ -194,12 +194,19 @@ function renderGalleryList(galleryArray, sha) {
     galleryListContainer.innerHTML = '';
 
     if (galleryArray.length === 0) {
-        galleryListContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-images"></i>
-                <p>אין אלבומים להצגה. התחל ביצירת האלבום הראשון!</p>
-            </div>
-        `;
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-images';
+
+        const text = document.createElement('p');
+        text.textContent = 'אין אלבומים להצגה. התחל ביצירת האלבום הראשון!';
+
+        emptyStateDiv.appendChild(icon);
+        emptyStateDiv.appendChild(text);
+
+        galleryListContainer.appendChild(emptyStateDiv);
         return;
     }
 
@@ -459,7 +466,6 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
 async function handleGallerySubmit(e) {
     e.preventDefault();
 
-    // ✅ Fix: הוסף validation של inputs
     const albumTitle = albumTitleInput.value.trim();
     const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
     const albumImages = albumImagesInput.files;
@@ -515,13 +521,13 @@ async function handleGallerySubmit(e) {
 
     const existingImagesCount = document.getElementById('albumPreview')?.children.length || 0;
     if (albumImages.length === 0 && existingImagesCount === 0) {
-        alert('נא לבחור לפחות תמונה אחת לאלבום.');
+        showStatus('נא לבחור לפחות תמונה אחת לאלבום.', null, true);
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
 
     if (!albumThumbnailUrlInput?.value) {
-        alert('יש לבחור תמונת שער מתוך התמונות שהעלית, או להעלות חדשה, על ידי לחיצה על הכוכבית.');
+        showStatus('יש לבחור תמונת שער מתוך התמונות שהעלית, או להעלות חדשה, על ידי לחיצה על הכוכבית.', null, true);
         if (submitBtn) submitBtn.disabled = false;
         return;
     }
@@ -552,12 +558,14 @@ async function handleGallerySubmit(e) {
 
         showStatus(`מתחיל עיבוד והעלאה של ${totalItems} תמונות...`, 40);
 
-        const uploadPromises = Array.from(previewItems).map(async (item) => {
+        const results = [];
+        const previewItemsArray = Array.from(previewItems);
+        for (const item of previewItemsArray) {
             const img = item.querySelector('img');
 
             if (item.dataset.existing === '1') {
                 processedCount++;
-                return img.getAttribute('src');
+                results.push(img.getAttribute('src'));
             } else {
                 const fileObj = selectedFiles.find(f => f.localUrl === img.src);
                 if (fileObj) {
@@ -582,18 +590,17 @@ async function handleGallerySubmit(e) {
                     processedCount++;
                     showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
 
-                    return publicUrl;
+                    results.push(publicUrl);
+                } else {
+                    results.push(null);
                 }
-                return null;
             }
-        });
-
-        const results = await Promise.all(uploadPromises);
+        }
         const finalImages = results.filter(url => url !== null);
 
         // 3. בניית האובייקט החדש
         let thumbnailUrl = "";
-        const previewItemsArray = Array.from(previewItems);
+        // const previewItemsArray = Array.from(previewItems); // already defined above
         const thumbnailIndex = previewItemsArray.findIndex(item => item.classList.contains('is-thumbnail'));
         
         if (thumbnailIndex !== -1 && results[thumbnailIndex]) {

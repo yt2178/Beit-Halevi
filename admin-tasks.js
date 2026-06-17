@@ -3,7 +3,7 @@ import {
     REPO_OWNER, REPO_NAME, TASKS_JSON_PATH,
     GITHUB_TOKEN,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
-    logEvent, putWithShaRetry
+    putWithShaRetry
 } from './admin-core.js';
 
 let allTasks = [];
@@ -15,7 +15,6 @@ let syncInterval = null;
 // DOM helpers
 const getTasksListContainer = () => document.getElementById('tasks-list');
 const getNewTaskInput = () => document.getElementById('new-task-input');
-const getAddTaskBtn = () => document.getElementById('add-task-btn');
 
 export async function loadAndRenderTasks() {
     const container = getTasksListContainer();
@@ -55,7 +54,9 @@ export async function loadAndRenderTasks() {
                 } else {
                     localStorage.removeItem(LOCAL_TASKS_KEY);
                 }
-            } catch(e) {}
+            } catch (e) {
+                console.error("Error parsing local tasks:", e);
+            }
         }
         
         renderTasks();

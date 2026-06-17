@@ -17,14 +17,7 @@ import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js
 import { loadAndRenderTasks } from './admin-tasks.js';
 import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
 
-const ADMIN_USER_CODES = {
-    "12589": "ידידיה תפילין",
-    "112233": "הרב יאיר חלבי",
-    "11223344": "הרב יוסף חיים סנו"
-};
-
 const GITHUB_TOKEN_KEY = 'admin_github_token';
-const USER_CODE_KEY = 'admin_user_code';
 const GITHUB_USERNAME_KEY = 'admin_github_username';
 
 // Theme & Drafts keys
@@ -43,7 +36,7 @@ function applyTheme(theme) {
         const mobileBtn = document.getElementById('theme-toggle-btn-mobile');
         if (mobileBtn) mobileBtn.textContent = theme === 'dark' ? '☀️ מצב בהיר' : '🌙 מצב כהה';
         localStorage.setItem(THEME_KEY, theme);
-    } catch (e) {
+    } catch {
         // ignore localStorage issues
     }
 }
@@ -78,7 +71,9 @@ function checkDraftStatus() {
         if (banner) {
             banner.style.display = raw ? 'flex' : 'none';
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('Error checking draft status:', error);
+    }
 }
 
 function loadNewsDraft(showFeedback = true) {
@@ -245,7 +240,7 @@ function getFinalSlug(title, date) {
 
 // הצגת/הסתרת פאנל הניהול
 function showAdminPanel() {
-    if (GITHUB_TOKEN && GITHUB_USERNAME) {
+    if (GITHUB_TOKEN) {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'block';
 
@@ -277,7 +272,6 @@ function showAdminPanel() {
 function logout() {
     if (confirm('האם אתה בטוח שברצונך לצאת?')) {
         localStorage.removeItem(GITHUB_TOKEN_KEY);
-        localStorage.removeItem(USER_CODE_KEY);
         localStorage.removeItem(GITHUB_USERNAME_KEY);
         updateGithubAuth(null, null);
         showToast('התנתקת בהצלחה', 1500, 'success');
@@ -380,12 +374,21 @@ function renderNewsList(newsArray) {
     updateBulkActionsUI();
 
     if (newsArray.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-newspaper"></i>
-                <p>אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!</p>
-            </div>
-        `;
+        container.innerHTML = '';
+
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-newspaper';
+
+        const text = document.createElement('p');
+        text.textContent = 'אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!';
+
+        emptyStateDiv.appendChild(icon);
+        emptyStateDiv.appendChild(text);
+
+        container.appendChild(emptyStateDiv);
         return;
     }
 
@@ -434,9 +437,10 @@ async function performDelete(slugs) {
         const fileData = await fileResponse.json();
 
         const transformFn = (latestContent) => {
+            const slugsSet = new Set(slugs);
             const updated = latestContent.filter(item => {
                 const itemSlug = generateSlug(item.data.title, item.data.date);
-                return !slugs.includes(itemSlug);
+                return !slugsSet.has(itemSlug);
             });
             return encodeToBase64(JSON.stringify(updated, null, 2));
         };
@@ -561,7 +565,9 @@ async function fetchDeletedMessages() {
             const delData = await delRes.json();
             return JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
         }
-    } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
+    } catch (e) {
+        console.error('Error fetching deleted messages:', e);
+    }
     return [];
 }
 
@@ -596,7 +602,10 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-msg-btn premium-btn small danger';
     deleteBtn.dataset.id = messageId;
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fas fa-trash-alt';
+    deleteBtn.appendChild(deleteIcon);
+    deleteBtn.appendChild(document.createTextNode(' מחק'));
     // Listener removed - handled by delegated listener
 
     const replyBtn = document.createElement('a');
@@ -607,7 +616,10 @@ function createMessageCardElement(timestamp, name, email, body, messageId) {
     replyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${mailBody}`;
     replyBtn.title = "לחץ כאן כדי להשיב באמצעות Gmail בדפדפן";
     replyBtn.style.textDecoration = 'none';
-    replyBtn.innerHTML = '<i class="fas fa-reply"></i> השב';
+    const replyIcon = document.createElement('i');
+    replyIcon.className = 'fas fa-reply';
+    replyBtn.appendChild(replyIcon);
+    replyBtn.appendChild(document.createTextNode(' השב'));
     replyBtn.style.marginLeft = '8px';
 
     headerDiv.appendChild(infoDiv);
@@ -631,7 +643,16 @@ async function loadAndRenderMessages() {
     if (!container) return;
 
     if (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין")) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>טרם הוגדר קישור לגיליון ההודעות ב-admin.js</p></div>';
+        container.innerHTML = '';
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-exclamation-triangle';
+        const p = document.createElement('p');
+        p.textContent = 'טרם הוגדר קישור לגיליון ההודעות ב-admin.js';
+        emptyState.appendChild(icon);
+        emptyState.appendChild(p);
+        container.appendChild(emptyState);
         return;
     }
 
@@ -720,22 +741,9 @@ async function handleDeleteMessage(messageId) {
 
 // פונקציית עזר פשוטה לפיענוח CSV (מתחשבת במירכאות)
 function parseCSV(text) {
-    const lines = text.split('\n');
-    return lines.map(line => {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            const char = line.charAt(i);
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) {
-                result.push(cur.trim());
-                cur = '';
-            } else cur += char;
-        }
-        result.push(cur.trim());
-        return result;
-    });
+    return text.split('\n').map(line =>
+        line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/"/g, '').trim())
+    );
 }
 
 
@@ -1008,37 +1016,31 @@ document.addEventListener('click', (e) => {
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const userCodeInput = document.getElementById('admin-usercode').value;
         const tokenInput = document.getElementById('github-token').value.trim();
 
         showStatus('מבצע אימות מול GitHub...', 40);
 
-        if (ADMIN_USER_CODES.hasOwnProperty(userCodeInput)) {
-            if (tokenInput) {
-                const verifiedLogin = await verifyGitHubToken(tokenInput);
+        if (tokenInput) {
+            const verifiedLogin = await verifyGitHubToken(tokenInput);
 
-                if (verifiedLogin) {
-                    const adminDisplayName = ADMIN_USER_CODES[userCodeInput];
-                    localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
-                    updateGithubAuth(tokenInput, adminDisplayName);
+            if (verifiedLogin) {
+                const adminDisplayName = verifiedLogin;
+                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
+                updateGithubAuth(tokenInput, adminDisplayName);
 
-                    localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
-                    localStorage.setItem(USER_CODE_KEY, userCodeInput);
+                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
 
-                    showStatus('התחברות הצליחה! ברוך הבא.', 100);
-                    logEvent('התחבר למערכת', 'login');
-                    setTimeout(() => {
-                        hideStatus();
-                        showAdminPanel();
-                    }, 1000);
-                } else {
-                    showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
-                }
+                showStatus('התחברות הצליחה! ברוך הבא.', 100);
+                logEvent('התחבר למערכת', 'login');
+                setTimeout(() => {
+                    hideStatus();
+                    showAdminPanel();
+                }, 1000);
             } else {
-                showStatus('נדרש Token כדי להמשיך.', null, true);
+                showStatus('טוקן GitHub אינו תקין או שפג תוקפו.', null, true);
             }
         } else {
-            showStatus('קוד משתמש שגוי. נא לנסות שנית.', null, true);
+            showStatus('נדרש Token כדי להמשיך.', null, true);
         }
     });
 }

@@ -13,7 +13,6 @@ export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
-console.log("ADMIN CORE: Version v24.1 (Base64 Hardening Active)");
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 // Google API Config
@@ -23,7 +22,6 @@ export const GOOGLE_FOLDER_ID = "1viRoR0PVmGrYNtuTSxRBTn5v4lSPvxow";
 
 // Storage Keys
 export const GITHUB_TOKEN_KEY = 'admin_github_token';
-export const USER_CODE_KEY = 'admin_user_code';
 export const GITHUB_USERNAME_KEY = 'admin_github_username';
 
 // ============================================================
@@ -103,24 +101,19 @@ export function initGoogleLogin() {
     }
 
     if (window.tokenClient) {
-        console.log("Google Token Client already exists.");
         return;
     }
 
     const scopeStr = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9kcml2ZS5maWxl") + " email profile openid";
-    console.log("Initializing GIS with Client ID:", GOOGLE_CLIENT_ID);
-    console.log("Scope string being used for init:", scopeStr);
 
     try {
         window.tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: scopeStr,
-            callback: (tokenResponse) => {
+            callback: () => {
                 // This will be overridden in googleLogin
-                console.log("GIS Global Callback Response:", tokenResponse);
             },
         });
-        console.log("Google Token Client initialized successfully.");
     } catch (err) {
         console.error("GIS Init Failed:", err);
     }
@@ -134,7 +127,6 @@ export async function googleLogin() {
         }
 
         if (!window.tokenClient) {
-            console.log("tokenClient not found, attempting to initialize...");
             initGoogleLogin();
         }
 
@@ -143,8 +135,6 @@ export async function googleLogin() {
         }
 
         window.tokenClient.callback = (tokenResponse) => {
-            console.log("Received Token Response in googleLogin:", tokenResponse);
-
             if (tokenResponse.error) {
                 console.error("Google Auth Error:", tokenResponse);
 
@@ -158,7 +148,6 @@ export async function googleLogin() {
                     reject(new Error(`שגיאת אימות גוגל: ${errorMsg}`));
                 }
             } else if (tokenResponse.access_token) {
-                console.log("Success! Access token obtained.");
                 cachedGoogleToken = tokenResponse.access_token;
                 tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3599) * 1000) - 60000;
                 resolve(tokenResponse.access_token);
@@ -352,7 +341,9 @@ export async function getFileWebViewLink(fileId, token) {
             const data = await res.json();
             return data.webViewLink;
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error("DEBUG: getFileWebViewLink error:", e);
+    }
     return null;
 }
 
@@ -367,7 +358,7 @@ export async function verifyGitHubToken(token) {
 
         if (response.ok) {
             const userData = await response.json();
-            return userData.login; // מחזיר את שם המשתמש האמיתי
+            return userData.name || userData.login; // מחזיר את שם המשתמש האמיתי
         } else {
             return null;
         }
@@ -405,7 +396,9 @@ export async function logEvent(action, type = 'general') {
             branch: 'main'
         };
         await putWithShaRetry(API_URL, payload, GITHUB_TOKEN, sha, 3);
-    } catch (err) { }
+    } catch (err) {
+        console.error('Failed to log event:', err);
+    }
 }
 
 // ============================================================
