@@ -131,7 +131,7 @@ export function initGalleryAdminEvents() {
 }
 
 /* ----------------- אלמנטים ----------------- */
-let galleryForm, albumTitleInput, albumThumbnailInput, albumImagesInput, galleryStatusMessage, galleryListContainer, albumPreview;
+let galleryForm, albumTitleInput, albumImagesInput, galleryStatusMessage, galleryListContainer, albumPreview;
 
 document.addEventListener('DOMContentLoaded', () => {
     galleryForm = document.getElementById('add-album-form');
