@@ -78,7 +78,9 @@ function checkDraftStatus() {
         if (banner) {
             banner.style.display = raw ? 'flex' : 'none';
         }
-    } catch (e) { }
+    } catch (error) {
+        console.error('Error checking draft status:', error);
+    }
 }
 
 function loadNewsDraft(showFeedback = true) {
