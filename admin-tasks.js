@@ -15,7 +15,6 @@ let syncInterval = null;
 // DOM helpers
 const getTasksListContainer = () => document.getElementById('tasks-list');
 const getNewTaskInput = () => document.getElementById('new-task-input');
-const getAddTaskBtn = () => document.getElementById('add-task-btn');
 
 export async function loadAndRenderTasks() {
     const container = getTasksListContainer();
