@@ -103,7 +103,6 @@ export function initGoogleLogin() {
     }
 
     if (window.tokenClient) {
-        console.log("Google Token Client already exists.");
         return;
     }
 
