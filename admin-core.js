@@ -111,9 +111,8 @@ export function initGoogleLogin() {
         window.tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CLIENT_ID,
             scope: scopeStr,
-            callback: (tokenResponse) => {
+            callback: () => {
                 // This will be overridden in googleLogin
-                console.log("GIS Global Callback Response:", tokenResponse);
             },
         });
     } catch (err) {
