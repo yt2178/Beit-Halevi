@@ -348,7 +348,9 @@ export async function getFileWebViewLink(fileId, token) {
             const data = await res.json();
             return data.webViewLink;
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error("DEBUG: getFileWebViewLink error:", e);
+    }
     return null;
 }
 
