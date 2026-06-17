@@ -130,7 +130,6 @@ export async function googleLogin() {
         }
 
         if (!window.tokenClient) {
-            console.log("tokenClient not found, attempting to initialize...");
             initGoogleLogin();
         }
 
