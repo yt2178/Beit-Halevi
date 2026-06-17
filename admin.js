@@ -382,12 +382,21 @@ function renderNewsList(newsArray) {
     updateBulkActionsUI();
 
     if (newsArray.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-newspaper"></i>
-                <p>אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!</p>
-            </div>
-        `;
+        container.innerHTML = '';
+
+        const emptyStateDiv = document.createElement('div');
+        emptyStateDiv.className = 'empty-state';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-newspaper';
+
+        const text = document.createElement('p');
+        text.textContent = 'אין ידיעות להצגה. התחל בפרסום הידיעה הראשונה!';
+
+        emptyStateDiv.appendChild(icon);
+        emptyStateDiv.appendChild(text);
+
+        container.appendChild(emptyStateDiv);
         return;
     }
 
