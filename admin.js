@@ -561,7 +561,9 @@ async function fetchDeletedMessages() {
             const delData = await delRes.json();
             return JSON.parse(decodeBase64ToUtf8(delData.content.replace(/\n/g, '')));
         }
-    } catch (e) { /* ✅ Fix: הסר debug log אם אין deleted_messages */ }
+    } catch (e) {
+        console.error('Error fetching deleted messages:', e);
+    }
     return [];
 }
 
