@@ -720,22 +720,9 @@ async function handleDeleteMessage(messageId) {
 
 // פונקציית עזר פשוטה לפיענוח CSV (מתחשבת במירכאות)
 function parseCSV(text) {
-    const lines = text.split('\n');
-    return lines.map(line => {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-            const char = line.charAt(i);
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) {
-                result.push(cur.trim());
-                cur = '';
-            } else cur += char;
-        }
-        result.push(cur.trim());
-        return result;
-    });
+    return text.split('\n').map(line =>
+        line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => val.replace(/"/g, '').trim())
+    );
 }
 
 
