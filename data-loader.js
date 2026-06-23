@@ -137,7 +137,12 @@ export async function loadGallery() {
             // [חדש] יצירת slug (מזהה ידידותי ל-URL)
             slug: item.data.title.replace(/\s/g, '-').replace(/[^א-תa-zA-Z0-9-]/g, '')
         }))
-        .filter(item => item.title && item.thumbnail);
+        .filter(item => item.title && item.thumbnail)
+        .sort((a, b) => {
+            const dateA = a.date || '1970-01-01';
+            const dateB = b.date || '1970-01-01';
+            return dateB.localeCompare(dateA);
+        });
 
     albumContainer.innerHTML = '';
     if (allLoadedAlbums.length === 0) {
