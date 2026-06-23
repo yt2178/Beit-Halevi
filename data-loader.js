@@ -152,6 +152,8 @@ export async function loadGallery() {
         const img = document.createElement('img');
         img.loading = 'lazy';
         img.className = 'lazy-load';
+        img.width = 300;
+        img.height = 220;
         img.src = cleanPath(albumData.thumbnail);
         img.alt = 'אלבום תמונות: ' + albumData.title;
 

@@ -42,6 +42,8 @@ export function openGridOverlay(albumData) {
                 const thumb = document.createElement('img');
                 thumb.className = 'lazy-load';
                 thumb.loading = 'lazy';
+                thumb.width = 150;
+                thumb.height = 120;
                 thumb.src = imgData.src;
                 thumb.alt = imgData.alt;
                 thumb.dataset.index = index;

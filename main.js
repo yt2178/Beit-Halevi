@@ -50,8 +50,21 @@ function updateDateTime() {
 
 // [חדש] עדכון כותרת הדף ומטא-תגים בצורה דינמית
 export function updateDynamicMetadata(title, description) {
-    if (title) document.title = `${title} | ישיבת בית הלוי`;
-    // כאן אפשר להוסיף עדכון של מטא-תגים עבור OG אם רוצים שיתוף מדויק יותר בסושיאל
+    if (title) {
+        document.title = `${title} | ישיבת בית הלוי`;
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', `${title} | ישיבת בית הלוי`);
+        const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+        if (twitterTitle) twitterTitle.setAttribute('content', `${title} | ישיבת בית הלוי`);
+    }
+    if (description) {
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) metaDesc.setAttribute('content', description);
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc) ogDesc.setAttribute('content', description);
+        const twitterDesc = document.querySelector('meta[name="twitter:description"]');
+        if (twitterDesc) twitterDesc.setAttribute('content', description);
+    }
 }
 
 // [חדש] ניהול באדג' (Badge) באייקון האפליקציה (PWA)

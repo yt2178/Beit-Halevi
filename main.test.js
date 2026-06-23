@@ -18,6 +18,35 @@ describe('updateDynamicMetadata', () => {
         expect(document.title).toBe(`${testTitle} | ישיבת בית הלוי`);
     });
 
+    it('should update description, og and twitter tags when provided', () => {
+        const metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        metaDesc.content = 'Old Description';
+        document.head.appendChild(metaDesc);
+
+        const ogTitle = document.createElement('meta');
+        ogTitle.setAttribute('property', 'og:title');
+        ogTitle.content = 'Old OG Title';
+        document.head.appendChild(ogTitle);
+
+        const ogDesc = document.createElement('meta');
+        ogDesc.setAttribute('property', 'og:description');
+        ogDesc.content = 'Old OG Description';
+        document.head.appendChild(ogDesc);
+
+        updateDynamicMetadata('New Title', 'New Description');
+
+        expect(document.title).toBe('New Title | ישיבת בית הלוי');
+        expect(metaDesc.content).toBe('New Description');
+        expect(ogTitle.content).toBe('New Title | ישיבת בית הלוי');
+        expect(ogDesc.content).toBe('New Description');
+
+        // Cleanup
+        metaDesc.remove();
+        ogTitle.remove();
+        ogDesc.remove();
+    });
+
     it('should not update document.title when title is not provided', () => {
         document.title = 'Original Title';
         updateDynamicMetadata(null, 'Test Description');
