@@ -271,6 +271,8 @@ function showAdminPanel() {
 
 function logout() {
     if (confirm('האם אתה בטוח שברצונך לצאת?')) {
+        sessionStorage.removeItem(GITHUB_TOKEN_KEY);
+        sessionStorage.removeItem(GITHUB_USERNAME_KEY);
         localStorage.removeItem(GITHUB_TOKEN_KEY);
         localStorage.removeItem(GITHUB_USERNAME_KEY);
         updateGithubAuth(null, null);
@@ -936,7 +938,7 @@ async function initAdmin() {
         });
 
         // שחזור שם מנהל שמור
-        const savedAdminName = localStorage.getItem('saved_admin_display_name') || localStorage.getItem('admin_github_username');
+        const savedAdminName = localStorage.getItem('saved_admin_display_name') || sessionStorage.getItem('admin_github_username');
         if (savedAdminName) {
             let isPredefined = false;
             for (let option of adminNameSelect.options) {
@@ -1086,10 +1088,10 @@ if (loginForm) {
             if (verifiedLogin) {
                 // שמירת השם בצורה מקומית קבועה ושמירה עבור סשן ה-API
                 localStorage.setItem('saved_admin_display_name', adminDisplayName);
-                localStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
+                sessionStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 updateGithubAuth(tokenInput, adminDisplayName);
 
-                localStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
+                sessionStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
 
                 showStatus('התחברות הצליחה! ברוך הבא.', 100);
                 logEvent('התחבר למערכת', 'login');
