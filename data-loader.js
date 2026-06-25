@@ -3,8 +3,6 @@ import { cleanPath, fetchStaticJson } from './utils.js';
 import { openGridOverlay, checkUrlHash } from './gallery.js';
 import { openNewsModal, checkNewsHash } from './news.js';
 // ---- קבועים גלובליים ----
-const repoOwner = 'yt2178';
-const repoName = 'Beit-Halevi';
 export const BASE_URL = window.location.origin + (window.location.hostname.endsWith('github.io') ? '/Beit-Halevi' : '');
 
 // ---- משתנים גלובליים ----
