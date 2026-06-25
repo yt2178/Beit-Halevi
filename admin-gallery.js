@@ -559,43 +559,53 @@ async function handleGallerySubmit(e) {
         showStatus(`מתחיל עיבוד והעלאה של ${totalItems} תמונות...`, 40);
 
         const selectedFilesMap = new Map(selectedFiles.map(f => [f.localUrl, f]));
-        const results = [];
         const previewItemsArray = Array.from(previewItems);
-        for (const item of previewItemsArray) {
+        const results = new Array(previewItemsArray.length);
+        const uploadTasks = [];
+
+        for (let i = 0; i < previewItemsArray.length; i++) {
+            const item = previewItemsArray[i];
             const img = item.querySelector('img');
 
             if (item.dataset.existing === '1') {
                 processedCount++;
-                results.push(img.getAttribute('src'));
+                results[i] = img.getAttribute('src');
             } else {
                 const fileObj = selectedFilesMap.get(img.src);
                 if (fileObj) {
-                    let fileToUpload = fileObj.file;
-                    const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                    console.log(`DEBUG: Original file size: ${originalSize}MB`);
+                    uploadTasks.push(async () => {
+                        let fileToUpload = fileObj.file;
+                        const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
+                        console.log(`DEBUG: Original file size: ${originalSize}MB`);
 
-                    try {
-                        // דחיסת תמונה לחיסכון בנפח (רק אם זו תמונה)
-                        if (fileToUpload.type.startsWith('image/')) {
-                            fileToUpload = await compressImage(fileToUpload);
-                            const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                            console.log(`DEBUG: Compressed file size: ${compressedSize}MB`);
+                        try {
+                            if (fileToUpload.type.startsWith('image/')) {
+                                fileToUpload = await compressImage(fileToUpload);
+                                const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
+                                console.log(`DEBUG: Compressed file size: ${compressedSize}MB`);
+                            }
+                        } catch (compressErr) {
+                            console.warn("Compression failed, uploading original:", compressErr);
                         }
-                    } catch (compressErr) {
-                        console.warn("Compression failed, uploading original:", compressErr);
-                    }
 
-                    const fileId = await uploadFileToDrive(fileToUpload, googleAccessToken);
-                    const publicUrl = await makeFilePublic(fileId, googleAccessToken);
+                        const fileId = await uploadFileToDrive(fileToUpload, googleAccessToken);
+                        const publicUrl = await makeFilePublic(fileId, googleAccessToken);
 
-                    processedCount++;
-                    showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
+                        processedCount++;
+                        showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
 
-                    results.push(publicUrl);
+                        results[i] = publicUrl;
+                    });
                 } else {
-                    results.push(null);
+                    results[i] = null;
                 }
             }
+        }
+
+        const BATCH_SIZE = 3;
+        for (let i = 0; i < uploadTasks.length; i += BATCH_SIZE) {
+            const batch = uploadTasks.slice(i, i + BATCH_SIZE);
+            await Promise.all(batch.map(task => task()));
         }
         const finalImages = results.filter(url => url !== null);
 
