@@ -31,10 +31,10 @@ export function openGridOverlay(albumData) {
         thumbnailGrid.style.textAlign = 'center';
     } else {
         // [שינוי] הצג Skeleton Loader מיידית
-        for (let i = 0; i < 1; i++) { // הצג 12 מקומות ריקים
-            const loader = document.createElement('div');
-            loader.className = 'loading-thumbnail';
-            thumbnailGrid.appendChild(loader);
+        const loaderTemplate = document.createElement('div');
+        loaderTemplate.className = 'loading-thumbnail';
+        for (let i = 0; i < 12; i++) { // הצג 12 מקומות ריקים
+            thumbnailGrid.appendChild(loaderTemplate.cloneNode(false));
         }
         setTimeout(() => {
             thumbnailGrid.textContent = ''; // נקה את ה-Skeleton
