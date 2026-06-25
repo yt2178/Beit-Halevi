@@ -181,7 +181,6 @@ export async function getFolderId(token) {
         // [הגנה מתקדמת] שימוש ב-Base64 כדי למנוע מתוספי דפדפן (AdBlock) למחוק את כתובת גוגל מהקוד
         const targetUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=") + "?q=" + query;
         
-        console.log("DEBUG: Final Google Search URL:", targetUrl);
         if (targetUrl.indexOf("http") !== 0) {
             alert("שגיאת אבטחה מקומית: הכתובת שובשה על ידי הדפדפן.\nערך נוכחי: " + targetUrl);
         }
