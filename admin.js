@@ -348,13 +348,19 @@ function createNewsItemElement(item) {
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-news-btn premium-btn small';
     editBtn.dataset.slug = slug;
-    editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+    const editIcon = document.createElement('i');
+    editIcon.className = 'fas fa-edit';
+    editBtn.appendChild(editIcon);
+    editBtn.appendChild(document.createTextNode(' ערוך'));
     editBtn.addEventListener('click', () => handleEditNews(slug));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-news-btn premium-btn small danger';
     deleteBtn.dataset.slug = slug;
-    deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'fas fa-trash-alt';
+    deleteBtn.appendChild(deleteIcon);
+    deleteBtn.appendChild(document.createTextNode(' מחק'));
     deleteBtn.addEventListener('click', () => handleDeleteNews(slug));
 
     actionsDiv.appendChild(editBtn);
