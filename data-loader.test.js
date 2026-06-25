@@ -37,6 +37,7 @@ document.body.innerHTML = `
     <button id="news-next-btn"></button>
     <button class="menu-toggle"></button>
     <div class="nav-links"></div>
+    <div id="news-container"></div>
 `;
 
 describe('applySiteConfig', () => {
@@ -45,13 +46,23 @@ describe('applySiteConfig', () => {
     let utils;
 
     beforeAll(async () => {
-        // Mock fetchStaticJson
+        // Mock dependencies
         jest.unstable_mockModule('./utils.js', () => ({
             fetchStaticJson: jest.fn(),
             cleanPath: jest.fn(),
             parseFrontMatter: jest.fn(),
             focusLock: jest.fn(),
             getHebrewYear: jest.fn()
+        }));
+
+        jest.unstable_mockModule('./gallery.js', () => ({
+            openGridOverlay: jest.fn(),
+            checkUrlHash: jest.fn()
+        }));
+
+        jest.unstable_mockModule('./news.js', () => ({
+            openNewsModal: jest.fn(),
+            checkNewsHash: jest.fn()
         }));
 
         dataLoader = await import('./data-loader.js');
@@ -138,5 +149,50 @@ describe('applySiteConfig', () => {
         await applySiteConfig();
 
         expect(document.getElementById('about-title-dynamic').textContent).toBe('');
+    });
+});
+
+describe('loadNews', () => {
+    let dataLoader;
+    let loadNews;
+    let utils;
+
+    beforeAll(async () => {
+        dataLoader = await import('./data-loader.js');
+        loadNews = dataLoader.loadNews;
+        utils = await import('./utils.js');
+    });
+
+    beforeEach(() => {
+        document.getElementById('news-container').innerHTML = '';
+        jest.clearAllMocks();
+        dataLoader.fetchCache.clear();
+    });
+
+    it('should display an error message if response is null', async () => {
+        utils.fetchStaticJson.mockResolvedValue(null);
+
+        await loadNews();
+
+        const newsContainer = document.getElementById('news-container');
+        const p = newsContainer.querySelector('p');
+
+        expect(p).not.toBeNull();
+        expect(p.style.color).toBe('red');
+        expect(p.textContent).toBe('שגיאה בטעינת העדכונים. ודא שקובץ data/news.json קיים.');
+    });
+
+    it('should display an error message if response has an error', async () => {
+        const errorMessage = 'Custom error message';
+        utils.fetchStaticJson.mockResolvedValue({ error: true, message: errorMessage });
+
+        await loadNews();
+
+        const newsContainer = document.getElementById('news-container');
+        const p = newsContainer.querySelector('p');
+
+        expect(p).not.toBeNull();
+        expect(p.style.color).toBe('red');
+        expect(p.textContent).toBe(errorMessage);
     });
 });
