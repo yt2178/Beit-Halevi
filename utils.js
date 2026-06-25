@@ -20,11 +20,14 @@ export function parseFrontMatter(content) {
     const data = {};
     let currentListKey = null;
 
-    yamlText.trim().split('\n').forEach(line => {
+    const lines = yamlText.trim().split('\n');
+    for (const line of lines) {
         const keyValueMatch = line.match(/^([^:]+):(.*)/);
+
         if (keyValueMatch) {
             const key = keyValueMatch[1].trim();
             const value = keyValueMatch[2].trim();
+
             if (value) {
                 data[key] = value.replace(/^['"]|['"]$/g, '');
                 currentListKey = null;
@@ -32,13 +35,16 @@ export function parseFrontMatter(content) {
                 data[key] = [];
                 currentListKey = key;
             }
-        } else if (currentListKey && line.trim().startsWith('- ')) {
+            continue;
+        }
+
+        if (currentListKey && line.trim().startsWith('- ')) {
             const listItemMatch = line.match(/-\s*['"]?([^'"]+)['"]?$/);
             if (listItemMatch && listItemMatch[1]) {
                 data[currentListKey].push(listItemMatch[1].trim());
             }
         }
-    });
+    }
     return { data, content: body };
 }
 // ---- פונקציה לטעינת JSON סטטי ----
