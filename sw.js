@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-cache-v41';
+const CACHE_NAME = 'beit-halevi-cache-v42';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
-    // ׳׳¡׳˜׳¨׳˜׳’׳™׳” ׳¢׳‘׳•׳¨ ׳§׳‘׳¦׳™ ׳ ׳×׳•׳ ׳™׳ ׳•-Google Drive
+    // קריאה לגיטהאב, גוגל-דרייב וAPIות חיצוניות
     if (url.hostname.includes('github') || url.hostname.includes('googleusercontent') || url.hostname.includes('googleapis')) {
         event.respondWith(
             fetch(event.request).then((response) => {
@@ -89,7 +89,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Stale-While-Revalidate ׳¢׳‘׳•׳¨ ׳›׳ ׳”׳©׳׳¨
+    // Stale-While-Revalidate אסטרטגיה לנכסים מקומיים
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -107,3 +107,71 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
+// [תיקון] -핸들ר להתראות (Push Notifications)
+self.addEventListener('push', (event) => {
+    if (!event.data) {
+        console.log('Received push notification with no data');
+        return;
+    }
+
+    try {
+        const data = event.data.json();
+        const options = {
+            body: data.body || 'עדכון חדש בישיבת בית הלוי',
+            icon: './assets/icons/icon-192x192.png',
+            badge: './assets/icons/icon-192x192.png',
+            tag: data.tag || 'beit-halevi-notification',
+            requireInteraction: false,
+            actions: [
+                { action: 'open', title: 'פתח' },
+                { action: 'close', title: 'סגור' }
+            ],
+            data: {
+                url: data.url || './',
+                id: data.notificationId || Date.now()
+            }
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(data.title || 'ישיבת בית הלוי', options)
+        );
+    } catch (err) {
+        console.error('Error handling push notification:', err);
+        // fallback - הצג התראה פשוטה
+        event.waitUntil(
+            self.registration.showNotification('ישיבת בית הלוי', {
+                body: 'יש עדכון חדש בישיבה!',
+                icon: './assets/icons/icon-192x192.png'
+            })
+        );
+    }
+});
+
+// [תיקון] - הנדלר לכשהמשתמש לוחץ על התראה
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const urlToOpen = event.notification.data?.url || './';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // בדוק אם כבר יש חלון פתוח לאתר
+            for (let i = 0; i < clientList.length; i++) {
+                const client = clientList[i];
+                if (client.url === urlToOpen && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // אם אין חלון פתוח, פתח חדש
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
+});
+
+// [תיקון] - הנדלר לכשהמשתמש סוגר התראה (שלח ביטול)
+self.addEventListener('notificationclose', (event) => {
+    console.log('Notification closed:', event.notification.data?.id);
+    // אפשר לשלוח אנליטיקה כאן
+});
