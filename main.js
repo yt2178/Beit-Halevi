@@ -297,28 +297,51 @@ if (hebrewYearDisplay) {
                 if (config.texts.donation_body) document.querySelector('#donations p').textContent = config.texts.donation_body;
             }
 
-            // [חדש] אתחול OneSignal אם מוגדר
+            // [תיקון] אתחול OneSignal - טעינה של הסקריפט תחילה, אחרי כן הגדרה
             if (config.oneSignalAppId) {
-                window.OneSignalDeferred = window.OneSignalDeferred || [];
-                window.OneSignalDeferred.push(function (OneSignal) {
-                    try {
-                        OneSignal.init({
-                            appId: config.oneSignalAppId,
-                            safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c", // אופציונלי
-                            notifyButton: {
-                                enable: false, // נשתמש בכפתור שלנו
-                            },
-                            allowLocalhostAsSecureOrigin: true,
-                            // [תיקון] הגדרות נתיב עבור GitHub Pages
-                            serviceWorkerParam: { scope: '/Beit-Halevi/' },
-                            serviceWorkerPath: '/Beit-Halevi/OneSignalSDKWorker.js',
-                        }).catch(e => console.warn("OneSignal init error ignored:", e));
-                    } catch(e) {
-                         console.warn("OneSignal try-catch:", e);
-                    }
+                console.log('Initializing OneSignal with App ID:', config.oneSignalAppId);
+                
+                // טעינת הסקריפט של OneSignal QEMU
+                const script = document.createElement('script');
+                script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+                script.async = true;
+                script.defer = true;
+                script.onload = () => {
+                    console.log('OneSignal SDK loaded successfully');
+                    // רק AFTER שהסקריפט נטען, אנחנו מתחילים את ה-init
+                    window.OneSignalDeferred = window.OneSignalDeferred || [];
+                    window.OneSignalDeferred.push(function (OneSignal) {
+                        try {
+                            console.log('Starting OneSignal.init...');
+                            OneSignal.init({
+                                appId: config.oneSignalAppId,
+                                safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
+                                notifyButton: {
+                                    enable: false, // נשתמש בכפתור שלנו
+                                },
+                                allowLocalhostAsSecureOrigin: true,
+                                serviceWorkerParam: { scope: '/Beit-Halevi/' },
+                                serviceWorkerPath: '/Beit-Halevi/OneSignalSDKWorker.js',
+                            }).then(() => {
+                                console.log('OneSignal initialized successfully');
+                                window.oneSignalInitialized = true;
+                                updateSubscribeUI();
+                            }).catch(e => console.error("OneSignal init error:", e));
+                        } catch(e) {
+                            console.error("OneSignal try-catch error:", e);
+                        }
+                    });
+                };
+                script.onerror = () => console.error('Failed to load OneSignal SDK');
+                document.head.appendChild(script);
 
-                    // [חדש] פונקציה לעדכון מצב הכפתור
-                    function updateSubscribeUI() {
+                // [תיקון] פונקציה לעדכון מצב הכפתור
+                function updateSubscribeUI() {
+                    try {
+                        if (!window.OneSignal) {
+                            console.warn('OneSignal not yet available for updateSubscribeUI');
+                            return;
+                        }
                         const isSubscribed = OneSignal.User.PushSubscription.optedIn;
                         const subBtn = document.getElementById('subscribe-btn');
                         const unsubBtn = document.getElementById('unsubscribe-btn');
@@ -327,7 +350,6 @@ if (hebrewYearDisplay) {
                         const optNew = document.getElementById('sub-opt-new');
                         const optUpdate = document.getElementById('sub-opt-update');
 
-                        // Set checkboxes based on saved preference or tags
                         const subscribeNewVal = localStorage.getItem('subscribe_new') !== 'false';
                         const subscribeUpdatesVal = localStorage.getItem('subscribe_updates') !== 'false';
                         
@@ -337,36 +359,29 @@ if (hebrewYearDisplay) {
                         if (isSubscribed) {
                             if (subBtn) {
                                 subBtn.innerHTML = '<i class="fas fa-save"></i> עדכן הגדרות';
-                                subBtn.style.backgroundColor = '#2ecc71'; // צבע ירוק
+                                subBtn.style.backgroundColor = '#2ecc71';
                             }
                             if (unsubBtn) unsubBtn.style.display = 'block';
-                            if (modalP) modalP.textContent = "אתה רשום להתראות האתר! כאן תוכל לעדכן את תחומי העניין שלך או לבטל את ההרשמה לגמרי.";
-                            if (fabBtn) fabBtn.style.display = 'none'; // הסתר כפתור FAB
+                            if (modalP) modalP.textContent = "אתה רשום להתראות האתר! כאן תוכל לעדכן את תחומי העניין שלך או לבטל את ההרשמה.";
+                            if (fabBtn) fabBtn.style.display = 'none';
                         } else {
                             if (subBtn) {
                                 subBtn.innerHTML = '<i class="fas fa-bell"></i> הרשם עכשיו';
-                                subBtn.style.backgroundColor = ''; // צבע מקורי
+                                subBtn.style.backgroundColor = '';
                             }
                             if (unsubBtn) unsubBtn.style.display = 'none';
                             if (modalP) modalP.textContent = "קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.";
                             if (fabBtn) fabBtn.style.display = 'flex';
                         }
+                    } catch(err) {
+                        console.error('Error in updateSubscribeUI:', err);
                     }
+                }
 
-                    // מאזין לשינוי במצב ההרשמה
+                // מאזין לשינוי במצב ההרשמה
+                if (window.OneSignal) {
                     OneSignal.User.PushSubscription.addEventListener("change", updateSubscribeUI);
-                    
-                    // בדיקה ראשונית כשהדף עולה
-                    updateSubscribeUI();
-                    window.oneSignalInitialized = true;
-                });
-
-                // טעינת הסקריפט של OneSignal
-                const script = document.createElement('script');
-                script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-                script.async = true;
-                script.defer = true;
-                document.head.appendChild(script);
+                }
             }
         }
     } catch (e) { console.warn("Failed to load site configuration:", e); }
@@ -377,11 +392,11 @@ if (hebrewYearDisplay) {
         if (!container) {
             container = document.createElement('div');
             container.id = 'toast-container';
-            container.style.cssText = 'position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10005; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 420px;';
+            container.style.cssText = 'position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10005; display: flex; flex-direction: column; gap: 10px; pointer-events: none;';
             document.body.appendChild(container);
         }
         const toast = document.createElement('div');
-        toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.25); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: toastSlideUp 0.3s ease-out; direction: rtl; text-align: center; border: 1px solid rgba(255,255,255,0.1); line-height: 1.4;';
+        toast.style.cssText = 'background: rgba(44, 62, 80, 0.95); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.3);';
         toast.innerHTML = message;
         container.appendChild(toast);
         setTimeout(() => {
@@ -401,7 +416,7 @@ if (hebrewYearDisplay) {
     const subscribeCloseBtn = document.querySelector('.subscribe-close');
     const subscribeBtn = document.getElementById('subscribe-btn');
 
-    // סגירת הכפתור הצף באופן אוטומטי אם כבר אושר בדפדפן (ללא קשר ל-OneSignal)
+    // סגירת הכפתור הצף באופן אוטומטי אם כבר אושר בדפדפן
     if ('Notification' in window && Notification.permission === 'granted') {
         if (fabSubscribeBtn) {
             fabSubscribeBtn.style.display = 'none';
@@ -412,12 +427,12 @@ if (hebrewYearDisplay) {
     if (fabSubscribeBtn && subscribeModal) {
         fabSubscribeBtn.addEventListener('click', () => {
             if ('Notification' in window && Notification.permission === 'granted') {
-                 const modalP = document.querySelector('#subscribe-modal p');
-                 if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! (ביטול מתבצע דרך הגדרות הדפדפן)";
-                 if (subscribeBtn) {
-                     subscribeBtn.innerHTML = '<i class="fas fa-check"></i> רשום לאתר';
-                     subscribeBtn.style.backgroundColor = '#2ecc71';
-                 }
+                const modalP = document.querySelector('#subscribe-modal p');
+                if (modalP) modalP.textContent = "אתה רשום בהצלחה להתראות האתר! (ביטול מתבצע דרך הגדרות הדפדפן)";
+                if (subscribeBtn) {
+                    subscribeBtn.innerHTML = '<i class="fas fa-check"></i> רשום לאתר';
+                    subscribeBtn.style.backgroundColor = '#2ecc71';
+                }
             }
             subscribeModal.classList.add('active');
             document.body.classList.add('no-scroll');
@@ -453,7 +468,7 @@ if (hebrewYearDisplay) {
             localStorage.setItem('subscribe_new', subscribeNew ? 'true' : 'false');
             localStorage.setItem('subscribe_updates', subscribeUpdates ? 'true' : 'false');
 
-            // [חדש] פולבק להתראות דפדפן מקומיות אם OneSignal נחסם או נכשל באתחול
+            // [תיקון] - עדיפות ל-OneSignal, fallback ל-Native
             if (window.oneSignalInitialized && typeof OneSignal !== 'undefined') {
                 try {
                     const isSubscribed = OneSignal.User.PushSubscription.optedIn;
@@ -530,15 +545,11 @@ if (hebrewYearDisplay) {
     const pwaCloseBtn = document.getElementById('pwa-close-btn');
 
     window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent the mini-infobar from appearing on mobile
         e.preventDefault();
-        // Stash the event so it can be triggered later.
         deferredPrompt = e;
         
-        // Check if user already closed it recently
         const lastClosed = localStorage.getItem('pwa_banner_closed');
         if (!lastClosed || (Date.now() - parseInt(lastClosed)) > 86400000) {
-            // Show the custom install banner
             if (pwaInstallBanner) pwaInstallBanner.style.display = 'flex';
         }
     });
@@ -546,9 +557,7 @@ if (hebrewYearDisplay) {
     if (pwaInstallBtn) {
         pwaInstallBtn.addEventListener('click', async () => {
             if (!deferredPrompt) return;
-            // Show the install prompt
             deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
             const { outcome } = await deferredPrompt.userChoice;
             deferredPrompt = null;
             if (pwaInstallBanner) pwaInstallBanner.style.display = 'none';
