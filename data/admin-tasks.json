@@ -1,5 +1,10 @@
 [
   {
+    "text": "יש בעיה כשאני פותח אלבום תמונות ולאחר מכן תמונה ספציפית כשאני לוחץ על האיקס הוא מוביל אותי למסך הראשי ולא לאלבום תמונות בחזרה צריך לעשות כשנאי פותח אלבום ולאחר מכן תמונה האלבום נשאר פתוח ברקע ואז האיקס שבכל תמונה בודדת יחזיר אליו",
+    "completed": false,
+    "createdAt": "2026-06-30T11:25:24.902Z"
+  },
+  {
     "text": "גם זה admin-core.js:279   PUT https://api.github.com/repos/yt2178/Beit-Halevi/contents/data/admin-tasks.json 422 (Unprocessable Content) admin-core.js:293 Conflict/Error (422) on attempt 1. Refetching latest...",
     "completed": false,
     "createdAt": "2026-05-28T13:35:35.778Z"
