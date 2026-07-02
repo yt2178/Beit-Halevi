@@ -659,8 +659,10 @@ async function loadAndRenderMessages() {
     }
 
     try {
-        const deletedMessages = await fetchDeletedMessages();
-        const rows = await fetchMessagesFromSheet();
+        const [deletedMessages, rows] = await Promise.all([
+            fetchDeletedMessages(),
+            fetchMessagesFromSheet()
+        ]);
 
         container.innerHTML = '';
         if (rows.length <= 1) {
