@@ -302,4 +302,41 @@ describe('cleanPath', () => {
   it('handles combination of edge cases', () => {
     expect(cleanPath('  - "./hello%20world"  ')).toBe('hello world');
   });
+
+  it('handles full URLs with domains and query parameters', () => {
+    expect(cleanPath('https://example.com/path?query=1')).toBe('https://example.com/path?query=1');
+    expect(cleanPath('http://localhost:8080/')).toBe('http://localhost:8080/');
+  });
+
+  it('handles non-string truthy inputs (numbers, booleans, arrays, objects)', () => {
+    expect(cleanPath(123)).toBe('123');
+    expect(cleanPath(true)).toBe('true');
+    expect(cleanPath(['a', 'b'])).toBe('a,b');
+
+    const obj = { toString: () => 'custom-string' };
+    expect(cleanPath(obj)).toBe('custom-string');
+  });
+
+  it('handles deeply nested or mixed slashes and dot-slashes', () => {
+    expect(cleanPath('.///.//hello/world')).toBe('hello/world');
+    expect(cleanPath('///./hello')).toBe('hello');
+    expect(cleanPath('./././hello')).toBe('hello');
+  });
+
+  it('handles multiple or nested quote characters', () => {
+    expect(cleanPath('""hello""')).toBe('"hello"');
+    expect(cleanPath('\'"hello"\'')).toBe('"hello"');
+    expect(cleanPath('\'\'hello\'\'')).toBe('\'hello\'');
+  });
+
+  it('preserves inner slashes', () => {
+    expect(cleanPath('hello/world')).toBe('hello/world');
+    expect(cleanPath('- hello/world')).toBe('hello/world');
+  });
+
+  it('handles various malformed URI components gracefully', () => {
+    expect(cleanPath('%')).toBe('%');
+    expect(cleanPath('bad%E0%A4%A')).toBe('bad%E0%A4%A');
+    expect(cleanPath('%81')).toBe('%81');
+  });
 });
