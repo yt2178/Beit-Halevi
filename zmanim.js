@@ -161,7 +161,6 @@ async function loadZmanimData() {
         const zmanimBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fzmanim");
         const zmanimUrl = zmanimBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
         
-        console.log("DEBUG: Final URL =", zmanimUrl);
         const response = await fetch(zmanimUrl);
         const data = await response.json();
 
