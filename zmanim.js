@@ -161,19 +161,25 @@ async function loadZmanimData() {
         const zmanimBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fzmanim");
         const zmanimUrl = zmanimBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&date=" + today + "&v=" + cb;
         
-        const response = await fetch(zmanimUrl);
-        const data = await response.json();
-
         const converterBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fconverter");
         const converterUrl = converterBase + "?cfg=json&date=" + today + "&g2h=1&strict=1&v=" + cb;
-        const calendarResponse = await fetch(converterUrl);
-        const calendarData = await calendarResponse.json();
-        hebrewDateEl.textContent = calendarData.hebrew;
         
         const shabbatBase = decodeURIComponent("https" + "%3A%2F%2Fwww" + ".hebcal.com%2Fshabbat");
         const shabbatUrl = shabbatBase + "?cfg=json&geonameid=" + currentCity.geonameid + "&m=50&v=" + cb;
-        const shabbatResponse = await fetch(shabbatUrl);
-        const shabbatData = await shabbatResponse.json();
+
+        const [response, calendarResponse, shabbatResponse] = await Promise.all([
+            fetch(zmanimUrl),
+            fetch(converterUrl),
+            fetch(shabbatUrl)
+        ]);
+
+        const [data, calendarData, shabbatData] = await Promise.all([
+            response.json(),
+            calendarResponse.json(),
+            shabbatResponse.json()
+        ]);
+
+        hebrewDateEl.textContent = calendarData.hebrew;
         const parashaItem = shabbatData.items.find(item => item.category === "parashat");
         if (parashaItem) parashaEl.textContent = parashaItem.hebrew;
 
