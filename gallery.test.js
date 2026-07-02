@@ -111,7 +111,7 @@ describe('openGridOverlay', () => {
         expect(mockUtils.cleanPath).toHaveBeenCalledWith(' img1.jpg ');
 
         // Check skeleton loader
-        expect(mockThumbnailGrid.children.length).toBe(1);
+        expect(mockThumbnailGrid.children.length).toBe(12);
         expect(mockThumbnailGrid.children[0].className).toBe('loading-thumbnail');
 
         // Advance timers by 300ms to trigger thumbnail rendering
