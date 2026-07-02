@@ -27,8 +27,13 @@ export const GITHUB_USERNAME_KEY = 'admin_github_username';
 // ============================================================
 // 2. Global State
 // ============================================================
-export let GITHUB_TOKEN = localStorage.getItem(GITHUB_TOKEN_KEY);
-export let GITHUB_USERNAME = localStorage.getItem(GITHUB_USERNAME_KEY);
+export let GITHUB_TOKEN = sessionStorage.getItem(GITHUB_TOKEN_KEY);
+export let GITHUB_USERNAME = sessionStorage.getItem(GITHUB_USERNAME_KEY);
+
+// Security cleanup: remove vulnerable tokens from local storage
+localStorage.removeItem(GITHUB_TOKEN_KEY);
+localStorage.removeItem(GITHUB_USERNAME_KEY);
+
 window.tokenClient = null;
 
 let cachedGoogleToken = null;
