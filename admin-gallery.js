@@ -191,7 +191,7 @@ window.loadAndRenderGallery = loadAndRenderGallery;
 
 function renderGalleryList(galleryArray, sha) {
     if (!galleryListContainer) return;
-    galleryListContainer.innerHTML = '';
+    galleryListContainer.replaceChildren();
 
     if (galleryArray.length === 0) {
         const emptyStateDiv = document.createElement('div');
@@ -241,13 +241,23 @@ function renderGalleryList(galleryArray, sha) {
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-album-btn premium-btn small';
         editBtn.dataset.index = index;
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> ערוך';
+
+        const editIcon = document.createElement('i');
+        editIcon.className = 'fas fa-edit';
+        editBtn.appendChild(editIcon);
+        editBtn.appendChild(document.createTextNode(' ערוך'));
+
         editBtn.addEventListener('click', () => editAlbum(album, index));
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-album-btn premium-btn small danger';
         deleteBtn.dataset.index = index;
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> מחק';
+
+        const deleteIcon = document.createElement('i');
+        deleteIcon.className = 'fas fa-trash-alt';
+        deleteBtn.appendChild(deleteIcon);
+        deleteBtn.appendChild(document.createTextNode(' מחק'));
+
         deleteBtn.addEventListener('click', () => deleteAlbum(index));
 
         actionsDiv.appendChild(editBtn);
@@ -266,7 +276,7 @@ function editAlbum(album, index) {
     albumTitleInput.value = album.data.title || '';
     if (albumThumbnailUrlInput) albumThumbnailUrlInput.value = album.data.thumbnail || '';
 
-    albumPreview.innerHTML = '';
+    albumPreview.replaceChildren();
     selectedFiles = []; // איפוס בחירות חדשות
 
     // הצגת תמונות קיימות
@@ -301,7 +311,7 @@ export function resetGalleryForm() {
     });
 
     // ניקוי תצוגה מקדימה
-    if (albumPreview) albumPreview.innerHTML = '';
+    if (albumPreview) albumPreview.replaceChildren();
     selectedFiles = [];
     selectedFiles = [];
     editingAlbumIndex = null;
@@ -395,7 +405,7 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     thumbBtn.type = 'button';
     thumbBtn.className = 'preview-btn';
     thumbBtn.title = 'בחירת תמונת שער לאלבום';
-    thumbBtn.innerHTML = '⭐';
+    thumbBtn.textContent = '⭐';
 
     const setAsThumbnail = () => {
         const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
@@ -434,7 +444,7 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     removeBtn.type = 'button';
     removeBtn.className = 'preview-btn remove';
     removeBtn.title = 'הסר תמונה';
-    removeBtn.innerHTML = '🗑';
+    removeBtn.textContent = '🗑';
     removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const url = img.src;
