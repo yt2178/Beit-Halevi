@@ -419,7 +419,7 @@
             const nav = document.getElementById('admin-bottom-nav');
             function checkMobile() {
                 // רק אם מחוברים (יש טוקן) - נציג תפריט תחתון במובייל
-                if (window.GITHUB_TOKEN || sessionStorage.getItem('admin_github_token')) {
+                if (window.GITHUB_TOKEN) {
                     nav.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
                 } else {
                     nav.style.display = 'none';
