@@ -171,10 +171,11 @@ export function setupAlbumControls(albumData) {
                 const zip = new JSZip();
                 const folder = zip.folder(albumSlug);
                 let successCount = 0;
+                let completedCount = 0;
 
-                for (let i = 0; i < imagesToDownload.length; i++) {
-                    const img = imagesToDownload[i];
-                    albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${i + 1}/${imagesToDownload.length})`;
+                albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (0/${imagesToDownload.length})`;
+
+                const fetchPromises = imagesToDownload.map(async (img, i) => {
                     try {
                         let downloadUrl = img.src;
                         
@@ -200,8 +201,13 @@ export function setupAlbumControls(albumData) {
                         successCount++;
                     } catch (err) {
                         console.warn(`Failed to fetch image for ZIP: ${img.src}`, err);
+                    } finally {
+                        completedCount++;
+                        albumDownloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> מוריד (${completedCount}/${imagesToDownload.length})`;
                     }
-                }
+                });
+
+                await Promise.all(fetchPromises);
 
                 // 3. יצירת והורדת קובץ ה-ZIP
                 if (successCount > 0) {
