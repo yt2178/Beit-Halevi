@@ -38,6 +38,43 @@ describe('decodeBase64ToUtf8', () => {
     });
 });
 
+describe('encodeToBase64', () => {
+    it('should encode simple ASCII strings', () => {
+        const input = 'Hello World';
+        const expectedOutput = btoa('Hello World');
+        const output = encodeToBase64(input);
+        expect(output).toBe(expectedOutput);
+    });
+
+    it('should encode UTF-8 strings (Hebrew text)', () => {
+        const input = 'שלום עולם';
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(input);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const expectedOutput = btoa(binary);
+
+        const output = encodeToBase64(input);
+        expect(output).toBe(expectedOutput);
+    });
+
+    it('should encode UTF-8 strings containing emojis', () => {
+        const input = 'Hello 🌍';
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(input);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const expectedOutput = btoa(binary);
+
+        const output = encodeToBase64(input);
+        expect(output).toBe(expectedOutput);
+    });
+
+    it('should handle empty string input', () => {
+        const output = encodeToBase64('');
+        expect(output).toBe('');
+    });
+});
 
 describe('sendPushNotification', () => {
     let mockFetch;
