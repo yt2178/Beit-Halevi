@@ -315,7 +315,7 @@ if (hebrewYearDisplay) {
                             console.log('Starting OneSignal.init...');
                             OneSignal.init({
                                 appId: config.oneSignalAppId,
-                                safari_web_id: "web.onesignal.auto.bf458933-25d2-4522-9216-3b1a2072342c",
+                                safari_web_id: "web.onesignal.auto.0d8cfe1b-addf-4fe0-8094-42e4bf6360cd",
                                 notifyButton: {
                                     enable: false, // נשתמש בכפתור שלנו
                                 },

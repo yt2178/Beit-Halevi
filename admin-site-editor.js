@@ -223,7 +223,10 @@ export async function saveAllSiteSettings() {
 
     currentSiteConfig.theme = document.getElementById('site-theme-select').value;
     currentSiteConfig.primaryColor = document.getElementById('site-primary-color').value;
-    currentSiteConfig.oneSignalAppId = document.getElementById('site-onesignal-id').value.trim();
+    const appIdInput = document.getElementById('site-onesignal-id')?.value.trim();
+    if (appIdInput) {
+        currentSiteConfig.oneSignalAppId = appIdInput;
+    }
 
     // [חדש] שמירת קישור תרומה
     const donationLinkEl = document.getElementById('site-donation-link');
