@@ -365,9 +365,10 @@
         
         <!-- [חדש] סקשן משימות מנהל -->
         <section id="tasks-section" style="display:none;">
-            <div class="section-header">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <button class="back-to-dashboard-btn premium-btn small"><i class="fas fa-arrow-right"></i> חזרה ללוח הבקרה</button>
-                <h2>📋 משימות לביצוע</h2>
+                <h2 style="margin: 0;">📋 משימות לביצוע</h2>
+                <button id="manual-sync-tasks-btn" class="premium-btn small" style="background-color: #27ae60;"><i class="fas fa-cloud-upload-alt"></i> שמור משימות ל-GitHub</button>
             </div>
             <div class="admin-card">
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">

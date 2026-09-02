@@ -142,6 +142,15 @@ function renderTasks() {
     container.appendChild(fragment);
 }
 
+let debounceSyncTimer = null;
+function triggerAutoSync() {
+    hasUnsavedChanges = true;
+    if (debounceSyncTimer) clearTimeout(debounceSyncTimer);
+    debounceSyncTimer = setTimeout(() => {
+        forceSyncTasks();
+    }, 2000);
+}
+
 function addTask() {
     const input = getNewTaskInput();
     const text = input ? input.value.trim() : '';
@@ -156,6 +165,7 @@ function addTask() {
     if (input) input.value = '';
     hasUnsavedChanges = true;
     renderTasks();
+    triggerAutoSync();
 }
 
 function toggleTask(index) {
@@ -164,6 +174,7 @@ function toggleTask(index) {
         task.completed = !task.completed;
         hasUnsavedChanges = true;
         renderTasks();
+        triggerAutoSync();
     }
 }
 
@@ -173,6 +184,7 @@ function deleteTask(index) {
         allTasks.splice(index, 1);
         hasUnsavedChanges = true;
         renderTasks();
+        triggerAutoSync();
     }
 }
 
