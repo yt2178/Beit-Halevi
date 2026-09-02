@@ -136,7 +136,7 @@ body.dark-mode #news-next-btn {
 }
 
 /* ׳”׳×׳׳׳× ׳›׳₪׳×׳•׳¨ ׳”׳©׳™׳×׳•׳£ ׳›׳“׳™ ׳©׳™׳”׳™׳” ׳§׳˜׳ ׳™׳•׳×׳¨ ׳‘׳׳¨׳›׳– */
-#news-share-btn {
+#news-share-btn, #news-whatsapp-btn {
     flex-grow: 0;
     margin: 0 10px;
     /* ׳׳¨׳•׳•׳— ׳§׳˜׳ ׳׳”׳¦׳“׳“׳™׳ */
@@ -155,7 +155,7 @@ body.dark-mode #news-next-btn {
     /* ׳׳–׳™׳– ׳׳× ׳”׳׳™׳™׳§׳•׳ ׳׳©׳׳׳ ׳”׳›׳₪׳×׳•׳¨ (׳‘-RTL) */
 }
 
-#news-share-btn {
+#news-share-btn, #news-whatsapp-btn {
     background-color: var(--secondary-color);
     color: white;
     border: none;
@@ -170,7 +170,7 @@ body.dark-mode #news-next-btn {
     gap: 8px;
 }
 
-#news-share-btn:hover {
+#news-share-btn:hover, #news-whatsapp-btn:hover {
     background-color: #2980b9;
 }
 
@@ -207,3 +207,5 @@ body.dark-mode .news-modal .modal-close {
     margin: 0;
 }
 
+
+body.dark-mode #news-whatsapp-btn { background-color: var(--dark-secondary); }
