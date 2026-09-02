@@ -21,24 +21,31 @@
     ],
     "shortcuts": [
         {
-            "name": "ניהול חדשות",
+            "name": "זמני היום והתפילות",
+            "short_name": "זמני היום",
+            "description": "זמני היום והתפילות בראש העין",
+            "url": "./#zmanim",
+            "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "חדשות ועדכונים",
             "short_name": "חדשות",
-            "description": "הוספה ועריכת ידיעות",
-            "url": "./admin.html#news-section",
+            "description": "הודעות וידיעות מישיבת בית הלוי",
+            "url": "./#news",
             "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
         },
         {
-            "name": "גלריה",
+            "name": "גלריית תמונות",
             "short_name": "גלריה",
-            "description": "ניהול אלבומי תמונות",
-            "url": "./admin.html#gallery-section",
+            "description": "תיעוד מאירועי ושמחות הישיבה",
+            "url": "./#gallery",
             "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
         },
         {
-            "name": "משימות",
-            "short_name": "משימות",
-            "description": "רשימת משימות למנהלים",
-            "url": "./admin.html#tasks-section",
+            "name": "יצירת קשר ותרומות",
+            "short_name": "צור קשר",
+            "description": "יצירת קשר עם משרדי הישיבה",
+            "url": "./#contact",
             "icons": [{ "src": "assets/icons/icon-192x192.png", "sizes": "192x192" }]
         }
     ]
