@@ -170,6 +170,17 @@ export function setupAlbumControls(albumData) {
     const albumSlug = albumData.slug;
 
     // 1. כפתור שיתוף
+    // [חדש] שיתוף אלבום ישיר לוואטסאפ
+    const albumWhatsappBtn = document.getElementById('album-whatsapp-btn');
+    if (albumWhatsappBtn) {
+        albumWhatsappBtn.style.display = 'flex';
+        albumWhatsappBtn.onclick = () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}#gallery/${albumSlug}`;
+            const text = `*ישיבת בית הלוי - ראש העין*\n\nגלריית תמונות: ${albumData.title}\n\nלצפייה באלבום המלא:\n${shareUrl}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        };
+    }
+
     if (albumShareBtn) {
         albumShareBtn.style.display = 'flex';
         albumShareBtn.onclick = async () => {
