@@ -702,9 +702,9 @@ async function handleGallerySubmit(e) {
             
             // [חדש] התראה על הוספת/עדכון אלבום
             if (!isUpdate) {
-                sendPushNotification(albumTitleInput.value, "אלבום תמונות חדש הועלה לגלריית הישיבה. מוזמנים לצפות!", false);
+                sendPushNotification(albumTitleInput.value, "גלריית תמונות חדשה פורסמה באתר הישיבה: היכנסו לצפייה.", false);
             } else {
-                sendPushNotification(albumTitleInput.value, "אלבום תמונות עודכן בגלריית הישיבה. מוזמנים לצפות בעדכון!", true);
+                sendPushNotification(albumTitleInput.value, "עדכון בגלריית התמונות באתר הישיבה: היכנסו לצפייה בתמונות החדשות.", true);
             }
             
             resetGalleryForm();

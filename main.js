@@ -358,19 +358,19 @@ if (hebrewYearDisplay) {
 
                         if (isSubscribed) {
                             if (subBtn) {
-                                subBtn.innerHTML = '<i class="fas fa-save"></i> עדכן הגדרות';
-                                subBtn.style.backgroundColor = '#2ecc71';
+                                subBtn.innerHTML = '<i class="fas fa-check"></i> שמירת העדפות';
+                                subBtn.style.backgroundColor = '#27ae60';
                             }
                             if (unsubBtn) unsubBtn.style.display = 'block';
-                            if (modalP) modalP.textContent = "אתה רשום להתראות האתר! כאן תוכל לעדכן את תחומי העניין שלך או לבטל את ההרשמה.";
+                            if (modalP) modalP.textContent = "הנך רשום לקבלת התראות ועדכונים מהישיבה. באפשרותך לעדכן את העדפותיך או לבטל את השירות.";
                             if (fabBtn) fabBtn.style.display = 'none';
                         } else {
                             if (subBtn) {
-                                subBtn.innerHTML = '<i class="fas fa-bell"></i> הרשם עכשיו';
+                                subBtn.innerHTML = '<i class="fas fa-bell"></i> הפעלת התראות';
                                 subBtn.style.backgroundColor = '';
                             }
                             if (unsubBtn) unsubBtn.style.display = 'none';
-                            if (modalP) modalP.textContent = "קבל עדכונים בזמן אמת על חדשות, אלבומים ואירועים בישיבה ישירות לדפדפן שלך.";
+                            if (modalP) modalP.textContent = "הצטרפו לקבלת עדכונים שוטפים על ידיעות, גלריות תמונות ואירועים בישיבה ישירות למכשירכם.";
                             if (fabBtn) fabBtn.style.display = 'flex';
                         }
                     } catch(err) {
@@ -469,16 +469,16 @@ if (hebrewYearDisplay) {
         if (sessionStorage.getItem('welcome_notif_sent')) return;
         sessionStorage.setItem('welcome_notif_sent', 'true');
 
-        let messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים שוטפים ישירות למכשירך.";
+        let messageBody = "תודה על הרשמתך. מעתה תקבל עדכונים שוטפים ישירות למכשירך.";
         if (subscribeNew && subscribeUpdates) {
-            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על פוסטים ואלבומים חדשים בישיבה, וכן על שינויים ועדכונים בקיים.";
+            messageBody = "תודה על הרשמתך. מעתה תקבל עדכונים שוטפים על פרסומים ואלבומים חדשים, וכן על שינויים ועדכונים בישיבה.";
         } else if (subscribeNew && !subscribeUpdates) {
-            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על כל פוסט או אלבום תמונות חדש שיתפרסם בישיבה.";
+            messageBody = "תודה על הרשמתך. מעתה תקבל עדכונים על כל פרסום או אלבום תמונות חדש שיתפרסם בישיבה.";
         } else if (!subscribeNew && subscribeUpdates) {
-            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על שינויים ועדכונים בפרסומי הישיבה.";
+            messageBody = "תודה על הרשמתך. מעתה תקבל עדכונים על שינויים ועדכונים בפרסומי הישיבה.";
         }
 
-        const title = "ברוכים הבאים לעדכוני ישיבת בית הלוי! 🔔";
+        const title = "ישיבת בית הלוי 🔔";
         const iconUrl = "https://yt2178.github.io/Beit-Halevi/assets/icons/icon-192x192.png";
 
         const options = {
@@ -524,7 +524,7 @@ if (hebrewYearDisplay) {
                             subscribe_new: subscribeNew ? "true" : "false",
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
-                        showToast("🔔 הגדרות ההתראות עודכנו בהצלחה!");
+                        showToast("העדפות ההתראות נשמרו בהצלחה.");
                         showWelcomeNotification(subscribeNew, subscribeUpdates);
                     } else {
                         await OneSignal.User.PushSubscription.optIn();
@@ -532,7 +532,7 @@ if (hebrewYearDisplay) {
                             subscribe_new: subscribeNew ? "true" : "false",
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
-                        showToast("🚀 נרשמת בהצלחה להתראות האתר!");
+                        showToast("ההתראות הופעלו בהצלחה. תודה על הצטרפותך!");
                         showWelcomeNotification(subscribeNew, subscribeUpdates);
                     }
                 } catch (err) {
@@ -554,15 +554,15 @@ if (hebrewYearDisplay) {
         if ('Notification' in window) {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                showToast("🔔 נרשמת בהצלחה להתראות במכשיר זה!");
+                showToast("ההתראות הופעלו בהצלחה במכשיר זה!");
                 showWelcomeNotification(subscribeNew, subscribeUpdates);
             } else if (permission === 'denied') {
-                showToast("⚠️ ההרשמה נחסמה: יש לאשר קבלת התראות בהגדרות הדפדפן שלך.");
+                showToast("קבלת ההתראות חסומה בהגדרות הדפדפן שלך.");
             } else {
-                showToast("⚠️ הרשמת ההתראות לא אושרה.");
+                showToast("אישור קבלת ההתראות בוטל.");
             }
         } else {
-            showToast("❌ מערכת ההתראות אינה נתמכת בדפדפן זה.");
+            showToast("מערכת ההתראות אינה נתמכת בדפדפן זה.");
         }
     }
 
@@ -579,7 +579,7 @@ if (hebrewYearDisplay) {
                     console.warn("OneSignal optOut error:", e);
                 }
             }
-            showToast("ביטלת את הרשמתך להתראות בהצלחה.");
+            showToast("קבלת ההתראות בוטלה בהצלחה.");
             
             if (subscribeModal) {
                 subscribeModal.classList.remove('active');
