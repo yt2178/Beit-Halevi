@@ -51,22 +51,22 @@
   },
   {
     "text": "הוספת אפשרות הרשמה האם להירשם רק כשיש פוסט או אלבום חדש או גם עדכון שלהם",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-04-28T10:18:20.670Z"
   },
   {
     "text": "בדיקת ההתראות בפרסום אלבום או פוסט חדש",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-04-28T10:17:46.064Z"
   },
   {
     "text": "בדיקת תקינות העלאת אלבום תמונות חדש",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-04-28T10:17:28.512Z"
   },
   {
     "text": "בדיקת תקינות העלאת פוסט חדש",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-04-28T10:17:20.853Z"
   },
   {

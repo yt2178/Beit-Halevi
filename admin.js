@@ -884,9 +884,9 @@ async function handleSaveNews(e) {
             clearNewsDraft();
             showStatus('הידיעה פורסמה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
-            logEvent(`${editingNewsSlug ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
+            logEvent(`${isEdit ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
 
-            if (!editingNewsSlug) {
+            if (!isEdit) {
                 sendPushNotification(title, "ידיעה חדשה התפרסמה באתר ישיבת בית הלוי! ככנסו לקרוא.", false);
             } else {
                 sendPushNotification(title, "ידיעה עודכנה באתר ישיבת בית הלוי! ככנסו לקרוא את העדכון.", true);

@@ -64,7 +64,7 @@ jobs:
                 --arg title "חדשות ועדכונים" \
                 --arg content "$TITLE" \
                 --arg url "$URL" \
-                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, filters: [{field: "tag", key: "subscribe_new", relation: "!=", value: "false"}] }' > payload.json
             fi
               
             curl -X POST "https://onesignal.com/api/v1/notifications" \
@@ -98,7 +98,7 @@ jobs:
                 --arg title "גלריית תמונות" \
                 --arg content "$ALBUM_TITLE" \
                 --arg url "$URL" \
-                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, filters: [{field: "tag", key: "subscribe_new", relation: "!=", value: "false"}] }' > payload.json
             fi
               
             curl -X POST "https://onesignal.com/api/v1/notifications" \
