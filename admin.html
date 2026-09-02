@@ -208,6 +208,10 @@
                 <h3>הוספת אלבום חדש</h3>
                 <form id="add-album-form">
                     <input type="text" id="albumTitleInput" placeholder="כותרת האלבום" required>
+                    <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <label for="albumDateInput" style="font-weight: 600; font-size: 0.95rem; color: inherit;">תאריך האירוע:</label>
+                        <input type="date" id="albumDateInput" required style="padding: 10px; border-radius: 6px; border: 1px solid #ccc; flex: 1; font-family: inherit;">
+                    </div>
 
                     <div class="file-upload-wrapper">
                         <label for="albumImagesInput" class="file-upload-label">

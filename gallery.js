@@ -17,6 +17,26 @@ export function openGridOverlay(albumData) {
 
     thumbnailGrid.textContent = '';
     gridAlbumTitle.textContent = albumData.title;
+
+    // [חדש] הצגת תאריך עברי ולועזי ליד שם האלבום
+    const dateContainer = document.getElementById('grid-album-date');
+    if (dateContainer) {
+        if (albumData.date) {
+            try {
+                const d = new Date(albumData.date + 'T00:00:00');
+                const gregDate = d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
+                const hebDate = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+                dateContainer.textContent = `${hebDate} | ${gregDate}`;
+                dateContainer.style.display = 'block';
+            } catch (e) {
+                dateContainer.textContent = albumData.date;
+                dateContainer.style.display = 'block';
+            }
+        } else {
+            dateContainer.style.display = 'none';
+        }
+    }
+
     updateDynamicMetadata(`גלריה: ${albumData.title}`);
     currentAlbumImages = (albumData.images || []).map((imgSrc, index) => ({
         src: cleanPath(imgSrc),
@@ -51,7 +71,6 @@ export function openGridOverlay(albumData) {
                     currentIndex = parseInt(thumb.dataset.index);
                     // [שינוי] פותח תמונה ומעדכן את ה-URL
                     showLightboxImage(true);
-                    gridOverlay.classList.remove('active');
                     lightbox.classList.add('active');
                     lightbox.setAttribute('aria-modal', 'true');
                     focusLock(lightbox, lightboxCloseBtn);
@@ -312,8 +331,12 @@ export function showLightboxImage(isFirstLoad = false) {
 // [שינוי] פונקציה לסגירת ה-Lightbox ועדכון ה-URL
 export function closeLightbox() {
     lightbox.classList.remove('active');
-    // אם ה-Grid עדיין פתוח (זה קורה רק אם נכנסנו דרך ה-Grid), לא משחררים את ה-scroll
-    if (!gridOverlay.classList.contains('active')) {
+    // אם יש אלבום פתוח ברקע, מחזירים לגריד האלבום והגלילה נשארת נעולה
+    if (currentAlbumData) {
+        gridOverlay.classList.add('active');
+        document.body.classList.add('no-scroll');
+        if (gridCloseBtn) focusLock(gridOverlay, gridCloseBtn);
+    } else {
         document.body.classList.remove('no-scroll');
     }
     // [שינוי] במקום hash '#', נחזיר ל-hash של האלבום אם הוא פתוח ברקע
@@ -356,7 +379,6 @@ export function openAlbumFromSlug(albumSlug, imageIndex) {
         currentIndex = imageIndex - 1; // אינדקס הוא 0-based
         // setTimeout כדי לתת זמן למערכת להגיב
         setTimeout(() => {
-            gridOverlay.classList.remove('active');
             lightbox.classList.add('active');
             document.body.classList.add('no-scroll');
             showLightboxImage(true); // true = pushState (כניסה חדשה)

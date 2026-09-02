@@ -95,6 +95,8 @@ function navigatePreview(direction) {
 }
 
 export function initGalleryAdminEvents() {
+    const dateInput = document.getElementById('albumDateInput');
+    if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
     // מאזין לסגירת מודאל תצוגה מקדימה לתמונות
     const closeBtn = document.getElementById('close-preview-modal');
     if (closeBtn) {
@@ -227,7 +229,8 @@ function renderGalleryList(galleryArray, sha) {
         const h3 = document.createElement('h3');
         h3.textContent = album.data.title; // Safe XSS
         const p = document.createElement('p');
-        p.textContent = (album.data.images ? album.data.images.length : 0) + ' תמונות';
+        const dateText = album.data.date ? ' | תאריך: ' + album.data.date : '';
+        p.textContent = (album.data.images ? album.data.images.length : 0) + ' תמונות' + dateText;
 
         infoDiv.appendChild(h3);
         infoDiv.appendChild(p);
@@ -273,7 +276,9 @@ function renderGalleryList(galleryArray, sha) {
 }
 function editAlbum(album, index) {
     const albumThumbnailUrlInput = document.getElementById('albumThumbnailUrl');
+    const albumDateInput = document.getElementById('albumDateInput');
     albumTitleInput.value = album.data.title || '';
+    if (albumDateInput) albumDateInput.value = album.data.date || new Date().toISOString().split('T')[0];
     if (albumThumbnailUrlInput) albumThumbnailUrlInput.value = album.data.thumbnail || '';
 
     albumPreview.replaceChildren();
@@ -304,6 +309,8 @@ function editAlbum(album, index) {
 
 export function resetGalleryForm() {
     if (galleryForm) galleryForm.reset();
+    const albumDateInput = document.getElementById('albumDateInput');
+    if (albumDateInput) albumDateInput.value = new Date().toISOString().split('T')[0];
 
     // ניקוי URL-ים מהזיכרון
     selectedFiles.forEach(f => {
@@ -381,6 +388,14 @@ async function handleFileSelect(e) {
         // הצגת תצוגה מקדימה
         const item = createPreviewItem(localUrl, false);
         albumPreview.appendChild(item);
+    }
+
+    if (!albumPreview.querySelector('.is-thumbnail')) {
+        const firstItem = albumPreview.querySelector('.album-preview-item');
+        if (firstItem) {
+            const starBtn = firstItem.querySelector('.preview-btn:not(.remove)');
+            if (starBtn) starBtn.click();
+        }
     }
     e.target.value = '';
 }
@@ -637,9 +652,13 @@ async function handleGallerySubmit(e) {
             return;
         }
 
+        const albumDateInput = document.getElementById('albumDateInput');
+        const albumDate = (albumDateInput && albumDateInput.value) ? albumDateInput.value : new Date().toISOString().split('T')[0];
+
         const newAlbum = {
             data: {
                 title: albumTitleInput.value,
+                date: albumDate,
                 thumbnail: thumbnailUrl,
                 images: finalImages
             },

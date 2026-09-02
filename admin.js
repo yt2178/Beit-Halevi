@@ -220,9 +220,8 @@ function handleApiError(err) {
 
 
 function generateSlug(title, date) {
-    // [חובה] יש לוודא שהפונקציה הזו קיימת ב-admin.js
-    // זה נותן slug חזק לשימוש ב-Commit Message ולחיפוש
-    const filename_slug = title.toLowerCase().replace(/\s/g, '-').replace(/[^a-z0-9-]/g, '');
+    // תמיכה מלאה באותיות עבריות ואנגליות ומספרים
+    const filename_slug = (title || '').replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, '');
     return `${date}-${filename_slug}`;
 }
 
@@ -455,8 +454,13 @@ async function performDelete(slugs) {
             return encodeToBase64(JSON.stringify(updated, null, 2));
         };
 
+        const existing = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
+        const slugsSet = new Set(slugs);
+        const initialUpdated = existing.filter(item => !slugsSet.has(generateSlug(item.data.title, item.data.date)));
+        const initialContent = encodeToBase64(JSON.stringify(initialUpdated, null, 2));
         const updateResponse = await putWithShaRetry(API_URL, {
             message: `Delete ${slugs.length} news items`,
+            content: initialContent,
             branch: 'main'
         }, GITHUB_TOKEN, fileData.sha, 3, transformFn);
 
@@ -843,34 +847,36 @@ async function handleSaveNews(e) {
         const existingContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
         const sha = fileData.sha;
 
-        if (editingNewsSlug) {
+        const targetSlug = editingNewsSlug;
+        const isEdit = Boolean(targetSlug);
+
+        if (isEdit) {
             const index = existingContent.findIndex(item =>
-                generateSlug(item.data.title, item.data.date) === editingNewsSlug
+                generateSlug(item.data.title, item.data.date) === targetSlug
             );
             if (index !== -1) existingContent[index] = newItem;
-            editingNewsSlug = null;
-            editingNewsSHA = null;
-            addNewsForm.querySelector('button').textContent = 'פרסם ידיעה';
+            else existingContent.unshift(newItem);
         } else {
             existingContent.unshift(newItem);
         }
 
         const transformFn = (latestContent) => {
-            // Need to capture editingNewsSlug locally because it's reset in the outer scope
-            // actually it's reset AFTER the call, but let's be safe and use parameters or closure
-            if (editingNewsSlug) {
+            if (isEdit) {
                 const index = latestContent.findIndex(item =>
-                    generateSlug(item.data.title, item.data.date) === editingNewsSlug
+                    generateSlug(item.data.title, item.data.date) === targetSlug
                 );
                 if (index !== -1) latestContent[index] = newItem;
+                else latestContent.unshift(newItem);
             } else {
                 latestContent.unshift(newItem);
             }
             return encodeToBase64(JSON.stringify(latestContent, null, 2));
         };
 
+        const initialContent = encodeToBase64(JSON.stringify(existingContent, null, 2));
         const updateResponse = await putWithShaRetry(API_URL, {
-            message: `${editingNewsSlug ? 'Update' : 'Add'} news: ${title}`,
+            message: `${isEdit ? 'Update' : 'Add'} news: ${title}`,
+            content: initialContent,
             branch: 'main'
         }, GITHUB_TOKEN, sha, 3, transformFn);
 

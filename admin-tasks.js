@@ -183,8 +183,10 @@ export async function forceSyncTasks() {
     const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + TASKS_JSON_PATH;
     
     try {
+        const initialContent = encodeToBase64(JSON.stringify(allTasks, null, 2));
         const payload = {
             message: "עדכון משימות לביצוע",
+            content: initialContent,
             branch: 'main'
         };
         
@@ -196,7 +198,9 @@ export async function forceSyncTasks() {
             tasksSha = data.content.sha;
             hasUnsavedChanges = false;
             localStorage.removeItem(LOCAL_TASKS_KEY); // מחיקת השמירה המקומית
-            hideStatus();
+            logEvent('עדכן משימות לביצוע', 'tasks');
+            showStatus('המשימות נשמרו בהצלחה! ✅', 100);
+            setTimeout(hideStatus, 1500);
         } else {
             throw new Error('Failed to save tasks');
         }
