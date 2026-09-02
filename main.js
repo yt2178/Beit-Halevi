@@ -380,7 +380,14 @@ if (hebrewYearDisplay) {
 
                 // מאזין לשינוי במצב ההרשמה
                 if (window.OneSignal) {
-                    OneSignal.User.PushSubscription.addEventListener("change", updateSubscribeUI);
+                    OneSignal.User.PushSubscription.addEventListener("change", (event) => {
+                        updateSubscribeUI();
+                        if (event && event.current && event.current.optedIn) {
+                            const optNew = localStorage.getItem('subscribe_new') !== 'false';
+                            const optUpdate = localStorage.getItem('subscribe_updates') !== 'false';
+                            showWelcomeNotification(optNew, optUpdate);
+                        }
+                    });
                 }
             }
         }
@@ -457,6 +464,46 @@ if (hebrewYearDisplay) {
         });
     }
 
+    // [חדש] שליחת התראת תודה והודעת פתיחה מיד לאחר הרישום
+    function showWelcomeNotification(subscribeNew = true, subscribeUpdates = true) {
+        if (sessionStorage.getItem('welcome_notif_sent')) return;
+        sessionStorage.setItem('welcome_notif_sent', 'true');
+
+        let messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים שוטפים ישירות למכשירך.";
+        if (subscribeNew && subscribeUpdates) {
+            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על פוסטים ואלבומים חדשים בישיבה, וכן על שינויים ועדכונים בקיים.";
+        } else if (subscribeNew && !subscribeUpdates) {
+            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על כל פוסט או אלבום תמונות חדש שיתפרסם בישיבה.";
+        } else if (!subscribeNew && subscribeUpdates) {
+            messageBody = "תודה שנרשמת! מעכשיו תקבל עדכונים על שינויים ועדכונים בפרסומי הישיבה.";
+        }
+
+        const title = "ברוכים הבאים לעדכוני ישיבת בית הלוי! 🔔";
+        const iconUrl = "https://yt2178.github.io/Beit-Halevi/assets/icons/icon-192x192.png";
+
+        const options = {
+            body: messageBody,
+            icon: iconUrl,
+            badge: iconUrl,
+            dir: "rtl",
+            lang: "he",
+            tag: "welcome-notification",
+            data: { url: "https://yt2178.github.io/Beit-Halevi/" }
+        };
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(title, options);
+                }).catch(() => {
+                    try { new Notification(title, options); } catch (e) {}
+                });
+            } else {
+                try { new Notification(title, options); } catch (e) {}
+            }
+        }
+    }
+
     // כפתור ההרשמה בתוך המודאל
     if (subscribeBtn) {
         subscribeBtn.addEventListener('click', async () => {
@@ -478,6 +525,7 @@ if (hebrewYearDisplay) {
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
                         showToast("🔔 הגדרות ההתראות עודכנו בהצלחה!");
+                        showWelcomeNotification(subscribeNew, subscribeUpdates);
                     } else {
                         await OneSignal.User.PushSubscription.optIn();
                         OneSignal.User.addTags({
@@ -485,13 +533,14 @@ if (hebrewYearDisplay) {
                             subscribe_updates: subscribeUpdates ? "true" : "false"
                         });
                         showToast("🚀 נרשמת בהצלחה להתראות האתר!");
+                        showWelcomeNotification(subscribeNew, subscribeUpdates);
                     }
                 } catch (err) {
                     console.warn("OneSignal integration error, falling back to native:", err);
-                    await triggerNativeNotificationFallback();
+                    await triggerNativeNotificationFallback(subscribeNew, subscribeUpdates);
                 }
             } else {
-                await triggerNativeNotificationFallback();
+                await triggerNativeNotificationFallback(subscribeNew, subscribeUpdates);
             }
 
             if (subscribeModal) {
@@ -501,11 +550,12 @@ if (hebrewYearDisplay) {
         });
     }
 
-    async function triggerNativeNotificationFallback() {
+    async function triggerNativeNotificationFallback(subscribeNew = true, subscribeUpdates = true) {
         if ('Notification' in window) {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                showToast("🔔 ההרשמה הצליחה! הגדרות העדכונים שלך נשמרו בהצלחה במכשיר זה.");
+                showToast("🔔 נרשמת בהצלחה להתראות במכשיר זה!");
+                showWelcomeNotification(subscribeNew, subscribeUpdates);
             } else if (permission === 'denied') {
                 showToast("⚠️ ההרשמה נחסמה: יש לאשר קבלת התראות בהגדרות הדפדפן שלך.");
             } else {
