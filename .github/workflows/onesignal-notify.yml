@@ -28,6 +28,14 @@ jobs:
           echo "Changed files: $CHANGED_FILES"
 
           BASE_URL="https://yt2178.github.io/Beit-Halevi"
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          IS_UPDATE=false
+          if echo "$COMMIT_MSG" | grep -iqE "update|עדכן"; then
+            IS_UPDATE=true
+          fi
+          echo "Is update: $IS_UPDATE"
 
           # Handle news.json changes
           if echo "$CHANGED_FILES" | grep -q 'data/news.json'; then
@@ -43,12 +51,21 @@ jobs:
             
             echo "Sending news notification: $MESSAGE"
             # Use jq to safely escape titles that might contain quotes
-            jq -n \
-              --arg app_id "$ONESIGNAL_APP_ID" \
-              --arg title "חדשות ועדכונים" \
-              --arg content "$TITLE" \
-              --arg url "$URL" \
-              '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+            if [ "$IS_UPDATE" = "true" ]; then
+              jq -n \
+                --arg app_id "$ONESIGNAL_APP_ID" \
+                --arg title "עדכון: $TITLE" \
+                --arg content "$TITLE" \
+                --arg url "$URL" \
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, filters: [{field: "tag", key: "subscribe_updates", relation: "=", value: "true"}] }' > payload.json
+            else
+              jq -n \
+                --arg app_id "$ONESIGNAL_APP_ID" \
+                --arg title "חדשות ועדכונים" \
+                --arg content "$TITLE" \
+                --arg url "$URL" \
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+            fi
               
             curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
@@ -68,12 +85,21 @@ jobs:
             
             echo "Sending gallery notification: $MESSAGE"
             # Use jq to safely escape titles that might contain quotes
-            jq -n \
-              --arg app_id "$ONESIGNAL_APP_ID" \
-              --arg title "גלריית תמונות" \
-              --arg content "$ALBUM_TITLE" \
-              --arg url "$URL" \
-              '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+            if [ "$IS_UPDATE" = "true" ]; then
+              jq -n \
+                --arg app_id "$ONESIGNAL_APP_ID" \
+                --arg title "עדכון גלריה" \
+                --arg content "עודכן אלבום: $ALBUM_TITLE" \
+                --arg url "$URL" \
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, filters: [{field: "tag", key: "subscribe_updates", relation: "=", value: "true"}] }' > payload.json
+            else
+              jq -n \
+                --arg app_id "$ONESIGNAL_APP_ID" \
+                --arg title "גלריית תמונות" \
+                --arg content "$ALBUM_TITLE" \
+                --arg url "$URL" \
+                '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["All"] }' > payload.json
+            fi
               
             curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \

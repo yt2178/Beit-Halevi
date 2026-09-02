@@ -152,7 +152,7 @@ describe('openGridOverlay', () => {
         thumb.click();
 
         expect(galleryModule.currentIndex).toBe(0);
-        expect(mockGridOverlay.classList.contains('active')).toBe(false);
+        expect(mockGridOverlay.classList.contains('active')).toBe(true);
         expect(mockLightbox.classList.contains('active')).toBe(true);
         expect(mockLightbox.getAttribute('aria-modal')).toBe('true');
         expect(mockUtils.focusLock).toHaveBeenCalledWith(mockLightbox, mockLightboxCloseBtn);

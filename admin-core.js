@@ -477,6 +477,6 @@ export async function sendPushNotification(title, message, isUpdate = false) {
             console.log("Push notification sent successfully!");
         }
     } catch (err) {
-        console.warn("Client-side OneSignal push skipped (delivered by GitHub Actions on commit):", err.message || err);
+        console.error("Error sending push notification:", err);
     }
 }
