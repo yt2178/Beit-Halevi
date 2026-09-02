@@ -1,3 +1,40 @@
+// [חדש] המרת מספר לאותיות בגימטריה לתאריך עברי אותנטי (למשל: כ"ב בתשרי תשפ"ו)
+function toHebrewNumeral(num) {
+    const letters = [
+        [400, 'ת'], [300, 'ש'], [200, 'ר'], [100, 'ק'],
+        [90, 'צ'], [80, 'פ'], [70, 'ע'], [60, 'ס'], [50, 'נ'], [40, 'מ'], [30, 'ל'], [20, 'כ'], [10, 'י'],
+        [9, 'ט'], [8, 'ח'], [7, 'ז'], [6, 'ו'], [5, 'ה'], [4, 'ד'], [3, 'ג'], [2, 'ב'], [1, 'א']
+    ];
+    let n = num % 1000;
+    let result = '';
+    for (const [val, letter] of letters) {
+        while (n >= val) {
+            if (n === 15) { result += 'טו'; n -= 15; break; }
+            if (n === 16) { result += 'טז'; n -= 16; break; }
+            result += letter;
+            n -= val;
+        }
+    }
+    if (result.length === 1) return result + "'";
+    if (result.length > 1) return result.slice(0, -1) + '"' + result.slice(-1);
+    return result;
+}
+
+function formatHebrewDateString(d) {
+    try {
+        const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(d);
+        let day = '', month = '', year = '';
+        for (const part of parts) {
+            if (part.type === 'day') day = toHebrewNumeral(parseInt(part.value, 10));
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'year') year = toHebrewNumeral(parseInt(part.value, 10));
+        }
+        return `${day} ב${month} ${year}`;
+    } catch {
+        return new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+    }
+}
+
 // ---- גלריה.js ----
 import { allLoadedAlbums } from './data-loader.js';
 import { cleanPath, focusLock } from './utils.js';
@@ -25,7 +62,7 @@ export function openGridOverlay(albumData) {
             try {
                 const d = new Date(albumData.date + 'T00:00:00');
                 const gregDate = d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
-                const hebDate = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+                const hebDate = formatHebrewDateString(d);
                 dateContainer.textContent = `${hebDate} | ${gregDate}`;
                 dateContainer.style.display = 'block';
             } catch (e) {
