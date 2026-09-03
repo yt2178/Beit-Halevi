@@ -95,3 +95,13 @@ export function getHebrewYear() {
     // לצרכי פשטות, נשתמש בפורמט המספרי העברי:
     return hebrewDate;
 }
+
+// ---- פונקציה לנרמול קישורי תמונות (מעבר ל-Google CDN ישיר ללא חסימות סינון) ----
+export function normalizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return url;
+    const driveMatch = url.match(/[?&]id=([^&]+)/);
+    if (driveMatch && url.includes('drive.google.com')) {
+        return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=w1000`;
+    }
+    return url;
+}

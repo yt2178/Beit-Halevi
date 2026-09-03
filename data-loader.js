@@ -1,5 +1,5 @@
 // data-loader.js
-import { cleanPath, fetchStaticJson } from './utils.js';
+import { cleanPath, fetchStaticJson, normalizeImageUrl } from './utils.js';
 import { openGridOverlay, checkUrlHash } from './gallery.js';
 import { openNewsModal, checkNewsHash } from './news.js';
 // ---- קבועים גלובליים ----
@@ -27,19 +27,14 @@ async function fetchAndParse(path) {
     // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
     if (path.includes('gallery')) {
         let data = await fetchStaticJson('gallery');
-        // [תיקון קריטי ל-403]: המרה של לינקים ישנים במידה וקיימים
+        // [תיקון קריטי לסינון אתרוג/אינטרנט כשר]: המרת כל קישורי דרייב ל-Google CDN ישיר
         if (Array.isArray(data)) {
             data.forEach(album => {
                 if (album.data && album.data.images) {
-                    album.data.images = album.data.images.map(img =>
-                        img.includes('drive.google.com/uc') ?
-                            img.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w1200') : img
-                    );
+                    album.data.images = album.data.images.map(img => normalizeImageUrl(img));
                 }
                 if (album.data && album.data.thumbnail) {
-                    if (album.data.thumbnail.includes('drive.google.com/uc')) {
-                        album.data.thumbnail = album.data.thumbnail.replace(/uc\?export=view&id=([^&]+)/, 'thumbnail?id=$1&sz=w800');
-                    }
+                    album.data.thumbnail = normalizeImageUrl(album.data.thumbnail);
                 }
             });
         }

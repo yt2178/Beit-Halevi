@@ -25,7 +25,8 @@ jest.unstable_mockModule('./data-loader.js', () => ({
 
 jest.unstable_mockModule('./utils.js', () => ({
     cleanPath: jest.fn((path) => path.trim()),
-    focusLock: jest.fn()
+    focusLock: jest.fn(),
+    normalizeImageUrl: jest.fn((url) => url)
 }));
 
 jest.unstable_mockModule('./main.js', () => ({

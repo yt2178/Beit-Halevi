@@ -332,7 +332,7 @@ export async function makeFilePublic(fileId, token) {
     } catch (e) {
         console.error("DEBUG: makeFilePublic error:", e);
     }
-    return atob("aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3RodW1ibmFpbD9pZD0=") + fileId + "&sz=w1000";
+    return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
 }
 
 export async function getFileWebViewLink(fileId, token) {

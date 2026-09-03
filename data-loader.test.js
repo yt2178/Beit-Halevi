@@ -52,7 +52,8 @@ describe('applySiteConfig', () => {
             cleanPath: jest.fn(),
             parseFrontMatter: jest.fn(),
             focusLock: jest.fn(),
-            getHebrewYear: jest.fn()
+            getHebrewYear: jest.fn(),
+            normalizeImageUrl: jest.fn((url) => url)
         }));
 
         jest.unstable_mockModule('./gallery.js', () => ({

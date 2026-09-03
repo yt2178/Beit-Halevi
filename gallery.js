@@ -37,7 +37,7 @@ function formatHebrewDateString(d) {
 
 // ---- גלריה.js ----
 import { allLoadedAlbums } from './data-loader.js';
-import { cleanPath, focusLock } from './utils.js';
+import { cleanPath, focusLock, normalizeImageUrl } from './utils.js';
 import {
     gridOverlay, lightbox, downloadBtn, lightboxCloseBtn,
     nextBtn, prevBtn, gridCloseBtn, thumbnailGrid,
@@ -76,7 +76,7 @@ export function openGridOverlay(albumData) {
 
     updateDynamicMetadata(`גלריה: ${albumData.title}`);
     currentAlbumImages = (albumData.images || []).map((imgSrc, index) => ({
-        src: cleanPath(imgSrc),
+        src: normalizeImageUrl(cleanPath(imgSrc)),
         alt: `${albumData.title} - תמונה ${index + 1}`,
         albumSlug: albumData.slug
     }));
@@ -104,6 +104,20 @@ export function openGridOverlay(albumData) {
                 thumb.src = imgData.src;
                 thumb.alt = imgData.alt;
                 thumb.dataset.index = index;
+
+                // [חדש - עמידות לסינון אתרוג/אינטרנט כשר]: מנגנון גיבוי אוטומטי אם תמונה נחסמת
+                thumb.onerror = () => {
+                    if (thumb.dataset.retried) return;
+                    thumb.dataset.retried = '1';
+                    if (thumb.src.includes('googleusercontent.com/d/')) {
+                        const m = thumb.src.match(/\/d\/([^=]+)/);
+                        if (m) thumb.src = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+                    } else if (thumb.src.includes('drive.google.com')) {
+                        const m = thumb.src.match(/[?&]id=([^&]+)/);
+                        if (m) thumb.src = `https://lh3.googleusercontent.com/d/${m[1]}=w1000`;
+                    }
+                };
+
                 thumb.addEventListener('click', () => {
                     currentIndex = parseInt(thumb.dataset.index);
                     // [שינוי] פותח תמונה ומעדכן את ה-URL
@@ -323,6 +337,20 @@ export function showLightboxImage(isFirstLoad = false) {
 
     lightboxImg.src = currentImage.src;
     lightboxImg.alt = currentImage.alt;
+
+    // [עמידות לסינון]: גיבוי אוטומטי במקרה של חסימה ב-Lightbox
+    lightboxImg.onerror = () => {
+        if (lightboxImg.dataset.retried) return;
+        lightboxImg.dataset.retried = '1';
+        if (lightboxImg.src.includes('googleusercontent.com/d/')) {
+            const m = lightboxImg.src.match(/\/d\/([^=]+)/);
+            if (m) lightboxImg.src = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1200`;
+        } else if (lightboxImg.src.includes('drive.google.com')) {
+            const m = lightboxImg.src.match(/[?&]id=([^&]+)/);
+            if (m) lightboxImg.src = `https://lh3.googleusercontent.com/d/${m[1]}=s0`;
+        }
+    };
+
     updateDynamicMetadata(`${currentImage.alt} (תמונה ${currentIndex + 1})`);
 
     // [חדש] עדכון ה-URL עם הקישור לתמונה הספציפית
@@ -342,10 +370,13 @@ export function showLightboxImage(isFirstLoad = false) {
     // הגדרת כפתור הורדה
     if (downloadBtn) {
         downloadBtn.onclick = () => {
+            const match = currentImage.src.match(/(?:[?&]id=|\/d\/)([^&=]+)/);
+            const dlUrl = match ? `https://lh3.googleusercontent.com/d/${match[1]}=s0` : currentImage.src;
+
             const link = document.createElement('a');
-            link.href = currentImage.src;
+            link.href = dlUrl;
             link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
-            link.download = currentImage.src.split('/').pop() || 'image.jpg';
+            link.download = `${currentImage.albumSlug}-${currentIndex + 1}.jpg`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { fetchStaticJson, focusLock, getHebrewYear, parseFrontMatter, cleanPath } from './utils.js';
+import { fetchStaticJson, focusLock, getHebrewYear, parseFrontMatter, cleanPath, normalizeImageUrl } from './utils.js';
 
 describe('fetchStaticJson', () => {
     const originalFetch = global.fetch;
@@ -338,5 +338,35 @@ describe('cleanPath', () => {
     expect(cleanPath('%')).toBe('%');
     expect(cleanPath('bad%E0%A4%A')).toBe('bad%E0%A4%A');
     expect(cleanPath('%81')).toBe('%81');
+  });
+});
+
+describe('normalizeImageUrl', () => {
+  it('converts drive.google.com thumbnail URLs to lh3.googleusercontent.com', () => {
+    const input = 'https://drive.google.com/thumbnail?id=1SiH5tr8E69k8c10prkWA40PK40Z-Nc9C&sz=w1000';
+    const expected = 'https://lh3.googleusercontent.com/d/1SiH5tr8E69k8c10prkWA40PK40Z-Nc9C=w1000';
+    expect(normalizeImageUrl(input)).toBe(expected);
+  });
+
+  it('converts drive.google.com uc export URLs to lh3.googleusercontent.com', () => {
+    const input = 'https://drive.google.com/uc?export=view&id=ABC123xyz';
+    const expected = 'https://lh3.googleusercontent.com/d/ABC123xyz=w1000';
+    expect(normalizeImageUrl(input)).toBe(expected);
+  });
+
+  it('leaves already normalized googleusercontent URLs intact', () => {
+    const url = 'https://lh3.googleusercontent.com/d/ABC123xyz=w1000';
+    expect(normalizeImageUrl(url)).toBe(url);
+  });
+
+  it('leaves local paths and relative URLs intact', () => {
+    expect(normalizeImageUrl('assets/gallery/album/1.jpg')).toBe('assets/gallery/album/1.jpg');
+    expect(normalizeImageUrl('./assets/logo.png')).toBe('./assets/logo.png');
+  });
+
+  it('handles non-string, null or empty inputs gracefully', () => {
+    expect(normalizeImageUrl(null)).toBe(null);
+    expect(normalizeImageUrl(undefined)).toBe(undefined);
+    expect(normalizeImageUrl('')).toBe('');
   });
 });
