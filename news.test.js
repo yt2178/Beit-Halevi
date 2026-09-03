@@ -18,6 +18,7 @@ describe('closeNewsModal', () => {
             modalDate: document.createElement('div'),
             modalBody: document.createElement('div'),
             newsShareBtn: document.createElement('button'),
+            newsWhatsappBtn: document.createElement('button'),
             newsPrevBtn: document.createElement('button'),
             newsNextBtn: document.createElement('button'),
             updateDynamicMetadata: mockUpdateDynamicMetadata

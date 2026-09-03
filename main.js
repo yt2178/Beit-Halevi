@@ -35,6 +35,7 @@ export const modalTitle = document.getElementById('modal-title');
 export const modalDate = document.getElementById('modal-date');
 export const modalBody = document.getElementById('modal-body');
 export const newsShareBtn = document.getElementById('news-share-btn');
+export const newsWhatsappBtn = document.getElementById('news-whatsapp-btn');
 export const newsPrevBtn = document.getElementById('news-prev-btn');
 export const newsNextBtn = document.getElementById('news-next-btn');
 

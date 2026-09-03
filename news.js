@@ -3,7 +3,7 @@ import { allLoadedNews } from './data-loader.js';
 import { focusLock } from './utils.js';
 import {
     newsModal, modalTitle, modalDate, modalBody,
-    newsShareBtn, newsPrevBtn, newsNextBtn,
+    newsShareBtn, newsWhatsappBtn, newsPrevBtn, newsNextBtn,
     updateDynamicMetadata
 } from './main.js';
 export let currentNewsIndex = 0;
@@ -38,6 +38,15 @@ export function openNewsModal(newsItem) {
     updateDynamicMetadata(newsItem.title);
 
     // לוגיקת שיתוף (עם גיבוי)
+    if (newsWhatsappBtn) {
+        newsWhatsappBtn.style.display = 'flex';
+        newsWhatsappBtn.onclick = () => {
+            const shareUrl = `${window.location.origin}${window.location.pathname}#news/${newsItem.slug}`;
+            const text = `ידיעה חדשה מישיבת בית הלוי: ${newsItem.title}\n\n${shareUrl}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        };
+    }
+
     if (newsShareBtn) {
         newsShareBtn.style.display = 'flex';
         newsShareBtn.onclick = async () => {
