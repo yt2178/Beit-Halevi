@@ -409,7 +409,7 @@ export async function logEvent(action, type = 'general') {
 // 6. Push Notifications
 // ============================================================
 export async function sendPushNotification(title, message, isUpdate = false) {
-    let restKey = sessionStorage.getItem('onesignal_rest_key');
+    let restKey = localStorage.getItem('onesignal_rest_key');
     let appIdStr = null;
     
     try {

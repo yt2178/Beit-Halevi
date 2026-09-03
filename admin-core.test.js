@@ -50,7 +50,7 @@ describe('sendPushNotification', () => {
             <input id="site-onesignal-id" value="test-app-id">
             <input id="site-onesignal-rest" value="test-rest-key">
         `;
-        window.sessionStorage.clear();
+        window.localStorage.clear();
 
 if (mockFetch) mockFetch.mockClear();
         mockFetch = jest.spyOn(window, 'fetch').mockResolvedValue({
@@ -69,7 +69,7 @@ if (mockFetch) mockFetch.mockClear();
     it('should skip notification and log warning if restKey or appIdStr is missing', async () => {
         document.body.innerHTML = '';
 
-        window.sessionStorage.removeItem('onesignal_rest_key');
+        window.localStorage.removeItem('onesignal_rest_key');
 
         mockFetch.mockResolvedValueOnce({
             ok: true,
@@ -85,7 +85,7 @@ if (mockFetch) mockFetch.mockClear();
     it('should send notification successfully using localStorage restKey and DOM appId', async () => {
         document.body.innerHTML = '<input id="site-onesignal-id" value="test-app-id">';
 
-        window.sessionStorage.setItem('onesignal_rest_key', 'local-rest-key');
+        window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
 
         await sendPushNotification('Test Title', 'Test Message');
@@ -106,7 +106,7 @@ if (mockFetch) mockFetch.mockClear();
 
     it('should set filters in payload for updates (isUpdate = true)', async () => {
 
-        window.sessionStorage.setItem('onesignal_rest_key', 'local-rest-key');
+        window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
 
         await sendPushNotification('Test Title', 'Test Message', true);
@@ -123,7 +123,7 @@ if (mockFetch) mockFetch.mockClear();
     it('should fallback to GitHub API for appId if not in DOM', async () => {
         document.body.innerHTML = '<input id="site-onesignal-rest" value="test-rest-key">';
 
-        window.sessionStorage.setItem('onesignal_rest_key', 'local-rest-key');
+        window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
 
         const encodedConfig = btoa(unescape(encodeURIComponent(JSON.stringify({ oneSignalAppId: 'github-app-id' }))));
@@ -142,7 +142,7 @@ if (mockFetch) mockFetch.mockClear();
 
     it('should fallback to DOM configRestElement for restKey if not in localStorage', async () => {
 
-        window.sessionStorage.removeItem('onesignal_rest_key');
+        window.localStorage.removeItem('onesignal_rest_key');
 
 
         await sendPushNotification('Test Title', 'Test Message');
@@ -154,7 +154,7 @@ if (mockFetch) mockFetch.mockClear();
 
     it('should log error if OneSignal API response is not ok', async () => {
 
-        window.sessionStorage.setItem('onesignal_rest_key', 'local-rest-key');
+        window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
         mockFetch.mockResolvedValueOnce({
             ok: false,
@@ -168,7 +168,7 @@ if (mockFetch) mockFetch.mockClear();
 
     it('should catch and log network errors', async () => {
 
-        window.sessionStorage.setItem('onesignal_rest_key', 'local-rest-key');
+        window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
         const networkError = new Error('Network failure');
         mockFetch.mockRejectedValueOnce(networkError);
