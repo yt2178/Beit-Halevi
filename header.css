@@ -54,6 +54,7 @@ header h1 {
 }
 
 nav {
+    position: relative;
     background-color: var(--nav-bg);
     padding: 10px;
     text-align: center;
