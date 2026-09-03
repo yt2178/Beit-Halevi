@@ -519,7 +519,12 @@ async function loadAndRenderHistory() {
 
         container.innerHTML = '';
         if (history.length === 0) {
-            container.innerHTML = '<div class="empty-state"><p>אין פעולות מתועדות</p></div>';
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין פעולות מתועדות';
+            emptyState.appendChild(emptyText);
+            container.appendChild(emptyState);
             return;
         }
 
@@ -678,7 +683,15 @@ async function loadAndRenderMessages() {
 
         container.innerHTML = '';
         if (rows.length <= 1) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            const emptyIcon = document.createElement('i');
+            emptyIcon.className = 'fas fa-envelope-open';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין הודעות להצגה';
+            emptyState.appendChild(emptyIcon);
+            emptyState.appendChild(emptyText);
+            container.appendChild(emptyState);
             return;
         }
 
@@ -699,7 +712,15 @@ async function loadAndRenderMessages() {
         });
 
         if (visibleCount === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-envelope-open"></i><p>אין הודעות להצגה</p></div>';
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            const emptyIcon = document.createElement('i');
+            emptyIcon.className = 'fas fa-envelope-open';
+            const emptyText = document.createElement('p');
+            emptyText.textContent = 'אין הודעות להצגה';
+            emptyState.appendChild(emptyIcon);
+            emptyState.appendChild(emptyText);
+            container.appendChild(emptyState);
         }
     } catch (err) {
         const p = document.createElement('p');
