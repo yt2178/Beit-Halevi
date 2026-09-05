@@ -7,7 +7,9 @@
 // 1. Constants
 // ============================================================
 export const REPO_OWNER = 'yt2178';
-export const REPO_NAME = 'Beit-Halevi';
+export const REPO_NAME = (typeof window !== 'undefined' && window.location.hostname === 'yt2178.github.io' && !window.location.pathname.startsWith('/Beit-Halevi'))
+    ? 'yt2178.github.io'
+    : 'Beit-Halevi';
 export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
