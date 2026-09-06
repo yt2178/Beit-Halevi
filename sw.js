@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-cache-v56';
+const CACHE_NAME = 'beit-halevi-cache-v57';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -29,7 +29,13 @@ const ASSETS_TO_CACHE = [
     './news.js',
     './utils.js',
     './zmanim.js',
-    './manifest.json'
+    './manifest.json',
+    './favicon.ico',
+    './assets/icons/icon-192x192.png',
+    './assets/icons/icon-512x512.png',
+    './assets/icons/icon-maskable-192x192.png',
+    './assets/icons/icon-maskable-512x512.png',
+    './assets/icons/apple-touch-icon.png'
 ];
 
 const EXTERNAL_ASSETS = [
