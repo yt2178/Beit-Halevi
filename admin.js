@@ -4,7 +4,7 @@
 
 import {
     REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH,
-    MESSAGES_SHEET_URL,
+    MESSAGES_SHEET_URL, APPS_SCRIPT_URL, APPS_SCRIPT_SECRET,
     GITHUB_TOKEN, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, logEvent,
@@ -272,8 +272,10 @@ function logout() {
     if (confirm('האם אתה בטוח שברצונך לצאת?')) {
         sessionStorage.removeItem(GITHUB_TOKEN_KEY);
         sessionStorage.removeItem(GITHUB_USERNAME_KEY);
+        sessionStorage.removeItem('onesignal_rest_key');
         localStorage.removeItem(GITHUB_TOKEN_KEY);
         localStorage.removeItem(GITHUB_USERNAME_KEY);
+        localStorage.removeItem('onesignal_rest_key');
         updateGithubAuth(null, null);
         showToast('התנתקת בהצלחה', 1500, 'success');
         showAdminPanel();
@@ -591,10 +593,34 @@ async function fetchDeletedMessages() {
 }
 
 async function fetchMessagesFromSheet() {
-    const response = await window.fetch(MESSAGES_SHEET_URL);
-    if (!response.ok) throw new Error('Failed to load messages sheet');
-    const csvData = await response.text();
-    return parseCSV(csvData);
+    if (APPS_SCRIPT_URL) {
+        try {
+            const response = await window.fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "getMessages",
+                    secret: APPS_SCRIPT_SECRET
+                })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && Array.isArray(data.rows)) {
+                    return data.rows;
+                }
+            }
+        } catch (e) {
+            console.warn("Apps Script messages fetch error, trying fallback:", e);
+        }
+    }
+
+    if (MESSAGES_SHEET_URL && !MESSAGES_SHEET_URL.includes("נא_להזין")) {
+        const response = await window.fetch(MESSAGES_SHEET_URL);
+        if (response.ok) {
+            const csvData = await response.text();
+            return parseCSV(csvData);
+        }
+    }
+    throw new Error('Failed to load messages sheet');
 }
 
 function createMessageCardElement(timestamp, name, email, body, messageId) {
@@ -661,7 +687,7 @@ async function loadAndRenderMessages() {
     const container = document.getElementById('messages-list-container');
     if (!container) return;
 
-    if (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין")) {
+    if (!APPS_SCRIPT_URL && (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין"))) {
         container.innerHTML = '';
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';

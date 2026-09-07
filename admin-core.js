@@ -15,6 +15,8 @@ export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOoueCstmZRu_Ktn4qsXQUclzvnraaBaOx9sA1Vcde7Vc6OO7_Sl5ctR6oX5qgzYWTcA/exec";
+export const APPS_SCRIPT_SECRET = "beit_halevi_secret_2026";
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 // Google API Config
@@ -35,6 +37,7 @@ export let GITHUB_USERNAME = sessionStorage.getItem(GITHUB_USERNAME_KEY);
 // Security cleanup: remove vulnerable tokens from local storage
 localStorage.removeItem(GITHUB_TOKEN_KEY);
 localStorage.removeItem(GITHUB_USERNAME_KEY);
+localStorage.removeItem('onesignal_rest_key');
 
 window.tokenClient = null;
 
@@ -211,7 +214,49 @@ export async function getFolderId(token) {
     }
 }
 
-export async function uploadFileToDrive(file, token) {
+export async function uploadFileToDrive(file, token = null) {
+    // 1. נסה תחילה להעלות ישירות דרך שרת ה-Apps Script (ללא חלונות קופצים או פקיעת טוקן)
+    if (APPS_SCRIPT_URL) {
+        try {
+            const base64Data = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const res = reader.result;
+                    resolve(typeof res === 'string' ? res.split(',')[1] : '');
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            const payload = {
+                action: "uploadImage",
+                secret: APPS_SCRIPT_SECRET,
+                filename: file.name,
+                mimeType: file.type || 'image/jpeg',
+                base64: base64Data
+            };
+
+            const res = await window.fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.fileId) {
+                    return data.fileId;
+                }
+            }
+        } catch (scriptErr) {
+            console.warn("Apps Script direct upload failed, checking token fallback:", scriptErr);
+            if (!token) throw scriptErr;
+        }
+    }
+
+    if (!token) {
+        throw new Error("לא ניתן להעלות תמונה: שרת Google אינו זמין ואין טוקן התחברות.");
+    }
+
     const folderId = await getFolderId(token);
     const metadata = { name: file.name, parents: [folderId] };
     const form = new FormData();
@@ -323,16 +368,18 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
     throw lastErr;
 }
 
-export async function makeFilePublic(fileId, token) {
-    try {
-        const permUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "/permissions";
-        await window.fetch(permUrl, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-            body: JSON.stringify({ role: "reader", type: "anyone" })
-        });
-    } catch (e) {
-        console.error("DEBUG: makeFilePublic error:", e);
+export async function makeFilePublic(fileId, token = null) {
+    if (token) {
+        try {
+            const permUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXMv") + fileId + "/permissions";
+            await window.fetch(permUrl, {
+                method: "POST",
+                headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+                body: JSON.stringify({ role: "reader", type: "anyone" })
+            });
+        } catch (e) {
+            console.error("DEBUG: makeFilePublic error:", e);
+        }
     }
     return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
 }
@@ -411,7 +458,7 @@ export async function logEvent(action, type = 'general') {
 // 6. Push Notifications
 // ============================================================
 export async function sendPushNotification(title, message, isUpdate = false) {
-    let restKey = localStorage.getItem('onesignal_rest_key');
+    let restKey = sessionStorage.getItem('onesignal_rest_key') || localStorage.getItem('onesignal_rest_key');
     let appIdStr = null;
     
     try {

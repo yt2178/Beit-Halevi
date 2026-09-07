@@ -136,11 +136,9 @@ if (contactForm) {
         statusMessage.style.textAlign = 'center';
         statusMessage.style.marginTop = '10px';
 
-        // הכתובת של ה-Google Form (formResponse)
-        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSei1Bf5tZILqekHD0nV2QsirdzryO8YEoOtkcl7rVB9HCKUog/formResponse";
+        // הכתובת של ה-Google Apps Script Web App המרכזי
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOoueCstmZRu_Ktn4qsXQUclzvnraaBaOx9sA1Vcde7Vc6OO7_Sl5ctR6oX5qgzYWTcA/exec";
 
-        // מיפוי השדות (המשתמש יצטרך להוציא את ה-entry.ID מהטופס שלו)
-        
         // בדיקת האניפוט
         if (contactForm.honeypot && contactForm.honeypot.value !== "") {
             console.warn("Spam detected via honeypot");
@@ -153,17 +151,19 @@ if (contactForm) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('entry.659007933', contactForm.name.value);   // שם מלא
-        formData.append('entry.627036351', contactForm.email.value);  // אימייל
-        formData.append('entry.607110160', contactForm.message.value); // הודעה
+        const payload = {
+            action: "submitContact",
+            name: contactForm.name.value.trim(),
+            email: contactForm.email.value.trim(),
+            message: contactForm.message.value.trim()
+        };
 
         try {
-            // שליחה ל-Google Forms
-            await fetch(FORM_URL, {
+            // שליחה ישירה לשרת Apps Script
+            await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: formData
+                body: JSON.stringify(payload)
             });
 
             statusMessage.textContent = "ההודעה נשלחה בהצלחה! תודה רבה.";
@@ -273,6 +273,7 @@ if (hebrewYearDisplay) {
             try {
                 const registration = await navigator.serviceWorker.register('./sw.js');
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                registration.update();
             } catch (err) {
                 console.log('ServiceWorker registration failed: ', err);
             }

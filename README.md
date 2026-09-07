@@ -1,7 +1,7 @@
 # ישיבת בית הלוי - אתר רשמי 🏛️
 
-[![גרסה](https://img.shields.io/badge/גרסה-v1.0.31-gold.svg)](https://yt2178.github.io/Beit-Halevi/)
-[![Service Worker](https://img.shields.io/badge/Service_Worker-v57-blue.svg)](https://yt2178.github.io/Beit-Halevi/sw.js)
+[![גרסה](https://img.shields.io/badge/גרסה-v1.0.32-gold.svg)](https://yt2178.github.io/Beit-Halevi/)
+[![Service Worker](https://img.shields.io/badge/Service_Worker-v58-blue.svg)](https://yt2178.github.io/Beit-Halevi/sw.js)
 [![בדיקות יחידה](https://img.shields.io/badge/Jest_Tests-82_עברו-brightgreen.svg)](#-בדיקות-ואימות-איכות)
 [![סימולציית מערכת](https://img.shields.io/badge/סימולציה-23%2F23_עברו-success.svg)](#-בדיקות-ואימות-איכות)
 [![רישיון](https://img.shields.io/badge/רישיון-ISC-lightgrey.svg)](LICENSE)
@@ -265,5 +265,5 @@ npx serve .
 
 ---
 
-> **בס״ד — פותח עבור ישיבת בית הלוי, ראש העין.**  
+> **בס״ד — פותח ע״י The Creator YT עבור ישיבת בית הלוי, ראש העין.**  
 > *כל הזכויות שמורות לישיבת בית הלוי © תשפ״ו (2026).*

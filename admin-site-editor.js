@@ -72,7 +72,7 @@ export async function loadSiteConfig() {
                 document.getElementById('site-onesignal-id').value = currentSiteConfig.oneSignalAppId || '';
             }
             if (document.getElementById('site-onesignal-rest')) {
-                document.getElementById('site-onesignal-rest').value = localStorage.getItem('onesignal_rest_key') || '';
+                document.getElementById('site-onesignal-rest').value = sessionStorage.getItem('onesignal_rest_key') || localStorage.getItem('onesignal_rest_key') || '';
             }
 
             const onesignalBtn = document.getElementById('save-onesignal-btn');
@@ -81,8 +81,13 @@ export async function loadSiteConfig() {
                 const appId = document.getElementById('site-onesignal-id').value.trim();
                 const restKey = document.getElementById('site-onesignal-rest').value.trim();
 
-                if (restKey) localStorage.setItem('onesignal_rest_key', restKey);
-                else localStorage.removeItem('onesignal_rest_key');
+                if (restKey) {
+                    sessionStorage.setItem('onesignal_rest_key', restKey);
+                    localStorage.removeItem('onesignal_rest_key');
+                } else {
+                    sessionStorage.removeItem('onesignal_rest_key');
+                    localStorage.removeItem('onesignal_rest_key');
+                }
 
                 currentSiteConfig.oneSignalAppId = appId;
 

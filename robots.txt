@@ -1,7 +1,8 @@
 User-agent: *
 Allow: /
-# Disallow admin directory and raw data files
+# Disallow admin directory, admin page and raw data files
 Disallow: /admin/
+Disallow: /admin.html
 Disallow: /data/
 
 Sitemap: https://yt2178.github.io/Beit-Halevi/sitemap.xml

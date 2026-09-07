@@ -2,7 +2,7 @@ import {
     GITHUB_TOKEN, GITHUB_USERNAME, REPO_OWNER, REPO_NAME, GALLERY_JSON_PATH,
     decodeBase64ToUtf8, encodeToBase64,
     uploadFileToDrive, makeFilePublic,
-    googleLogin,
+    googleLogin, APPS_SCRIPT_URL,
     showStatus, hideStatus,
     logEvent, putWithShaRetry, sendPushNotification
 } from './admin-core.js';
@@ -562,7 +562,7 @@ async function handleGallerySubmit(e) {
     try {
         // [תיקון קריטי 1]: ביצוע Login וקבלת ה-Token
         showStatus('מתחבר לחשבון גוגל...', 20);
-        const googleAccessToken = await googleLogin();
+        const googleAccessToken = APPS_SCRIPT_URL ? null : await googleLogin();
 
         // 1. השגת הקובץ הנוכחי
         showStatus('ניגש למאגר הנתונים ב-GitHub...', 35);

@@ -35,8 +35,7 @@ function formatHebrewDateString(d) {
     }
 }
 
-// ---- גלריה.js ----
-import { allLoadedAlbums } from './data-loader.js';
+import { allLoadedAlbums, BASE_URL } from './data-loader.js';
 import { cleanPath, focusLock, normalizeImageUrl } from './utils.js';
 import {
     gridOverlay, lightbox, downloadBtn, lightboxCloseBtn,
@@ -75,11 +74,15 @@ export function openGridOverlay(albumData) {
     }
 
     updateDynamicMetadata(`גלריה: ${albumData.title}`);
-    currentAlbumImages = (albumData.images || []).map((imgSrc, index) => ({
-        src: normalizeImageUrl(cleanPath(imgSrc)),
-        alt: `${albumData.title} - תמונה ${index + 1}`,
-        albumSlug: albumData.slug
-    }));
+    currentAlbumImages = (albumData.images || []).map((imgSrc, index) => {
+        const cleaned = cleanPath(imgSrc);
+        const fullSrc = cleaned.startsWith('http') ? normalizeImageUrl(cleaned) : (BASE_URL ? `${BASE_URL}/${cleaned}` : cleaned);
+        return {
+            src: fullSrc,
+            alt: `${albumData.title} - תמונה ${index + 1}`,
+            albumSlug: albumData.slug
+        };
+    });
     setupAlbumControls(albumData);
 
     if (currentAlbumImages.length === 0) {
@@ -115,6 +118,13 @@ export function openGridOverlay(albumData) {
                     } else if (thumb.src.includes('drive.google.com')) {
                         const m = thumb.src.match(/[?&]id=([^&]+)/);
                         if (m) thumb.src = `https://lh3.googleusercontent.com/d/${m[1]}=w1000`;
+                    } else {
+                        const orig = cleanPath(imgData.src);
+                        if (thumb.src.includes('/Beit-Halevi/')) {
+                            thumb.src = orig;
+                        } else {
+                            thumb.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+                        }
                     }
                 };
 
@@ -348,6 +358,13 @@ export function showLightboxImage(isFirstLoad = false) {
         } else if (lightboxImg.src.includes('drive.google.com')) {
             const m = lightboxImg.src.match(/[?&]id=([^&]+)/);
             if (m) lightboxImg.src = `https://lh3.googleusercontent.com/d/${m[1]}=s0`;
+        } else {
+            const orig = cleanPath(currentImage.src);
+            if (lightboxImg.src.includes('/Beit-Halevi/')) {
+                lightboxImg.src = orig;
+            } else {
+                lightboxImg.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+            }
         }
     };
 

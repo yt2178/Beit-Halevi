@@ -26,7 +26,7 @@ async function fetchAndParse(path) {
         }
     // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
     if (path.includes('gallery')) {
-        let data = await fetchStaticJson('gallery');
+        let data = await fetchStaticJson('gallery?v=' + Date.now());
         // [תיקון קריטי לסינון אתרוג/אינטרנט כשר]: המרת כל קישורי דרייב ל-Google CDN ישיר
         if (Array.isArray(data)) {
             data.forEach(album => {
@@ -83,7 +83,10 @@ export async function applySiteConfig() {
             
             const donationLink = document.getElementById('donation-link-dynamic');
             if (donationLink && config.texts.donation_link) {
-                donationLink.href = config.texts.donation_link;
+                const url = config.texts.donation_link.trim();
+                if (/^https?:\/\//i.test(url)) {
+                    donationLink.href = url;
+                }
             }
         }
 
@@ -152,8 +155,21 @@ export async function loadGallery() {
         img.className = 'lazy-load';
         img.width = 300;
         img.height = 220;
-        img.src = cleanPath(albumData.thumbnail);
+        const cleanThumb = cleanPath(albumData.thumbnail);
+        const fullThumbSrc = cleanThumb.startsWith('http') ? cleanThumb : (BASE_URL ? `${BASE_URL}/${cleanThumb}` : cleanThumb);
+        img.src = fullThumbSrc;
         img.alt = 'אלבום תמונות: ' + albumData.title;
+
+        // [עמידות לנתיבים וסינון] מנגנון גיבוי אוטומטי במקרה של שגיאה
+        img.onerror = () => {
+            if (img.dataset.retried) return;
+            img.dataset.retried = '1';
+            if (img.src.includes('/Beit-Halevi/')) {
+                img.src = cleanThumb;
+            } else {
+                img.src = `${window.location.origin}/Beit-Halevi/${cleanThumb}`;
+            }
+        };
 
         const titleDiv = document.createElement('div');
         titleDiv.className = 'album-title';

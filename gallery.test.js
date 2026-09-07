@@ -20,7 +20,8 @@ const mockUpdateDynamicMetadata = jest.fn();
 
 // Pre-mock dependencies
 jest.unstable_mockModule('./data-loader.js', () => ({
-    allLoadedAlbums: []
+    allLoadedAlbums: [],
+    BASE_URL: ''
 }));
 
 jest.unstable_mockModule('./utils.js', () => ({

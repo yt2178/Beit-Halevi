@@ -49,7 +49,9 @@ export function parseFrontMatter(content) {
 }
 // ---- פונקציה לטעינת JSON סטטי ----
 export async function fetchStaticJson(path) {
-    const url = `./data/${path}.json`; // מצפה לקובץ בנתיב /data/news.json או /data/gallery.json
+    const cleanName = path.split('?')[0];
+    const query = path.includes('?') ? '?' + path.split('?')[1] : '';
+    const url = `./data/${cleanName}.json${query}`;
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Network response error for ${url}`);
