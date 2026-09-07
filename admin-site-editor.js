@@ -278,3 +278,35 @@ export async function saveAllSiteSettings() {
         showStatus(`❌ שגיאה: ${err.message}`, null, true);
     }
 }
+
+export async function pingIndexNow() {
+    const statusEl = document.getElementById('indexnow-status');
+    const btn = document.getElementById('ping-indexnow-btn');
+    if (statusEl) {
+        statusEl.textContent = 'שולח עדכון למנועי חיפוש...';
+        statusEl.style.color = '#e67e22';
+    }
+    if (btn) btn.disabled = true;
+
+    try {
+        const key = '24896f10ac3d42c5a84385b89040c587';
+        const keyLocation = 'https://yt2178.github.io/24896f10ac3d42c5a84385b89040c587.txt';
+        const url = 'https://yt2178.github.io/Beit-Halevi/';
+        const endpoint = `https://api.indexnow.org/indexnow?url=${encodeURIComponent(url)}&key=${key}&keyLocation=${encodeURIComponent(keyLocation)}`;
+        
+        await fetch(endpoint, { mode: 'no-cors' });
+        if (statusEl) {
+            statusEl.textContent = '✅ נשלח בהצלחה ל-Bing, Copilot ו-ChatGPT!';
+            statusEl.style.color = '#27ae60';
+        }
+    } catch (err) {
+        console.error('IndexNow ping failed:', err);
+        if (statusEl) {
+            statusEl.textContent = '❌ שגיאה בשליחה: ' + err.message;
+            statusEl.style.color = '#e74c3c';
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+

@@ -15,7 +15,7 @@ import { putWithShaRetry } from './admin-core.js';
 
 import { loadAndRenderGallery, initGalleryAdminEvents } from './admin-gallery.js';
 import { loadAndRenderTasks } from './admin-tasks.js';
-import { loadSiteConfig, saveAllSiteSettings } from './admin-site-editor.js';
+import { loadSiteConfig, saveAllSiteSettings, pingIndexNow } from './admin-site-editor.js';
 
 const GITHUB_TOKEN_KEY = 'admin_github_token';
 const GITHUB_USERNAME_KEY = 'admin_github_username';
@@ -1031,6 +1031,7 @@ async function initAdmin() {
         await loadSiteConfig();
     });
     document.getElementById('save-all-site-settings')?.addEventListener('click', saveAllSiteSettings);
+    document.getElementById('ping-indexnow-btn')?.addEventListener('click', pingIndexNow);
 
     document.querySelectorAll('.back-to-dashboard-btn').forEach(btn => {
         btn.addEventListener('click', () => navigateTo('dashboard-section'));
