@@ -48,21 +48,20 @@ img {
 @media screen and (max-width: 768px) {
 
     /* ניווט */
-    nav, nav * {
-        justify-content: space-between;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     nav {
-        padding: 8px 15px;
-        max-height: 100px;
-        overflow: hidden;
+        position: relative !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 6px 14px !important;
+        overflow: visible !important;
         opacity: 1;
         transform: translateY(0);
+        transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
     }
 
     /* הנפשה חלקה של העלמות שורת הכפתורים בגלילה */
-    .sticky-wrapper.scrolled nav {
+    .sticky-wrapper.scrolled nav:not(.menu-open) {
         max-height: 0 !important;
         height: 0 !important;
         min-height: 0 !important;
@@ -75,8 +74,8 @@ img {
         transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, visibility 0.3s ease, height 0.3s ease;
     }
 
-    /* תיקון באג דפדפנים: דחיסת כל הילדים כדי למנוע רווח רפאים */
-    .sticky-wrapper.scrolled nav * {
+    /* תיקון באג דפדפנים: דחיסת כל הילדים כדי למנוע רווח רפאים רק כשהתפריט סגור */
+    .sticky-wrapper.scrolled nav:not(.menu-open) * {
         max-height: 0 !important;
         height: 0 !important;
         min-height: 0 !important;
@@ -86,12 +85,14 @@ img {
         overflow: hidden !important;
     }
 
-    nav {
-        position: relative !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 6px 14px !important;
+    /* כאשר התפריט פתוח - שמור על תצוגה פתוחה ומלאה */
+    nav.menu-open,
+    .sticky-wrapper.scrolled nav.menu-open {
+        max-height: none !important;
+        height: auto !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        overflow: visible !important;
     }
 
     .menu-toggle {
@@ -821,6 +822,7 @@ iframe {
     nav {
         padding: 5px 10px !important;
         min-height: 45px;
+        overflow: visible !important;
     }
 
     .nav-links {

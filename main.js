@@ -190,10 +190,14 @@ if (contactForm) {
 // [חדש] קוד לתפריט נייד
 if (menuToggle && navLinks) {
     const icon = menuToggle.querySelector('i');
+    const mainNav = document.getElementById('main-nav');
     const closeMenu = () => {
         navLinks.classList.remove('active');
-        icon.classList.add('fa-bars');
-        icon.classList.remove('fa-times');
+        if (mainNav) mainNav.classList.remove('menu-open');
+        if (icon) {
+            icon.classList.add('fa-bars');
+            icon.classList.remove('fa-times');
+        }
     };
     
     // [ חדש] 2. טיפול בלחיצה על כפתור התפריט
@@ -205,8 +209,11 @@ if (menuToggle && navLinks) {
             closeMenu();
         } else {
             navLinks.classList.add('active');
-            icon.classList.remove('fa-bars');
-            icon.classList.add('fa-times');
+            if (mainNav) mainNav.classList.add('menu-open');
+            if (icon) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            }
         }
     });
     navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
