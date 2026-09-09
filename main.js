@@ -633,11 +633,18 @@ if (hebrewYearDisplay) {
     // --- [חדש] לוגיקה לכותרת מצטמצמת בגלילה (Sticky Shrunk Header) ---
     const stickyWrapper = document.getElementById('sticky-header-wrapper');
     if (stickyWrapper) {
+        let ticking = false;
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                stickyWrapper.classList.add('scrolled');
-            } else {
-                stickyWrapper.classList.remove('scrolled');
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    if (window.scrollY > 50) {
+                        stickyWrapper.classList.add('scrolled');
+                    } else {
+                        stickyWrapper.classList.remove('scrolled');
+                    }
+                    ticking = false;
+                });
+                ticking = true;
             }
         });
     }
