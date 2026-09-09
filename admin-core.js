@@ -37,7 +37,6 @@ export let GITHUB_USERNAME = sessionStorage.getItem(GITHUB_USERNAME_KEY);
 // Security cleanup: remove vulnerable tokens from local storage
 localStorage.removeItem(GITHUB_TOKEN_KEY);
 localStorage.removeItem(GITHUB_USERNAME_KEY);
-localStorage.removeItem('onesignal_rest_key');
 
 window.tokenClient = null;
 
@@ -454,78 +453,3 @@ export async function logEvent(action, type = 'general') {
     }
 }
 
-// ============================================================
-// 6. Push Notifications
-// ============================================================
-export async function sendPushNotification(title, message, isUpdate = false) {
-    let restKey = sessionStorage.getItem('onesignal_rest_key') || localStorage.getItem('onesignal_rest_key');
-    let appIdStr = null;
-    
-    try {
-        const configElement = document.getElementById('site-onesignal-id');
-        const configRestElement = document.getElementById('site-onesignal-rest');
-        
-        if (configElement && configElement.value) {
-            appIdStr = configElement.value.trim();
-        }
-        
-        // [שיפור] אם אין מפתח מקומי, נסה לקחת מהשדה (שעשוי להכיל מפתח גלובלי)
-        if (!restKey && configRestElement && configRestElement.value) {
-            restKey = configRestElement.value.trim();
-        }
-
-        if (!appIdStr) {
-            // גיבוי לטעינה מהקובץ אם השדה לא נמצא או חסר מפתח
-            const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
-            const res = await window.fetch(resUrl);
-            if (res.ok) {
-                const data = await res.json();
-                const config = JSON.parse(decodeBase64ToUtf8(data.content.replace(/\n/g, '')));
-                if (!appIdStr) appIdStr = config.oneSignalAppId;
-            }
-        }
-    } catch (e) {
-        console.error("Could not fetch OneSignal App ID", e);
-    }
-
-    if (!restKey || !appIdStr) {
-        console.warn("OneSignal REST Key or App ID differs/missing. Push notification skipped.");
-        return;
-    }
-
-    try {
-        const payload = {
-            app_id: appIdStr,
-            headings: { "en": title, "he": title },
-            contents: { "en": message, "he": message },
-            url: "https://yt2178.github.io/Beit-Halevi/"
-        };
-
-        if (isUpdate) {
-            // Target users who subscribed to updates (subscribe_updates == "true")
-            payload.filters = [
-                { "field": "tag", "key": "subscribe_updates", "relation": "=", "value": "true" }
-            ];
-        } else {
-            // Target all subscribed users
-            payload.included_segments = ["Subscribed Users"];
-        }
-
-        const response = await window.fetch("https://onesignal.com/api/v1/notifications", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Basic " + restKey
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            console.error("Failed to send push notification:", await response.text());
-        } else {
-            console.log("Push notification sent successfully!");
-        }
-    } catch (err) {
-        console.error("Error sending push notification:", err);
-    }
-}
