@@ -26,7 +26,7 @@ async function fetchAndParse(path) {
         }
     // אם הנתיב מכיל gallery, קרא את קובץ gallery.json
     if (path.includes('gallery')) {
-        let data = await fetchStaticJson('gallery?v=' + Date.now());
+        let data = await fetchStaticJson('gallery');
         // [תיקון קריטי לסינון אתרוג/אינטרנט כשר]: המרת כל קישורי דרייב ל-Google CDN ישיר
         if (Array.isArray(data)) {
             data.forEach(album => {
