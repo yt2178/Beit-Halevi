@@ -8,7 +8,6 @@ import {
     GITHUB_TOKEN, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, logEvent,
-    sendPushNotification,
     uploadFileToDrive, makeFilePublic, verifyGitHubToken
 } from './admin-core.js';
 import { putWithShaRetry } from './admin-core.js';
@@ -272,10 +271,8 @@ function logout() {
     if (confirm('האם אתה בטוח שברצונך לצאת?')) {
         sessionStorage.removeItem(GITHUB_TOKEN_KEY);
         sessionStorage.removeItem(GITHUB_USERNAME_KEY);
-        sessionStorage.removeItem('onesignal_rest_key');
         localStorage.removeItem(GITHUB_TOKEN_KEY);
         localStorage.removeItem(GITHUB_USERNAME_KEY);
-        localStorage.removeItem('onesignal_rest_key');
         updateGithubAuth(null, null);
         showToast('התנתקת בהצלחה', 1500, 'success');
         showAdminPanel();
@@ -932,12 +929,6 @@ async function handleSaveNews(e) {
             showStatus('הידיעה פורסמה בהצלחה!', 100);
             setTimeout(hideStatus, 1500);
             logEvent(`${isEdit ? 'עדכן' : 'הוסיף'} ידיעה: ${title}`, 'news');
-
-            if (!isEdit) {
-                sendPushNotification(title, "פרסום חדש באתר ישיבת בית הלוי: היכנסו לקריאה מלאה.", false);
-            } else {
-                sendPushNotification(title, "עדכון בפרסום באתר ישיבת בית הלוי: היכנסו לצפייה בפרטים המעודכנים.", true);
-            }
 
             resetNewsForm();
             await loadAndRenderNewsList();
