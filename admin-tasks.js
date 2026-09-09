@@ -20,7 +20,10 @@ export async function loadAndRenderTasks() {
     const container = getTasksListContainer();
     if (!container) return;
     
-    container.innerHTML = '<p style="text-align:center;">טוען משימות...</p>';
+    const loadingP = document.createElement('p');
+    loadingP.style.cssText = 'text-align:center;';
+    loadingP.textContent = 'טוען משימות...';
+    container.replaceChildren(loadingP);
     
     try {
         const API_URL = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + TASKS_JSON_PATH;
@@ -80,8 +83,7 @@ export async function loadAndRenderTasks() {
         const p = document.createElement('p');
         p.style.cssText = 'text-align:center; color:red;';
         p.textContent = 'שגיאה בטעינת משימות: ' + err.message;
-        container.innerHTML = '';
-        container.appendChild(p);
+        container.replaceChildren(p);
     }
 }
 
@@ -90,11 +92,14 @@ function renderTasks() {
     if (!container) return;
     
     if (allTasks.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">אין משימות פתוחות. עבודה טובה!</p>';
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center; color:#7f8c8d;';
+        p.textContent = 'אין משימות פתוחות. עבודה טובה!';
+        container.replaceChildren(p);
         return;
     }
     
-    container.innerHTML = '';
+    container.replaceChildren();
     const fragment = document.createDocumentFragment();
     allTasks.forEach((task, index) => {
         const div = document.createElement('div');
@@ -127,7 +132,7 @@ function renderTasks() {
         `;
         
         const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '🗑️';
+        deleteBtn.textContent = '🗑️';
         deleteBtn.style.cssText = 'background:none; border:none; cursor:pointer; font-size:1.1rem; opacity:0.6;';
         deleteBtn.title = 'מחק משימה';
         deleteBtn.addEventListener('click', () => deleteTask(index));
