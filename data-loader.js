@@ -106,8 +106,8 @@ export async function loadGallery() {
     const response = await fetchAndParse('_posts/gallery');
     
     // Skeleton for albums
-    if (!albumContainer.innerHTML || albumContainer.innerHTML.includes('טוען')) {
-        albumContainer.innerHTML = '';
+    if (!albumContainer.hasChildNodes() || albumContainer.textContent.includes('טוען')) {
+        albumContainer.replaceChildren();
         for (let i = 0; i < 3; i++) {
             const div = document.createElement('div');
             div.className = 'album-cover skeleton-box';
@@ -120,8 +120,7 @@ export async function loadGallery() {
         const p = document.createElement('p');
         p.style.cssText = 'text-align:center; color: red;';
         p.textContent = response?.message || 'שגיאה בטעינת האלבומים.';
-        albumContainer.innerHTML = '';
-        albumContainer.appendChild(p);
+        albumContainer.replaceChildren(p);
         return;
     }
     const items = response;
@@ -140,9 +139,12 @@ export async function loadGallery() {
             return dateB.localeCompare(dateA);
         });
 
-    albumContainer.innerHTML = '';
+    albumContainer.replaceChildren();
     if (allLoadedAlbums.length === 0) {
-        albumContainer.innerHTML = '<p style="text-align:center;">לא נמצאו אלבומים.</p>';
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center;';
+        p.textContent = 'לא נמצאו אלבומים.';
+        albumContainer.replaceChildren(p);
         return;
     }
 
@@ -201,7 +203,7 @@ export async function loadNews(loadMore = false) {
 
     // הצג סקלטון בזמן הטעינה
     if (!loadMore) {
-        newsContainer.innerHTML = '';
+        newsContainer.replaceChildren();
         for (let i = 0; i < 3; i++) {
             const item = document.createElement('div');
             item.className = 'skeleton-item';
@@ -228,8 +230,7 @@ export async function loadNews(loadMore = false) {
         const p = document.createElement('p');
         p.style.cssText = 'text-align:center; color: red;';
         p.textContent = response?.message || 'שגיאה בטעינת העדכונים. ודא שקובץ data/news.json קיים.';
-        newsContainer.innerHTML = '';
-        newsContainer.appendChild(p);
+        newsContainer.replaceChildren(p);
         return;
     }
     const items = response;
@@ -246,11 +247,14 @@ export async function loadNews(loadMore = false) {
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (!loadMore) {
-        newsContainer.innerHTML = '';
+        newsContainer.replaceChildren();
     }
 
     if (allLoadedNews.length === 0) {
-        newsContainer.innerHTML = '<p style="text-align:center;">אין עדכונים חדשים כרגע.</p>';
+        const p = document.createElement('p');
+        p.style.cssText = 'text-align:center;';
+        p.textContent = 'אין עדכונים חדשים כרגע.';
+        newsContainer.replaceChildren(p);
         return;
     }
 
@@ -282,9 +286,9 @@ export async function loadNews(loadMore = false) {
 
         // [תיקון אבטחה] ניקוי מלא של ה-HTML ואז חילוץ טקסט נקי כדי למנוע XSS מקיטוע של תגיות
         const cleanFullHTML = DOMPurify.sanitize(marked.parse(item.body));
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = cleanFullHTML;
-        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(cleanFullHTML, 'text/html');
+        const plainText = doc.body.textContent || doc.body.innerText || '';
 
         const truncatedText = plainText.slice(0, 150);
         bodyDiv.textContent = truncatedText + '... ';
@@ -316,7 +320,10 @@ export async function loadNews(loadMore = false) {
         loadMoreButton.addEventListener('click', async () => {
             // [חדש] הצגת ספינר בזמן הטעינה
             loadMoreButton.disabled = true;
-            loadMoreButton.innerHTML = '<span class="spinner"></span>טוען...';
+
+            const spinner = document.createElement('span');
+            spinner.className = 'spinner';
+            loadMoreButton.replaceChildren(spinner, 'טוען...');
 
             // [שינוי] משתמש ב-await כדי לחכות שהטעינה תסתיים
             await loadNews(true);
