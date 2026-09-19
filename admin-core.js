@@ -403,18 +403,39 @@ export async function getFileWebViewLink(fileId, token) {
 // [חדש] פונקציה לאימות הטוקן מול GitHub
 export async function verifyGitHubToken(token) {
     try {
-        const response = await window.fetch('https://api.github.com/user', {
+        const userRes = await window.fetch('https://api.github.com/user', {
             headers: {
                 'Authorization': "token " + token
             }
         });
 
-        if (response.ok) {
-            const userData = await response.json();
-            return userData.name || userData.login; // מחזיר את שם המשתמש האמיתי
-        } else {
+        if (!userRes.ok) {
             return null;
         }
+
+        const userData = await userRes.json();
+
+        // בדיקה שהטוקן מקושר למאגר ובעל הרשאות כתיבה
+        try {
+            const repoRes = await window.fetch("https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME, {
+                headers: {
+                    'Authorization': "token " + token
+                }
+            });
+
+            if (!repoRes.ok) {
+                return null;
+            }
+
+            const repoData = await repoRes.json();
+            if (repoData.permissions && repoData.permissions.push === false) {
+                return null;
+            }
+        } catch (e) {
+            return null;
+        }
+
+        return userData.name || userData.login; // מחזיר את שם המשתמש האמיתי
     } catch (error) {
         return null;
     }

@@ -988,8 +988,9 @@ async function initAdmin() {
             localStorage.removeItem(GITHUB_TOKEN_KEY);
             localStorage.removeItem(GITHUB_USERNAME_KEY);
             localStorage.removeItem('onesignal_rest_key');
+            updateGithubAuth(null, null); // איפוס המשתנה בזיכרון
             // הצג הודעת שגיאה מותאמת בטופס הכניסה
-            showAdminPanel(); // יראה את מסך הכניסה (כי GITHUB_TOKEN נמחק)
+            showAdminPanel(); // יראה את מסך הכניסה
             const errMsg = document.getElementById('login-error-msg') || (() => {
                 const p = document.createElement('p');
                 p.id = 'login-error-msg';
@@ -998,7 +999,7 @@ async function initAdmin() {
                 if (loginForm) loginForm.appendChild(p);
                 return p;
             })();
-            errMsg.textContent = '⚠️ הטוקן שנשמר פג תוקפו. נא להזין טוקן חדש.';
+            errMsg.textContent = '⚠️ הטוקן שנשמר אינו תקין, פג תוקפו, או שאין לו הרשאות כתיבה למאגר. נא להזין טוקן תקין.';
             return;
         }
     }
