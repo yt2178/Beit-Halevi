@@ -239,7 +239,7 @@ function getFinalSlug(title, date) {
 
 // הצגת/הסתרת פאנל הניהול
 function showAdminPanel() {
-    if (GITHUB_TOKEN) {
+    if (GITHUB_TOKEN && sessionStorage.getItem(GITHUB_TOKEN_KEY)) {
         loginSection.style.display = 'none';
         dashboardSection.style.display = 'block';
 
@@ -978,8 +978,9 @@ async function initAdmin() {
     }
 
     // בדיקת תוקף הטוקן מול GitHub בכל כניסה לדף
-    if (GITHUB_TOKEN) {
-        const isValid = await verifyGitHubToken(GITHUB_TOKEN);
+    const tokenToCheck = sessionStorage.getItem(GITHUB_TOKEN_KEY) || GITHUB_TOKEN;
+    if (tokenToCheck) {
+        const isValid = await verifyGitHubToken(tokenToCheck);
         if (!isValid) {
             // הטוקן פג תוקפו – נקה sessionstorage והצג הודעה
             sessionStorage.removeItem(GITHUB_TOKEN_KEY);
@@ -1002,6 +1003,8 @@ async function initAdmin() {
             errMsg.textContent = '⚠️ הטוקן שנשמר אינו תקין, פג תוקפו, או שאין לו הרשאות כתיבה למאגר. נא להזין טוקן תקין.';
             return;
         }
+    } else {
+        updateGithubAuth(null, null);
     }
 
     showAdminPanel();

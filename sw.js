@@ -1,4 +1,4 @@
-const CACHE_NAME = 'beit-halevi-cache-v58';
+const CACHE_NAME = 'beit-halevi-cache-v59';
 
 const ASSETS_TO_CACHE = [
     './',
@@ -81,6 +81,22 @@ self.addEventListener('fetch', (event) => {
 
     // Network-First עבור קובצי JSON דינמיים מתיקיית /data/ כדי להבטיח עדכניות מיידית
     if (url.pathname.includes('/data/')) {
+        event.respondWith(
+            fetch(event.request).then((response) => {
+                if (response && response.status === 200) {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return response;
+            }).catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Network-First עבור פאנל הניהול וקבצי הניהול כדי למנוע טעינת סקריפטים ישנים
+    if (url.pathname.includes('admin')) {
         event.respondWith(
             fetch(event.request).then((response) => {
                 if (response && response.status === 200) {
