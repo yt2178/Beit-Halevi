@@ -977,6 +977,32 @@ async function initAdmin() {
         initGoogleLogin();
     }
 
+    // בדיקת תוקף הטוקן מול GitHub בכל כניסה לדף
+    if (GITHUB_TOKEN) {
+        const isValid = await verifyGitHubToken(GITHUB_TOKEN);
+        if (!isValid) {
+            // הטוקן פג תוקפו – נקה sessionstorage והצג הודעה
+            sessionStorage.removeItem(GITHUB_TOKEN_KEY);
+            sessionStorage.removeItem(GITHUB_USERNAME_KEY);
+            sessionStorage.removeItem('onesignal_rest_key');
+            localStorage.removeItem(GITHUB_TOKEN_KEY);
+            localStorage.removeItem(GITHUB_USERNAME_KEY);
+            localStorage.removeItem('onesignal_rest_key');
+            // הצג הודעת שגיאה מותאמת בטופס הכניסה
+            showAdminPanel(); // יראה את מסך הכניסה (כי GITHUB_TOKEN נמחק)
+            const errMsg = document.getElementById('login-error-msg') || (() => {
+                const p = document.createElement('p');
+                p.id = 'login-error-msg';
+                p.style.cssText = 'color:#e74c3c;text-align:center;margin-top:10px;font-weight:bold;';
+                const loginForm = document.getElementById('login-form');
+                if (loginForm) loginForm.appendChild(p);
+                return p;
+            })();
+            errMsg.textContent = '⚠️ הטוקן שנשמר פג תוקפו. נא להזין טוקן חדש.';
+            return;
+        }
+    }
+
     showAdminPanel();
 
     // אתחול בחירת שם מנהל
