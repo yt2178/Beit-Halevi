@@ -3,7 +3,9 @@ import { cleanPath, fetchStaticJson, normalizeImageUrl } from './utils.js';
 import { openGridOverlay, checkUrlHash } from './gallery.js';
 import { openNewsModal, checkNewsHash } from './news.js';
 // ---- קבועים גלובליים ----
-export const BASE_URL = window.location.origin + (window.location.pathname.startsWith('/Beit-Halevi') ? '/Beit-Halevi' : '');
+export const BASE_URL = (typeof window !== 'undefined' && window.location.origin.includes('github.io'))
+    ? 'https://yt2178.github.io/Beit-Halevi'
+    : (typeof window !== 'undefined' && window.location.pathname.startsWith('/Beit-Halevi') ? '/Beit-Halevi' : '');
 
 // ---- משתנים גלובליים ----
 export let allLoadedNews = [];

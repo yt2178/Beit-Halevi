@@ -415,21 +415,26 @@ export async function verifyGitHubToken(token) {
 
         const userData = await userRes.json();
 
-        // בדיקה שהטוקן מקושר למאגר ובעל הרשאות כתיבה
+        // בדיקה ישירה של הרשאות גישה לקובצי המאגר (Contents)
         try {
-            const repoRes = await window.fetch("https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME, {
+            const contentsRes = await window.fetch("https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH, {
                 headers: {
                     'Authorization': "token " + token
                 }
             });
 
-            if (!repoRes.ok) {
+            if (!contentsRes.ok) {
+                // אם גיטהאב מחזיר 403 או 401 - לטוקן אין הרשאה לקובצי המאגר
                 return null;
             }
 
-            const repoData = await repoRes.json();
-            if (repoData.permissions && repoData.permissions.push === false) {
-                return null;
+            // בדיקת Scopes עבור Classic Token
+            const scopes = contentsRes.headers.get('x-oauth-scopes') || userRes.headers.get('x-oauth-scopes');
+            if (scopes !== null) {
+                const scopeList = scopes.split(',').map(s => s.trim());
+                if (!scopeList.includes('repo') && !scopeList.includes('public_repo')) {
+                    return null;
+                }
             }
         } catch (e) {
             return null;

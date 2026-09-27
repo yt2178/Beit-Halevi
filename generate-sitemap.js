@@ -11,32 +11,32 @@ function generateSlug(title, date) {
 let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/</loc>
+    <loc>https://yt2178.github.io/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#about</loc>
+    <loc>https://yt2178.github.io/#about</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#zmanim</loc>
+    <loc>https://yt2178.github.io/#zmanim</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#news</loc>
+    <loc>https://yt2178.github.io/#news</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#gallery</loc>
+    <loc>https://yt2178.github.io/#gallery</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#contact</loc>
+    <loc>https://yt2178.github.io/#contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -46,7 +46,7 @@ news.forEach(item => {
     if (item.data && item.data.title && item.data.date) {
         const slug = encodeURIComponent(generateSlug(item.data.title, item.data.date));
         sitemap += `  <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#news/${slug}</loc>
+    <loc>https://yt2178.github.io/#news/${slug}</loc>
     <lastmod>${item.data.date}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -58,7 +58,7 @@ gallery.forEach(item => {
     if (item.data && item.data.title) {
         const cleanTitle = encodeURIComponent(item.data.title.replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, ''));
         sitemap += `  <url>
-    <loc>https://yt2178.github.io/Beit-Halevi/#gallery/${cleanTitle}</loc>
+    <loc>https://yt2178.github.io/#gallery/${cleanTitle}</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>\n`;
