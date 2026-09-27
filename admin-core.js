@@ -31,13 +31,15 @@ export const GITHUB_USERNAME_KEY = 'admin_github_username';
 // ============================================================
 // 2. Global State
 // ============================================================
-export let GITHUB_TOKEN = sessionStorage.getItem(GITHUB_TOKEN_KEY);
-export let GITHUB_USERNAME = sessionStorage.getItem(GITHUB_USERNAME_KEY);
+export let GITHUB_TOKEN = null;
+export let GITHUB_USERNAME = null;
 
 // Security cleanup: remove vulnerable tokens from local storage
 localStorage.removeItem(GITHUB_TOKEN_KEY);
 localStorage.removeItem(GITHUB_USERNAME_KEY);
 localStorage.removeItem('onesignal_rest_key');
+sessionStorage.removeItem(GITHUB_TOKEN_KEY);
+sessionStorage.removeItem(GITHUB_USERNAME_KEY);
 
 window.tokenClient = null;
 

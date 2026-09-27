@@ -1029,7 +1029,7 @@ async function initAdmin() {
         });
 
         // שחזור שם מנהל שמור
-        const savedAdminName = localStorage.getItem('saved_admin_display_name') || sessionStorage.getItem('admin_github_username');
+        const savedAdminName = localStorage.getItem('saved_admin_display_name');
         if (savedAdminName) {
             let isPredefined = false;
             for (let option of adminNameSelect.options) {
@@ -1180,10 +1180,7 @@ if (loginForm) {
             if (verifiedLogin) {
                 // שמירת השם בצורה מקומית קבועה ושמירה עבור סשן ה-API
                 localStorage.setItem('saved_admin_display_name', adminDisplayName);
-                sessionStorage.setItem(GITHUB_USERNAME_KEY, adminDisplayName);
                 updateGithubAuth(tokenInput, adminDisplayName);
-
-                sessionStorage.setItem(GITHUB_TOKEN_KEY, tokenInput);
 
                 showStatus('התחברות הצליחה! ברוך הבא.', 100);
                 logEvent('התחבר למערכת', 'login');
