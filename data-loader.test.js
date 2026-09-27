@@ -124,9 +124,11 @@ describe('applySiteConfig', () => {
         expect(document.getElementById('about-body-dynamic').textContent).toBe('');
     });
 
-    it('should handle fetch failure', async () => {
-        utils.fetchStaticJson.mockRejectedValue(new Error('Fetch failed'));
+    it('should catch errors when fetchAndParse rejects', async () => {
         const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        // Mock the underlying utility so fetchAndParse rejects
+        utils.fetchStaticJson.mockRejectedValueOnce(new Error('fetchAndParse rejected'));
 
         await applySiteConfig();
 
