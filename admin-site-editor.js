@@ -118,7 +118,7 @@ function renderEditableTextsList(texts) {
     const container = document.getElementById('editable-texts-list');
     if (!container) return;
 
-    container.innerHTML = '';
+    container.replaceChildren();
 
     EDITABLE_TEXTS.forEach(item => {
         const btn = document.createElement('button');
@@ -163,7 +163,7 @@ function renderSitePreview(config) {
     const bgColor = isDark ? '#1a1a1a' : '#ffffff';
     const textColor = isDark ? '#e0e0e0' : '#2c3e50';
 
-    previewContainer.innerHTML = ''; // Clear container
+    previewContainer.replaceChildren(); // Clear container
 
     const containerDiv = document.createElement('div');
     containerDiv.style.cssText = `font-family: 'Assistant', sans-serif; direction: rtl; color: ${textColor}; background: ${bgColor}; padding: 15px; border-radius: 5px;`;
