@@ -1,4 +1,4 @@
-import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64 } from './admin-core.js';
+import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64, logEvent, updateGithubAuth } from './admin-core.js';
 import { jest } from '@jest/globals';
 
 describe('decodeBase64ToUtf8', () => {
@@ -330,5 +330,116 @@ describe('putWithShaRetry', () => {
         // Attempt 2: PUT (500) -> throws
         expect(window.fetch).toHaveBeenCalledTimes(3);
 
+    });
+});
+
+describe('logEvent', () => {
+    let originalFetch;
+
+    beforeEach(() => {
+        originalFetch = window.fetch;
+        updateGithubAuth('dummy_token', 'dummy_user');
+    });
+
+    afterEach(() => {
+        window.fetch = originalFetch;
+        jest.clearAllMocks();
+    });
+
+    it('should do nothing if token or username is missing', async () => {
+        updateGithubAuth('', '');
+        window.fetch = jest.fn();
+        await logEvent('action');
+        expect(window.fetch).not.toHaveBeenCalled();
+    });
+
+    it('should fetch existing history and prepend new event', async () => {
+        const existingHistory = [
+            { timestamp: '1', user: 'old', action: 'old_action', type: 'general' }
+        ];
+
+        window.fetch = jest.fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: jest.fn().mockResolvedValue({
+                    sha: 'dummy_sha',
+                    content: btoa(JSON.stringify(existingHistory))
+                })
+            })
+            .mockResolvedValueOnce({
+                ok: true
+            });
+
+        await logEvent('new_action', 'special');
+
+        expect(window.fetch).toHaveBeenCalledTimes(2);
+
+        const putCallArgs = window.fetch.mock.calls[1];
+        expect(putCallArgs[1].method).toBe('PUT');
+
+        const payload = JSON.parse(putCallArgs[1].body);
+        const updatedHistory = JSON.parse(atob(payload.content));
+
+        expect(updatedHistory.length).toBe(2);
+        expect(updatedHistory[0].action).toBe('new_action');
+        expect(updatedHistory[0].type).toBe('special');
+        expect(updatedHistory[1].action).toBe('old_action');
+        expect(payload.sha).toBe('dummy_sha');
+    });
+
+    it('should cap the history array at 100 items', async () => {
+        const existingHistory = Array(100).fill({ timestamp: '1', user: 'old', action: 'old', type: 'general' });
+
+        window.fetch = jest.fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: jest.fn().mockResolvedValue({
+                    sha: 'dummy_sha',
+                    content: btoa(JSON.stringify(existingHistory))
+                })
+            })
+            .mockResolvedValueOnce({
+                ok: true
+            });
+
+        await logEvent('new_action');
+
+        const putCallArgs = window.fetch.mock.calls[1];
+        const payload = JSON.parse(putCallArgs[1].body);
+        const updatedHistory = JSON.parse(atob(payload.content));
+
+        expect(updatedHistory.length).toBe(100);
+        expect(updatedHistory[0].action).toBe('new_action');
+    });
+
+    it('should handle missing existing history file gracefully', async () => {
+        window.fetch = jest.fn()
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 404
+            })
+            .mockResolvedValueOnce({
+                ok: true
+            });
+
+        await logEvent('first_action');
+
+        const putCallArgs = window.fetch.mock.calls[1];
+        const payload = JSON.parse(putCallArgs[1].body);
+        const updatedHistory = JSON.parse(atob(payload.content));
+
+        expect(updatedHistory.length).toBe(1);
+        expect(updatedHistory[0].action).toBe('first_action');
+        expect(payload.sha).toBeUndefined(); // no sha since file didn't exist
+    });
+
+    it('should catch and log errors', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        window.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+        await logEvent('action');
+
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to log event:', expect.any(Error));
+        consoleSpy.mockRestore();
     });
 });
