@@ -124,3 +124,60 @@ describe('updateAppBadge', () => {
         expect(mockSetAppBadge).not.toHaveBeenCalled();
     });
 });
+
+describe('OneSignal OptOut Fallback', () => {
+    let originalConsoleWarn;
+    let toastContainer;
+    let unsubscribeBtn;
+
+    beforeAll(async () => {
+        originalConsoleWarn = console.warn;
+        console.warn = jest.fn();
+
+        // Mock OneSignal
+        window.oneSignalInitialized = true;
+        window.OneSignal = {
+            User: {
+                PushSubscription: {
+                    optOut: jest.fn().mockRejectedValue(new Error('Test OptOut Error'))
+                }
+            }
+        };
+
+        // DOM is mocked in jest.setup.js
+        // Import main.js to attach event listeners
+        await import('./main.js');
+    });
+
+    afterAll(() => {
+        console.warn = originalConsoleWarn;
+        delete window.oneSignalInitialized;
+        delete window.OneSignal;
+        jest.restoreAllMocks();
+    });
+
+    it('should catch OneSignal optOut error and show toast', async () => {
+        unsubscribeBtn = document.getElementById('unsubscribe-btn');
+        toastContainer = document.getElementById('toast-container');
+
+        expect(unsubscribeBtn).not.toBeNull();
+
+        // Trigger click
+        const clickEvent = new MouseEvent('click', { bubbles: true });
+        unsubscribeBtn.dispatchEvent(clickEvent);
+
+        // Wait for microtasks
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Check warn was called
+        expect(console.warn).toHaveBeenCalledWith("OneSignal optOut error:", expect.any(Error));
+
+        // Check if toast was shown (should not throw and should reach showToast)
+        // Check if localStorage was updated
+        expect(localStorage.getItem('subscribe_new')).toBe('false');
+        expect(localStorage.getItem('subscribe_updates')).toBe('false');
+
+        // Check if toast is rendered
+        expect(toastContainer.innerHTML).toContain('קבלת ההתראות בוטלה בהצלחה.');
+    });
+});
