@@ -637,7 +637,6 @@ async function handleGallerySubmit(e) {
 
         // 3. בניית האובייקט החדש
         let thumbnailUrl = "";
-        // const previewItemsArray = Array.from(previewItems); // already defined above
         const thumbnailIndex = previewItemsArray.findIndex(item => item.classList.contains('is-thumbnail'));
         
         if (thumbnailIndex !== -1 && results[thumbnailIndex]) {
