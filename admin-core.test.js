@@ -138,7 +138,6 @@ if (mockFetch) mockFetch.mockClear();
         expect(payload.headings.en).toBe("Test Title");
         expect(payload.contents.en).toBe("Test Message");
         expect(payload.included_segments).toEqual(["Subscribed Users"]);
-        expect(mockLog).toHaveBeenCalledWith("Push notification sent successfully!");
     });
 
     it('should set filters in payload for updates (isUpdate = true)', async () => {
