@@ -1032,7 +1032,8 @@ async function initAdmin() {
         const savedAdminName = localStorage.getItem('saved_admin_display_name') || sessionStorage.getItem('admin_github_username');
         if (savedAdminName) {
             let isPredefined = false;
-            for (let option of adminNameSelect.options) {
+            const options = Array.from(adminNameSelect.options);
+            for (let option of options) {
                 if (option.value === savedAdminName) {
                     adminNameSelect.value = savedAdminName;
                     isPredefined = true;
