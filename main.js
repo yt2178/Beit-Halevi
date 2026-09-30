@@ -316,7 +316,6 @@ if (hebrewYearDisplay) {
                 script.async = true;
                 script.defer = true;
                 script.onload = () => {
-                    console.log('OneSignal SDK loaded successfully');
                     // רק AFTER שהסקריפט נטען, אנחנו מתחילים את ה-init
                     window.OneSignalDeferred = window.OneSignalDeferred || [];
                     window.OneSignalDeferred.push(function (OneSignal) {
