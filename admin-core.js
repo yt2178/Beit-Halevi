@@ -548,8 +548,6 @@ export async function sendPushNotification(title, message, isUpdate = false) {
 
         if (!response.ok) {
             console.error("Failed to send push notification:", await response.text());
-        } else {
-            console.log("Push notification sent successfully!");
         }
     } catch (err) {
         console.error("Error sending push notification:", err);
