@@ -270,7 +270,6 @@ export async function uploadFileToDrive(file, token = null) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
-            console.log("DEBUG: Final Google Upload URL:", uploadUrlStr);
             const res = await window.fetch(uploadUrlStr, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
