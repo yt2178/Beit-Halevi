@@ -161,3 +161,48 @@ describe('openGridOverlay', () => {
         jest.useRealTimers();
     });
 });
+
+describe('albumDownloadBtn click handler fallback', () => {
+    it('should trigger sequential fallback downloads reusing anchor element when JSZip fails', async () => {
+        const albumData = {
+            title: 'Download Test Album',
+            slug: 'download-test-album',
+            images: ['img1.jpg', 'img2.jpg']
+        };
+
+        galleryModule.openGridOverlay(albumData);
+
+        // Spy on document.createElement to track anchor creation
+        const createdElements = [];
+        const originalCreateElement = document.createElement.bind(document);
+        jest.spyOn(document, 'createElement').mockImplementation((tagName) => {
+            const el = originalCreateElement(tagName);
+            if (tagName.toLowerCase() === 'a') {
+                createdElements.push(el);
+            }
+            return el;
+        });
+
+        // Mock script element loading error to simulate JSZip failure quickly
+        jest.spyOn(document.head, 'appendChild').mockImplementation((el) => {
+            if (el.tagName && el.tagName.toLowerCase() === 'script') {
+                setTimeout(() => el.onerror && el.onerror(new Error("Script load error")), 0);
+            }
+            return el;
+        });
+
+        const mainModule = await import('./main.js');
+
+        global.showNotificationToast = jest.fn();
+
+        // Trigger click on albumDownloadBtn
+        await mainModule.albumDownloadBtn.onclick();
+
+        // Verify anchor element creation was hoisted (1 anchor created for sequential downloads)
+        const downloadAnchors = createdElements.filter(el => el.target === '_blank');
+        expect(downloadAnchors.length).toBe(1);
+
+        document.head.appendChild.mockRestore();
+        document.createElement.mockRestore();
+    });
+});
