@@ -14,7 +14,7 @@ let selectedFiles = [];       // התמונות שנבחרו להעלאה
  * [חדש] פונקציה לדחיסת תמונה לפני העלאה לחיסכון במקום בדרייב
  * מורידה איכות ל-0.8 ומגבילה רוחב למקסימום 1600px
  */
-async function compressImage(file, maxWidth = 1600, quality = 0.8) {
+export async function compressImage(file, maxWidth = 1600, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
