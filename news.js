@@ -68,8 +68,8 @@ export function openNewsModal(newsItem) {
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-                } catch (error) {
-                    console.log('Error copying to clipboard:', error);
+                } catch {
+                    // silent fallback handling
                 }
             }
         };
