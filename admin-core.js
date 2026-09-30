@@ -16,7 +16,16 @@ export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
 export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVs5qCMlfPJOMikCwzzMdjygVl80byjxLSevub_sSeWQPnBakL-ioOQlgfYo2IDz1SHw/exec";
-export const APPS_SCRIPT_SECRET = "beit_halevi_secret_2026";
+export function getAppsScriptSecret() {
+    if (typeof process !== 'undefined' && process.env && process.env.APPS_SCRIPT_SECRET) {
+        return process.env.APPS_SCRIPT_SECRET;
+    }
+    if (typeof window !== 'undefined') {
+        return window.APPS_SCRIPT_SECRET || sessionStorage.getItem('apps_script_secret') || '';
+    }
+    return '';
+}
+export const APPS_SCRIPT_SECRET = getAppsScriptSecret();
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 // Google API Config
@@ -230,7 +239,7 @@ export async function uploadFileToDrive(file, token = null) {
 
             const payload = {
                 action: "uploadImage",
-                secret: APPS_SCRIPT_SECRET,
+                secret: getAppsScriptSecret(),
                 filename: file.name,
                 mimeType: file.type || 'image/jpeg',
                 base64: base64Data

@@ -1,5 +1,44 @@
-import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64 } from './admin-core.js';
+import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64, getAppsScriptSecret } from './admin-core.js';
 import { jest } from '@jest/globals';
+
+describe('getAppsScriptSecret', () => {
+    const originalEnvSecret = process.env.APPS_SCRIPT_SECRET;
+
+    afterEach(() => {
+        if (originalEnvSecret !== undefined) {
+            process.env.APPS_SCRIPT_SECRET = originalEnvSecret;
+        } else {
+            delete process.env.APPS_SCRIPT_SECRET;
+        }
+        delete window.APPS_SCRIPT_SECRET;
+        sessionStorage.removeItem('apps_script_secret');
+    });
+
+    it('should return process.env.APPS_SCRIPT_SECRET if present', () => {
+        process.env.APPS_SCRIPT_SECRET = 'env_secret_123';
+        expect(getAppsScriptSecret()).toBe('env_secret_123');
+    });
+
+    it('should return window.APPS_SCRIPT_SECRET if env is not set', () => {
+        delete process.env.APPS_SCRIPT_SECRET;
+        window.APPS_SCRIPT_SECRET = 'window_secret_456';
+        expect(getAppsScriptSecret()).toBe('window_secret_456');
+    });
+
+    it('should return sessionStorage secret if env and window are not set', () => {
+        delete process.env.APPS_SCRIPT_SECRET;
+        delete window.APPS_SCRIPT_SECRET;
+        sessionStorage.setItem('apps_script_secret', 'session_secret_789');
+        expect(getAppsScriptSecret()).toBe('session_secret_789');
+    });
+
+    it('should return empty string when no secret is configured', () => {
+        delete process.env.APPS_SCRIPT_SECRET;
+        delete window.APPS_SCRIPT_SECRET;
+        sessionStorage.removeItem('apps_script_secret');
+        expect(getAppsScriptSecret()).toBe('');
+    });
+});
 
 describe('decodeBase64ToUtf8', () => {
     it('should decode simple ASCII Base64 strings', () => {
