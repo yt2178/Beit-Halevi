@@ -3,7 +3,7 @@ import {
     REPO_OWNER, REPO_NAME, TASKS_JSON_PATH,
     GITHUB_TOKEN,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
-    putWithShaRetry
+    putWithShaRetry, logEvent
 } from './admin-core.js';
 
 let allTasks = [];
@@ -42,6 +42,7 @@ export async function loadAndRenderTasks() {
         }
         
         allTasks = gitHubTasks;
+        hasUnsavedChanges = false;
 
         // בדוק שחזור מקומי
         const localRaw = localStorage.getItem(LOCAL_TASKS_KEY);
