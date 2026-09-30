@@ -600,15 +600,11 @@ async function handleGallerySubmit(e) {
                 if (fileObj) {
                     uploadTasks.push(async () => {
                         let fileToUpload = fileObj.file;
-                        const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                        console.log(`DEBUG: Original file size: ${originalSize}MB`);
 
                         try {
                             // דחיסת תמונה לחיסכון בנפח (רק אם זו תמונה)
                             if (fileToUpload.type.startsWith('image/')) {
                                 fileToUpload = await compressImage(fileToUpload);
-                                const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                                console.log(`DEBUG: Compressed file size: ${compressedSize}MB`);
                             }
                         } catch (compressErr) {
                             console.warn("Compression failed, uploading original:", compressErr);
