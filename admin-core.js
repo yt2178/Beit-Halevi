@@ -345,7 +345,6 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
                             const latestContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
                             const newBase64 = transformFn(latestContent);
                             currentPayload.content = newBase64;
-                            console.log("Transformation re-applied to latest content.");
                         }
 
                         continue;
