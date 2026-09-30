@@ -628,11 +628,15 @@ async function handleGallerySubmit(e) {
             }
         }
 
-        const BATCH_SIZE = 3;
-        for (let i = 0; i < uploadTasks.length; i += BATCH_SIZE) {
-            const batch = uploadTasks.slice(i, i + BATCH_SIZE);
-            await Promise.all(batch.map(task => task()));
-        }
+        const CONCURRENCY_LIMIT = 3;
+        let taskIndex = 0;
+        const workers = Array.from({ length: Math.min(CONCURRENCY_LIMIT, uploadTasks.length) }, async () => {
+            while (taskIndex < uploadTasks.length) {
+                const task = uploadTasks[taskIndex++];
+                await task();
+            }
+        });
+        await Promise.all(workers);
         const finalImages = results.filter(url => url !== null);
 
         // 3. בניית האובייקט החדש
