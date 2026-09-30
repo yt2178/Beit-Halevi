@@ -61,7 +61,7 @@ export function openNewsModal(newsItem) {
                 try {
                     await navigator.share(shareData);
                 } catch (error) {
-                    console.log('Error sharing news:', error);
+                    // Ignore share cancellation or error
                 }
             } else {
                 // גיבוי: העתקה ללוח
