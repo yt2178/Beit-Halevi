@@ -139,11 +139,11 @@ function showToast(message, duration = 1500, type = 'success') {
         setTimeout(() => {
             toast.classList.add('hide');
             setTimeout(() => {
-                try { toast.remove(); } catch (e) { }
+                try { toast.remove(); } catch (e) { console.error("DEBUG: showToast error:", e); }
             }, 300);
         }, duration);
     } catch (e) {
-        // silent fail
+        console.error("DEBUG: showToast error:", e);
     }
 }
 
