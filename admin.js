@@ -344,7 +344,6 @@ function createNewsItemElement(item) {
     detailsDiv.appendChild(contentDiv);
     newsDiv.appendChild(detailsDiv);
 
-    // ✅ Fix XSS: בנה את כפתורי בעדכונים בטוח
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'item-actions';
 
