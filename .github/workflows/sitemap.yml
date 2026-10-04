@@ -7,6 +7,7 @@ on:
       - 'data/gallery.json'
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,6 +19,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -31,9 +33,9 @@ jobs:
       - name: Commit and Push Updated Sitemap
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sitemap.xml
           if ! git diff --cached --quiet; then
-            git commit -m "Auto-update sitemap.xml with latest news and gallery items [skip ci]"
-            git push https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+            git commit -m "Auto-update sitemap.xml [skip ci]"
+            git push
           fi
