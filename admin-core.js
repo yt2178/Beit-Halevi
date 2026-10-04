@@ -495,7 +495,6 @@ export async function sendPushNotification(title, message, isUpdate = false) {
             appIdStr = configElement.value.trim();
         }
         
-        // [שיפור] אם אין מפתח מקומי, נסה לקחת מהשדה (שעשוי להכיל מפתח גלובלי)
         if (!restKey && configRestElement && configRestElement.value) {
             restKey = configRestElement.value.trim();
         }
@@ -519,6 +518,38 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         return;
     }
 
+    // שליחה דרך Apps Script (שרת) כדי לעקוף מגבלות CORS של הדפדפן
+    if (APPS_SCRIPT_URL) {
+        try {
+            const scriptPayload = {
+                action: "sendPush",
+                secret: APPS_SCRIPT_SECRET,
+                appId: appIdStr,
+                restKey: restKey,
+                title: title,
+                message: message,
+                url: "https://yt2178.github.io/Beit-Halevi/",
+                isUpdate: isUpdate
+            };
+            const scriptRes = await window.fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(scriptPayload)
+            });
+            if (scriptRes.ok) {
+                const scriptData = await scriptRes.json();
+                if (scriptData.success) {
+                    console.log("Push notification sent successfully via Apps Script!");
+                    return;
+                }
+                console.error("Apps Script push error:", scriptData.error || scriptData);
+            }
+        } catch (err) {
+            console.error("Apps Script push error:", err);
+        }
+        return; // OneSignal חוסם CORS מדפדפן – לא ננסה ישירות
+    }
+
+    // ניסיון ישיר (רק אם אין Apps Script – ייכשל בגלל CORS בדפדפן רגיל)
     try {
         const payload = {
             app_id: appIdStr,
@@ -528,12 +559,10 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         };
 
         if (isUpdate) {
-            // Target users who subscribed to updates (subscribe_updates == "true")
             payload.filters = [
                 { "field": "tag", "key": "subscribe_updates", "relation": "=", "value": "true" }
             ];
         } else {
-            // Target all subscribed users
             payload.included_segments = ["Subscribed Users"];
         }
 

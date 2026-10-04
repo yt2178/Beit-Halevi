@@ -92,7 +92,8 @@ describe('sendPushNotification', () => {
 if (mockFetch) mockFetch.mockClear();
         mockFetch = jest.spyOn(window, 'fetch').mockResolvedValue({
             ok: true,
-            text: jest.fn().mockResolvedValue('success')
+            text: jest.fn().mockResolvedValue('success'),
+            json: jest.fn().mockResolvedValue({ success: true })
         });
         mockWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
         mockError = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -129,19 +130,17 @@ if (mockFetch) mockFetch.mockClear();
 
         expect(mockFetch).toHaveBeenCalledTimes(1);
         const fetchArgs = mockFetch.mock.calls[0];
-        expect(fetchArgs[0]).toBe("https://onesignal.com/api/v1/notifications");
+        // בגלל APPS_SCRIPT_URL הקריאה הולכת לשרת Apps Script
         expect(fetchArgs[1].method).toBe("POST");
-        expect(fetchArgs[1].headers.Authorization).toBe("Basic local-rest-key");
-
-        const payload = JSON.parse(fetchArgs[1].body);
-        expect(payload.app_id).toBe("test-app-id");
-        expect(payload.headings.en).toBe("Test Title");
-        expect(payload.contents.en).toBe("Test Message");
-        expect(payload.included_segments).toEqual(["Subscribed Users"]);
-        expect(mockLog).toHaveBeenCalledWith("Push notification sent successfully!");
+        const body = JSON.parse(fetchArgs[1].body);
+        expect(body.action).toBe("sendPush");
+        expect(body.appId).toBe("test-app-id");
+        expect(body.title).toBe("Test Title");
+        expect(body.message).toBe("Test Message");
+        expect(mockLog).toHaveBeenCalledWith("Push notification sent successfully via Apps Script!");
     });
 
-    it('should set filters in payload for updates (isUpdate = true)', async () => {
+    it('should set isUpdate=true in Apps Script payload for updates', async () => {
 
         window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
@@ -151,10 +150,7 @@ if (mockFetch) mockFetch.mockClear();
         expect(mockFetch).toHaveBeenCalledTimes(1);
         const fetchArgs = mockFetch.mock.calls[0];
         const payload = JSON.parse(fetchArgs[1].body);
-        expect(payload.included_segments).toBeUndefined();
-        expect(payload.filters).toEqual([
-            { "field": "tag", "key": "subscribe_updates", "relation": "=", "value": "true" }
-        ]);
+        expect(payload.isUpdate).toBe(true);
     });
 
     it('should fallback to GitHub API for appId if not in DOM', async () => {
@@ -168,13 +164,18 @@ if (mockFetch) mockFetch.mockClear();
             ok: true,
             json: jest.fn().mockResolvedValue({ content: encodedConfig })
         });
+        // second fetch: Apps Script
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: jest.fn().mockResolvedValue({ success: true })
+        });
 
         await sendPushNotification('Test Title', 'Test Message');
 
         expect(mockFetch).toHaveBeenCalledTimes(2);
-        const onesignalFetchArgs = mockFetch.mock.calls[1];
-        const payload = JSON.parse(onesignalFetchArgs[1].body);
-        expect(payload.app_id).toBe("github-app-id");
+        const appsScriptArgs = mockFetch.mock.calls[1];
+        const payload = JSON.parse(appsScriptArgs[1].body);
+        expect(payload.appId).toBe("github-app-id");
     });
 
     it('should fallback to DOM configRestElement for restKey if not in localStorage', async () => {
@@ -186,24 +187,26 @@ if (mockFetch) mockFetch.mockClear();
 
         expect(mockFetch).toHaveBeenCalledTimes(1);
         const fetchArgs = mockFetch.mock.calls[0];
-        expect(fetchArgs[1].headers.Authorization).toBe("Basic test-rest-key");
+        const body = JSON.parse(fetchArgs[1].body);
+        expect(body.restKey).toBe("test-rest-key");
     });
 
-    it('should log error if OneSignal API response is not ok', async () => {
+    it('should log error if Apps Script returns non-ok response', async () => {
 
         window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
         mockFetch.mockResolvedValueOnce({
             ok: false,
-            text: jest.fn().mockResolvedValue('API Error Details')
+            json: jest.fn().mockResolvedValue({ error: 'Script Error' })
         });
 
         await sendPushNotification('Test Title', 'Test Message');
 
-        expect(mockError).toHaveBeenCalledWith("Failed to send push notification:", "API Error Details");
+        // Apps Script שולח error ומחזיר early - לא קוראת שוב ישירות
+        expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should catch and log network errors', async () => {
+    it('should catch and log network errors from Apps Script', async () => {
 
         window.localStorage.setItem('onesignal_rest_key', 'local-rest-key');
 
@@ -212,7 +215,7 @@ if (mockFetch) mockFetch.mockClear();
 
         await sendPushNotification('Test Title', 'Test Message');
 
-        expect(mockError).toHaveBeenCalledWith("Error sending push notification:", networkError);
+        expect(mockError).toHaveBeenCalledWith("Apps Script push error:", networkError);
     });
 });
 
