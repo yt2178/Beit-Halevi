@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.BEIT_HALEVI_PAT || github.token }}
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,10 +30,15 @@ jobs:
         run: node generate-sitemap.js
 
       - name: Commit and Push Updated Sitemap
+        env:
+          TOKEN: ${{ secrets.BEIT_HALEVI_PAT || github.token }}
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add sitemap.xml
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update sitemap.xml with latest news and gallery items [skip ci]" && git push)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-update sitemap.xml with latest news and gallery items [skip ci]"
+            git push "https://x-access-token:${TOKEN}@github.com/yt2178/Beit-Halevi.git" HEAD:main
+          fi
