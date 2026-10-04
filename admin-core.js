@@ -15,7 +15,7 @@ export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUUyWJkWk0HFMlS3SdoIuStLfVfgnQjXKi3TSOMHHAB7We6WCVk4sc5Ne_xf6q8HmMUg/exec";
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9Q26XavI0TYhxAG_he6B9IHobwkvS4k-pAX9rEV3dLuLYwNrhjOwlfspV4xYZ3hJyGQ/exec";
 export const APPS_SCRIPT_SECRET = "beit_halevi_secret_2026";
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
@@ -141,28 +141,28 @@ export async function googleLogin() {
         }
 
         if (!window.tokenClient) {
-            return reject(new Error("גוגל לא נטען כראוי, נא לרענן או לבדוק חיבור אינטרנט."));
+            return reject(new Error("׳’׳•׳’׳ ׳׳ ׳ ׳˜׳¢׳ ׳›׳¨׳׳•׳™, ׳ ׳ ׳׳¨׳¢׳ ׳ ׳׳• ׳׳‘׳“׳•׳§ ׳—׳™׳‘׳•׳¨ ׳׳™׳ ׳˜׳¨׳ ׳˜."));
         }
 
         window.tokenClient.callback = (tokenResponse) => {
             if (tokenResponse.error) {
                 console.error("Google Auth Error:", tokenResponse);
 
-                // [חדש] טיפול בשגיאות ספציפיות
+                // [׳—׳“׳©] ׳˜׳™׳₪׳•׳ ׳‘׳©׳’׳™׳׳•׳× ׳¡׳₪׳¦׳™׳₪׳™׳•׳×
                 if (tokenResponse.error === 'popup_closed_by_user') {
-                    reject(new Error("סגרת את חלון ההתחברות. נסה שוב."));
+                    reject(new Error("׳¡׳’׳¨׳× ׳׳× ׳—׳׳•׳ ׳”׳”׳×׳—׳‘׳¨׳•׳×. ׳ ׳¡׳” ׳©׳•׳‘."));
                 } else if (tokenResponse.error === 'access_denied') {
-                    reject(new Error("הגבלת תגישות לאתר. בדוק את הגדרות חשבון גוגל שלך."));
+                    reject(new Error("׳”׳’׳‘׳׳× ׳×׳’׳™׳©׳•׳× ׳׳׳×׳¨. ׳‘׳“׳•׳§ ׳׳× ׳”׳’׳“׳¨׳•׳× ׳—׳©׳‘׳•׳ ׳’׳•׳’׳ ׳©׳׳."));
                 } else {
                     const errorMsg = tokenResponse.error_description || tokenResponse.error;
-                    reject(new Error(`שגיאת אימות גוגל: ${errorMsg}`));
+                    reject(new Error(`׳©׳’׳™׳׳× ׳׳™׳׳•׳× ׳’׳•׳’׳: ${errorMsg}`));
                 }
             } else if (tokenResponse.access_token) {
                 cachedGoogleToken = tokenResponse.access_token;
                 tokenExpiry = Date.now() + ((tokenResponse.expires_in || 3599) * 1000) - 60000;
                 resolve(tokenResponse.access_token);
             } else {
-                reject(new Error("לא התקבל Access Token מגוגל."));
+                reject(new Error("׳׳ ׳”׳×׳§׳‘׳ Access Token ׳׳’׳•׳’׳."));
             }
         };
 
@@ -184,15 +184,15 @@ export async function googleLogin() {
 }
 
 export async function getFolderId(token) {
-    const FOLDER_NAME = "ישיבת בית הלוי - גלריה";
+    const FOLDER_NAME = "׳™׳©׳™׳‘׳× ׳‘׳™׳× ׳”׳׳•׳™ - ׳’׳׳¨׳™׳”";
     try {
         const query = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
         
-        // [הגנה מתקדמת] שימוש ב-Base64 כדי למנוע מתוספי דפדפן (AdBlock) למחוק את כתובת גוגל מהקוד
+        // [׳”׳’׳ ׳” ׳׳×׳§׳“׳׳×] ׳©׳™׳׳•׳© ׳‘-Base64 ׳›׳“׳™ ׳׳׳ ׳•׳¢ ׳׳×׳•׳¡׳₪׳™ ׳“׳₪׳“׳₪׳ (AdBlock) ׳׳׳—׳•׳§ ׳׳× ׳›׳×׳•׳‘׳× ׳’׳•׳’׳ ׳׳”׳§׳•׳“
         const targetUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vZHJpdmUvdjMvZmlsZXM=") + "?q=" + query;
         
         if (targetUrl.indexOf("http") !== 0) {
-            alert("שגיאת אבטחה מקומית: הכתובת שובשה על ידי הדפדפן.\nערך נוכחי: " + targetUrl);
+            alert("׳©׳’׳™׳׳× ׳׳‘׳˜׳—׳” ׳׳§׳•׳׳™׳×: ׳”׳›׳×׳•׳‘׳× ׳©׳•׳‘׳©׳” ׳¢׳ ׳™׳“׳™ ׳”׳“׳₪׳“׳₪׳.\n׳¢׳¨׳ ׳ ׳•׳›׳—׳™: " + targetUrl);
         }
 
         const searchRes = await window.fetch(targetUrl, { headers: { "Authorization": "Bearer " + token } });
@@ -215,7 +215,7 @@ export async function getFolderId(token) {
 }
 
 export async function uploadFileToDrive(file, token = null) {
-    // 1. נסה תחילה להעלות ישירות דרך שרת ה-Apps Script (ללא חלונות קופצים או פקיעת טוקן)
+    // 1. ׳ ׳¡׳” ׳×׳—׳™׳׳” ׳׳”׳¢׳׳•׳× ׳™׳©׳™׳¨׳•׳× ׳“׳¨׳ ׳©׳¨׳× ׳”-Apps Script (׳׳׳ ׳—׳׳•׳ ׳•׳× ׳§׳•׳₪׳¦׳™׳ ׳׳• ׳₪׳§׳™׳¢׳× ׳˜׳•׳§׳)
     if (APPS_SCRIPT_URL) {
         try {
             const base64Data = await new Promise((resolve, reject) => {
@@ -254,7 +254,7 @@ export async function uploadFileToDrive(file, token = null) {
     }
 
     if (!token) {
-        throw new Error("לא ניתן להעלות תמונה: שרת Google אינו זמין ואין טוקן התחברות.");
+        throw new Error("׳׳ ׳ ׳™׳×׳ ׳׳”׳¢׳׳•׳× ׳×׳׳•׳ ׳”: ׳©׳¨׳× Google ׳׳™׳ ׳• ׳–׳׳™׳ ׳•׳׳™׳ ׳˜׳•׳§׳ ׳”׳×׳—׳‘׳¨׳•׳×.");
     }
 
     const folderId = await getFolderId(token);
@@ -400,7 +400,7 @@ export async function getFileWebViewLink(fileId, token) {
     return null;
 }
 
-// [חדש] פונקציה לאימות הטוקן מול GitHub
+// [׳—׳“׳©] ׳₪׳•׳ ׳§׳¦׳™׳” ׳׳׳™׳׳•׳× ׳”׳˜׳•׳§׳ ׳׳•׳ GitHub
 export async function verifyGitHubToken(token) {
     try {
         const userRes = await window.fetch('https://api.github.com/user', {
@@ -415,7 +415,7 @@ export async function verifyGitHubToken(token) {
 
         const userData = await userRes.json();
 
-        // בדיקה ישירה של הרשאות גישה לקובצי המאגר (Contents)
+        // ׳‘׳“׳™׳§׳” ׳™׳©׳™׳¨׳” ׳©׳ ׳”׳¨׳©׳׳•׳× ׳’׳™׳©׳” ׳׳§׳•׳‘׳¦׳™ ׳”׳׳׳’׳¨ (Contents)
         try {
             const contentsRes = await window.fetch("https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH, {
                 headers: {
@@ -424,11 +424,11 @@ export async function verifyGitHubToken(token) {
             });
 
             if (!contentsRes.ok) {
-                // אם גיטהאב מחזיר 403 או 401 - לטוקן אין הרשאה לקובצי המאגר
+                // ׳׳ ׳’׳™׳˜׳”׳׳‘ ׳׳—׳–׳™׳¨ 403 ׳׳• 401 - ׳׳˜׳•׳§׳ ׳׳™׳ ׳”׳¨׳©׳׳” ׳׳§׳•׳‘׳¦׳™ ׳”׳׳׳’׳¨
                 return null;
             }
 
-            // בדיקת Scopes עבור Classic Token
+            // ׳‘׳“׳™׳§׳× Scopes ׳¢׳‘׳•׳¨ Classic Token
             const scopes = contentsRes.headers.get('x-oauth-scopes') || userRes.headers.get('x-oauth-scopes');
             if (scopes !== null) {
                 const scopeList = scopes.split(',').map(s => s.trim());
@@ -440,7 +440,7 @@ export async function verifyGitHubToken(token) {
             return null;
         }
 
-        return userData.name || userData.login; // מחזיר את שם המשתמש האמיתי
+        return userData.name || userData.login; // ׳׳—׳–׳™׳¨ ׳׳× ׳©׳ ׳”׳׳©׳×׳׳© ׳”׳׳׳™׳×׳™
     } catch (error) {
         return null;
     }
@@ -500,7 +500,7 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         }
 
         if (!appIdStr) {
-            // גיבוי לטעינה מהקובץ אם השדה לא נמצא או חסר מפתח
+            // ׳’׳™׳‘׳•׳™ ׳׳˜׳¢׳™׳ ׳” ׳׳”׳§׳•׳‘׳¥ ׳׳ ׳”׳©׳“׳” ׳׳ ׳ ׳׳¦׳ ׳׳• ׳—׳¡׳¨ ׳׳₪׳×׳—
             const resUrl = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + SITE_CONFIG_PATH;
             const res = await window.fetch(resUrl);
             if (res.ok) {
@@ -518,7 +518,7 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         return;
     }
 
-    // שליחה דרך Apps Script (שרת) כדי לעקוף מגבלות CORS של הדפדפן
+    // ׳©׳׳™׳—׳” ׳“׳¨׳ Apps Script (׳©׳¨׳×) ׳›׳“׳™ ׳׳¢׳§׳•׳£ ׳׳’׳‘׳׳•׳× CORS ׳©׳ ׳”׳“׳₪׳“׳₪׳
     if (APPS_SCRIPT_URL) {
         try {
             const scriptPayload = {
@@ -546,10 +546,10 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         } catch (err) {
             console.error("Apps Script push error:", err);
         }
-        return; // OneSignal חוסם CORS מדפדפן – לא ננסה ישירות
+        return; // OneSignal ׳—׳•׳¡׳ CORS ׳׳“׳₪׳“׳₪׳ ג€“ ׳׳ ׳ ׳ ׳¡׳” ׳™׳©׳™׳¨׳•׳×
     }
 
-    // ניסיון ישיר (רק אם אין Apps Script – ייכשל בגלל CORS בדפדפן רגיל)
+    // ׳ ׳™׳¡׳™׳•׳ ׳™׳©׳™׳¨ (׳¨׳§ ׳׳ ׳׳™׳ Apps Script ג€“ ׳™׳™׳›׳©׳ ׳‘׳’׳׳ CORS ׳‘׳“׳₪׳“׳₪׳ ׳¨׳’׳™׳)
     try {
         const payload = {
             app_id: appIdStr,
@@ -584,3 +584,4 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         console.error("Error sending push notification:", err);
     }
 }
+
