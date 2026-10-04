@@ -236,17 +236,31 @@ export async function uploadFileToDrive(file, token = null) {
                 base64: base64Data
             };
 
-            const res = await window.fetch(APPS_SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
+            let lastErr = null;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    const res = await window.fetch(APPS_SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify(payload)
+                    });
 
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.fileId) {
-                    return data.fileId;
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success && data.fileId) {
+                            return data.fileId;
+                        }
+                    } else {
+                        console.warn(`Apps Script upload attempt ${attempt} returned status ${res.status}`);
+                    }
+                } catch (fetchErr) {
+                    lastErr = fetchErr;
+                    console.warn(`Apps Script upload attempt ${attempt} failed:`, fetchErr);
+                }
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 1500));
                 }
             }
+            if (lastErr && !token) throw lastErr;
         } catch (scriptErr) {
             console.warn("Apps Script direct upload failed, checking token fallback:", scriptErr);
             if (!token) throw scriptErr;

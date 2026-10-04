@@ -634,7 +634,7 @@ async function handleGallerySubmit(e) {
             }
         }
 
-        const BATCH_SIZE = 3;
+        const BATCH_SIZE = 2;
         for (let i = 0; i < uploadTasks.length; i += BATCH_SIZE) {
             const batch = uploadTasks.slice(i, i + BATCH_SIZE);
             await Promise.all(batch.map(task => task()));
