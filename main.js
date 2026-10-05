@@ -308,8 +308,6 @@ if (hebrewYearDisplay) {
 
             // [תיקון] אתחול OneSignal - טעינה של הסקריפט תחילה, אחרי כן הגדרה
             if (config.oneSignalAppId) {
-                console.log('Initializing OneSignal with App ID:', config.oneSignalAppId);
-                
                 // טעינת הסקריפט של OneSignal QEMU
                 const script = document.createElement('script');
                 script.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
