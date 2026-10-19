@@ -75,7 +75,9 @@ document.body.innerHTML = `
   <button id="news-next-btn"></button>
   <button id="subscribe-btn"></button>
   <button id="fab-subscribe-btn"></button>
-  <div id="subscribe-modal"><p></p><button class="subscribe-close"></button></div>
+  <button id="unsubscribe-btn"></button>
+  <div id="subscribe-status-card"></div>
+  <div id="subscribe-modal"><p id="subscribe-modal-desc"></p><button class="subscribe-close"></button></div>
   <div id="pwa-install-banner"></div>
   <button id="pwa-install-btn"></button>
   <button id="pwa-close-btn"></button>
