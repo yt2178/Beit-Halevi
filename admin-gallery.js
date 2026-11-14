@@ -14,7 +14,7 @@ let selectedFiles = [];       // התמונות שנבחרו להעלאה
  * [חדש] פונקציה לדחיסת תמונה לפני העלאה לחיסכון במקום בדרייב
  * מורידה איכות ל-0.8 ומגבילה רוחב למקסימום 1600px
  */
-async function compressImage(file, maxWidth = 1600, quality = 0.8) {
+export async function compressImage(file, maxWidth = 1600, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -376,6 +376,8 @@ async function handleFileSelect(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
+    const fragment = document.createDocumentFragment();
+
     for (const file of files) {
         // [תיקון קריטי ל-404]: יצירת URL זמני לתצוגה מקדימה
         const localUrl = URL.createObjectURL(file);
@@ -387,8 +389,10 @@ async function handleFileSelect(e) {
 
         // הצגת תצוגה מקדימה
         const item = createPreviewItem(localUrl, false);
-        albumPreview.appendChild(item);
+        fragment.appendChild(item);
     }
+
+    albumPreview.appendChild(fragment);
 
     if (!albumPreview.querySelector('.is-thumbnail')) {
         const firstItem = albumPreview.querySelector('.album-preview-item');

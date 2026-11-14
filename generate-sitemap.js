@@ -3,7 +3,7 @@ import fs from 'fs';
 const news = JSON.parse(fs.readFileSync('data/news.json', 'utf8'));
 const gallery = JSON.parse(fs.readFileSync('data/gallery.json', 'utf8'));
 
-function generateSlug(title, date) {
+export function generateSlug(title, date) {
     const filename_slug = (title || '').replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, '');
     return `${date}-${filename_slug}`;
 }
