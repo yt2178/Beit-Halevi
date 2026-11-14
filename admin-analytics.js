@@ -150,33 +150,56 @@ export async function loadSearchConsoleStats(forceRefresh = false) {
         start.setDate(end.getDate() - 28);
 
         const formatDate = d => d.toISOString().split('T')[0];
-        // הנכס המאומת המדויק מ-Google Search Console
-        const exactSite = "https://yt2178.github.io/";
-        const queryUrl = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(exactSite)}/searchAnalytics/query`;
-        
-        console.log("Querying GSC API for site:", exactSite);
-        const response = await window.fetch(queryUrl, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                startDate: formatDate(start),
-                endDate: formatDate(end),
-                dimensions: ['page'],
-                rowLimit: 5
-            })
-        });
+        // ננסה את כל צורות הרישום האפשריות של הנכס ב-Google Search Console
+        const candidateSites = [
+            "https://yt2178.github.io/",
+            "https://yt2178.github.io/Beit-Halevi/",
+            "https://yt2178.github.io",
+            "sc-domain:yt2178.github.io"
+        ];
 
-        if (!response.ok) {
-            const errBody = await response.json().catch(() => ({}));
-            console.error("GSC API Error details:", response.status, JSON.stringify(errBody));
-            const detailedMsg = errBody.error?.message || (response.status === 403 ? 'אין הרשאת גישה לנכס בחשבון גוגל הנוכחי' : 'שגיאה ב-GSC');
-            throw new Error(`${detailedMsg} (${response.status})`);
+        let response = null;
+        let successData = null;
+        let lastErrorMsg = '';
+
+        for (const site of candidateSites) {
+            try {
+                const encodedSite = encodeURIComponent(site);
+                const queryUrl = `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodedSite}/searchAnalytics/query`;
+                const res = await window.fetch(queryUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        startDate: formatDate(start),
+                        endDate: formatDate(end),
+                        dimensions: ['page'],
+                        rowLimit: 5
+                    })
+                });
+
+                if (res.ok) {
+                    successData = await res.json();
+                    response = res;
+                    console.log("GSC matched verified property:", site);
+                    break;
+                } else {
+                    const errBody = await res.json().catch(() => ({}));
+                    lastErrorMsg = errBody.error?.message || `HTTP ${res.status}`;
+                    console.warn(`GSC check failed for ${site}:`, res.status, lastErrorMsg);
+                }
+            } catch (err) {
+                lastErrorMsg = err.message;
+            }
         }
 
-        const data = await response.json();
+        if (!response || !response.ok) {
+            throw new Error(`שגיאת הרשאה (${lastErrorMsg}): ודא שהתחברת לחשבון גוגל המנהל את האתר ואישרת הרשאת Search Console`);
+        }
+
+        const data = successData;
         gscDataCache = data;
         renderGscData(data);
         if (statusNoteEl) statusNoteEl.textContent = '28 ימים אחרונים ✓';
@@ -273,28 +296,49 @@ export async function loadBingStats(forceRefresh = false) {
 
     const localApiKey = sessionStorage.getItem('bing_webmaster_api_key') || '';
 
-    try {
-        const res = await window.fetch(APPS_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'getBingStats',
-                secret: APPS_SCRIPT_SECRET,
-                bingApiKey: localApiKey
-            })
-        });
+    const bingCandidateSites = [
+        "https://yt2178.github.io/",
+        "https://yt2178.github.io",
+        "https://yt2178.github.io/Beit-Halevi/",
+        "https://yt2178.github.io/Beit-Halevi"
+    ];
 
-        if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
-        const data = await res.json();
+    let successBingData = null;
+    let lastBingError = '';
 
-        if (data.success && data.d) {
-            bingDataCache = data.d;
-            renderBingData(data.d);
-            if (statusNoteEl) statusNoteEl.textContent = 'עודכן זה עתה ✓';
-        } else {
-            throw new Error(data.error || 'לא התקבלו נתונים מ-Bing');
+    for (const siteUrl of bingCandidateSites) {
+        try {
+            const res = await window.fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'getBingStats',
+                    secret: APPS_SCRIPT_SECRET,
+                    bingApiKey: localApiKey,
+                    siteUrl: siteUrl
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.d) {
+                    successBingData = data.d;
+                    console.log("Bing matched site URL:", siteUrl);
+                    break;
+                } else if (data.error) {
+                    lastBingError = data.error;
+                }
+            }
+        } catch (err) {
+            lastBingError = err.message;
         }
-    } catch (err) {
-        console.warn('Bing stats fetch failed:', err);
+    }
+
+    if (successBingData) {
+        bingDataCache = successBingData;
+        renderBingData(successBingData);
+        if (statusNoteEl) statusNoteEl.textContent = 'עודכן זה עתה ✓';
+    } else {
+        console.warn('Bing stats fetch failed for all candidates:', lastBingError);
         clicksEl.textContent = '-';
         impressionsEl.textContent = '-';
         if (queriesListEl) {
@@ -304,10 +348,11 @@ export async function loadBingStats(forceRefresh = false) {
                         <i class="fas fa-key" style="color:#f39c12;"></i> <strong>חיבור מפתח Bing Webmaster API:</strong>
                     </div>
                     <div style="display:flex; gap:6px;">
-                        <input type="password" id="bing-api-key-input" placeholder="הזן מפתח API של Bing" class="premium-input" style="flex:1; font-size:0.8rem; padding:6px 10px;">
+                        <input type="password" id="bing-api-key-input" placeholder="הזן מפתח API של Bing" class="premium-input" style="flex:1; font-size:0.8rem; padding:6px 10px;" value="${escapeHtml(localApiKey)}">
                         <button id="save-bing-key-btn" class="premium-btn small" style="background-color:#2980b9;">שמור</button>
                     </div>
                     <small style="color:#888; display:block; margin-top:6px;">ניתן להפיק מפתח ב-Bing Webmasters > Settings > API Access</small>
+                    ${lastBingError ? `<div style="color:#e67e22; font-size:0.8rem; margin-top:5px;"><i class="fas fa-info-circle"></i> שגיאה: ${escapeHtml(lastBingError)}</div>` : ''}
                 </li>`;
             
             document.getElementById('save-bing-key-btn')?.addEventListener('click', () => {
@@ -318,7 +363,7 @@ export async function loadBingStats(forceRefresh = false) {
                 }
             });
         }
-        if (statusNoteEl) statusNoteEl.textContent = 'דרוש מפתח';
+        if (statusNoteEl) statusNoteEl.textContent = localApiKey ? 'שגיאת מפתח/אתר' : 'דרוש מפתח';
     }
 }
 
