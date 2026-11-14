@@ -318,20 +318,22 @@ export function setupAlbumControls(albumData) {
                 console.warn("Dynamic ZIP creation failed or blocked by CORS, using fallback sequential download", err);
                 showNotificationToast("⚠️ <strong>הורדה ישירה:</strong> עקב הגדרות הדפדפן, התמונות יורדו כעת כקבצים נפרדים בזה אחר זה. אנא אשר הורדה של קבצים מרובים אם תתבקש על ידי הדפדפן.", 6000);
 
+                const link = document.createElement('a');
+                link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
+                document.body.appendChild(link);
+
                 for (let i = 0; i < imagesToDownload.length; i++) {
                     const img = imagesToDownload[i];
-                    const link = document.createElement('a');
                     link.href = img.src;
-                    link.target = "_blank"; // מניעת החלפת הלשונית הנוכחית
                     link.download = `${albumSlug}-${i + 1}.jpg`;
-                    document.body.appendChild(link);
                     link.click();
-                    document.body.removeChild(link);
 
                     if (i < imagesToDownload.length - 1) {
                         await new Promise(resolve => setTimeout(resolve, 250));
                     }
                 }
+
+                document.body.removeChild(link);
             } finally {
                 albumDownloadBtn.disabled = false;
                 albumDownloadBtn.innerHTML = '<i class="fas fa-file-archive"></i> הורד הכל';
