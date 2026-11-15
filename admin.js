@@ -4,7 +4,7 @@
 
 import {
     REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH,
-    MESSAGES_SHEET_URL, APPS_SCRIPT_URL, APPS_SCRIPT_SECRET,
+    MESSAGES_SHEET_URL, APPS_SCRIPT_URL, APPS_SCRIPT_SECRET, getAppsScriptSecret,
     GITHUB_TOKEN, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, logEvent,
@@ -140,11 +140,11 @@ function showToast(message, duration = 1500, type = 'success') {
         setTimeout(() => {
             toast.classList.add('hide');
             setTimeout(() => {
-                try { toast.remove(); } catch (e) { }
+                try { toast.remove(); } catch (e) { console.error("DEBUG: showToast error:", e); }
             }, 300);
         }, duration);
     } catch (e) {
-        // silent fail
+        console.error("DEBUG: showToast error:", e);
     }
 }
 
@@ -345,7 +345,6 @@ function createNewsItemElement(item) {
     detailsDiv.appendChild(contentDiv);
     newsDiv.appendChild(detailsDiv);
 
-    // ✅ Fix XSS: בנה את כפתורי בעדכונים בטוח
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'item-actions';
 
@@ -379,14 +378,14 @@ function renderNewsList(newsArray) {
     const container = document.getElementById('news-list-container');
     if (!container) return;
 
-    container.innerHTML = '';
+    container.replaceChildren();
 
     // [חדש] איפוס בחירה כשמרנדרים מחדש
     selectedNewsSlugs = [];
     updateBulkActionsUI();
 
     if (newsArray.length === 0) {
-        container.innerHTML = '';
+        container.replaceChildren();
 
         const emptyStateDiv = document.createElement('div');
         emptyStateDiv.className = 'empty-state';
@@ -520,7 +519,7 @@ async function loadAndRenderHistory() {
         const fileData = await response.json();
         const history = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
 
-        container.innerHTML = '';
+        container.replaceChildren();
         if (history.length === 0) {
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state';
@@ -563,7 +562,7 @@ async function loadAndRenderHistory() {
         const p = document.createElement('p');
         p.style.cssText = 'color:red; text-align:center;';
         p.textContent = 'שגיאה בטעינת היסטוריה: ' + err.message;
-        container.innerHTML = '';
+        container.replaceChildren();
         container.appendChild(p);
     }
 }
@@ -600,7 +599,7 @@ async function fetchMessagesFromSheet() {
                 method: 'POST',
                 body: JSON.stringify({
                     action: "getMessages",
-                    secret: APPS_SCRIPT_SECRET
+                    secret: getAppsScriptSecret()
                 })
             });
             if (response.ok) {
@@ -689,7 +688,7 @@ async function loadAndRenderMessages() {
     if (!container) return;
 
     if (!APPS_SCRIPT_URL && (!MESSAGES_SHEET_URL || MESSAGES_SHEET_URL.includes("נא_להזין"))) {
-        container.innerHTML = '';
+        container.replaceChildren();
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
         const icon = document.createElement('i');
@@ -708,7 +707,7 @@ async function loadAndRenderMessages() {
             fetchMessagesFromSheet()
         ]);
 
-        container.innerHTML = '';
+        container.replaceChildren();
         if (rows.length <= 1) {
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state';
@@ -753,7 +752,7 @@ async function loadAndRenderMessages() {
         const p = document.createElement('p');
         p.style.cssText = 'color:red; text-align:center;';
         p.textContent = 'שגיאה בטעינת הודעות: ' + err.message;
-        container.innerHTML = '';
+        container.replaceChildren();
         container.appendChild(p);
     }
 }

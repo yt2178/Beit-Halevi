@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -37,12 +37,17 @@ jobs:
           fi
           echo "Is update: $IS_UPDATE"
 
+          # Extract title from commit message if available
+          EXTRACTED_TITLE=""
+          if echo "$COMMIT_MSG" | grep -q ": "; then
+            EXTRACTED_TITLE=$(echo "$COMMIT_MSG" | sed 's/^.*: //')
+          fi
+
           # Handle news.json changes
           if echo "$CHANGED_FILES" | grep -q 'data/news.json'; then
             echo "Processing news.json change..."
             TITLE=$(jq -r '.[0].data.title' data/news.json)
             DATE=$(jq -r '.[0].data.date' data/news.json)
-            # Reliable slug creation across environments matching application code
             CLEAN_TITLE=$(node -e "console.log(process.argv[1].replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, ''))" "$TITLE")
             SLUG="${DATE}-${CLEAN_TITLE}"
             
@@ -50,7 +55,6 @@ jobs:
             URL="${BASE_URL}/#news/${SLUG}"
             
             echo "Sending news notification: $MESSAGE"
-            # Use jq to safely escape titles that might contain quotes
             if [ "$IS_UPDATE" = "true" ]; then
               jq -n \
                 --arg app_id "$ONESIGNAL_APP_ID" \
@@ -67,24 +71,35 @@ jobs:
                 '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["Subscribed Users", "Total Subscriptions"] }' > payload.json
             fi
               
-            curl -X POST "https://onesignal.com/api/v1/notifications" \
+            RESPONSE=$(curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
                  -H "Content-Type: application/json; charset=utf-8" \
-                 -d @payload.json -sSw "\nHTTP status: %{http_code}\n"
+                 -d @payload.json -sSw "\n%{http_code}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "OneSignal HTTP status: $HTTP_CODE"
+            echo "OneSignal response: $BODY"
+            if [ "$HTTP_CODE" -ge 400 ]; then
+              echo "Error: OneSignal news notification failed with status $HTTP_CODE"
+              exit 1
+            fi
           fi
 
           # Handle gallery.json changes
           if echo "$CHANGED_FILES" | grep -q 'data/gallery.json'; then
             echo "Processing gallery.json change..."
-            ALBUM_TITLE=$(jq -r '.[0].data.title' data/gallery.json)
-            # Reliable slug creation across environments
+            ALBUM_TITLE=""
+            if [ -n "$EXTRACTED_TITLE" ] && [ "$EXTRACTED_TITLE" != "$COMMIT_MSG" ]; then
+              ALBUM_TITLE="$EXTRACTED_TITLE"
+            else
+              ALBUM_TITLE=$(jq -r '.[-1].data.title' data/gallery.json)
+            fi
+
             CLEAN_ALBUM=$(node -e "console.log(process.argv[1].replace(/\s/g, '-').replace(/[^a-zA-Z0-9\u05D0-\u05EA-]/gi, ''))" "$ALBUM_TITLE")
-            
             MESSAGE="אלבום חדש בגלריה: ${ALBUM_TITLE}"
             URL="${BASE_URL}/#gallery/${CLEAN_ALBUM}"
             
             echo "Sending gallery notification: $MESSAGE"
-            # Use jq to safely escape titles that might contain quotes
             if [ "$IS_UPDATE" = "true" ]; then
               jq -n \
                 --arg app_id "$ONESIGNAL_APP_ID" \
@@ -101,8 +116,16 @@ jobs:
                 '{ app_id: $app_id, headings: {he: $title}, contents: {he: $content}, url: $url, included_segments: ["Subscribed Users", "Total Subscriptions"] }' > payload.json
             fi
               
-            curl -X POST "https://onesignal.com/api/v1/notifications" \
+            RESPONSE=$(curl -X POST "https://onesignal.com/api/v1/notifications" \
                  -H "Authorization: Basic $ONESIGNAL_REST_API_KEY" \
                  -H "Content-Type: application/json; charset=utf-8" \
-                 -d @payload.json -sSw "\nHTTP status: %{http_code}\n"
+                 -d @payload.json -sSw "\n%{http_code}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            echo "OneSignal HTTP status: $HTTP_CODE"
+            echo "OneSignal response: $BODY"
+            if [ "$HTTP_CODE" -ge 400 ]; then
+              echo "Error: OneSignal gallery notification failed with status $HTTP_CODE"
+              exit 1
+            fi
           fi

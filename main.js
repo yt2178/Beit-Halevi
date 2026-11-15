@@ -279,10 +279,9 @@ if (hebrewYearDisplay) {
         window.addEventListener('load', async () => {
             try {
                 const registration = await navigator.serviceWorker.register('./sw.js');
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 registration.update();
             } catch (err) {
-                console.log('ServiceWorker registration failed: ', err);
+                // Ignore service worker registration failure quietly
             }
         });
     }
@@ -380,7 +379,6 @@ if (hebrewYearDisplay) {
             // [מוטמע] אתחול OneSignal - מזהה מוטמע מובנה כברירת מחדל
             const oneSignalAppId = (config && config.oneSignalAppId) || DEFAULT_ONESIGNAL_APP_ID;
             if (oneSignalAppId) {
-                console.log('Initializing OneSignal with App ID:', oneSignalAppId);
                 
                 // ניטור ותיקון תמונת OneSignal Slidedown שלא תישבר
                 try {

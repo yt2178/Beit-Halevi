@@ -164,14 +164,33 @@ export async function loadGallery() {
         img.src = fullThumbSrc;
         img.alt = 'אלבום תמונות: ' + albumData.title;
 
-        // [עמידות לנתיבים וסינון] מנגנון גיבוי אוטומטי במקרה של שגיאה
+        // [עמידות לנתיבים וסינון] מנגנון גיבוי אוטומטי חכם במקרה של שגיאה
         img.onerror = () => {
             if (img.dataset.retried) return;
             img.dataset.retried = '1';
-            if (img.src.includes('/Beit-Halevi/')) {
-                img.src = cleanThumb;
+
+            if (cleanThumb.startsWith('http')) {
+                // מעבר גיבוי בין שרתי גוגל דרייב
+                if (img.src.includes('googleusercontent.com/d/')) {
+                    const m = img.src.match(/\/d\/([^=]+)/);
+                    if (m) {
+                        img.src = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+                        return;
+                    }
+                } else if (img.src.includes('drive.google.com')) {
+                    const m = img.src.match(/[?&]id=([^&]+)/);
+                    if (m) {
+                        img.src = `https://lh3.googleusercontent.com/d/${m[1]}=w1000`;
+                        return;
+                    }
+                }
             } else {
-                img.src = `${window.location.origin}/Beit-Halevi/${cleanThumb}`;
+                // נתיב מקומי בלבד
+                if (img.src.includes('/Beit-Halevi/')) {
+                    img.src = cleanThumb;
+                } else {
+                    img.src = `${window.location.origin}/Beit-Halevi/${cleanThumb}`;
+                }
             }
         };
 

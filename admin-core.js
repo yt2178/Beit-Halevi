@@ -16,7 +16,16 @@ export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
 export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwb3KCUkzLCyofjUwUFxUh_Fx7zgbxG1EEKUFXLnB9uziKlXHJMbKKZV7GHO_jb8CqkUA/exec";
-export const APPS_SCRIPT_SECRET = "beit_halevi_secret_2026";
+export function getAppsScriptSecret() {
+    if (typeof process !== 'undefined' && process.env && process.env.APPS_SCRIPT_SECRET) {
+        return process.env.APPS_SCRIPT_SECRET;
+    }
+    if (typeof window !== 'undefined') {
+        return window.APPS_SCRIPT_SECRET || sessionStorage.getItem('apps_script_secret') || '';
+    }
+    return '';
+}
+export const APPS_SCRIPT_SECRET = getAppsScriptSecret();
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
 
 // Google API Config
@@ -209,7 +218,7 @@ export async function getFolderId(token) {
         await makeFilePublic(createData.id, token);
         return createData.id;
     } catch (err) {
-        console.error("DEBUG: getFolderId error:", err);
+        console.error("getFolderId error:", err);
         return "root";
     }
 }
@@ -230,7 +239,7 @@ export async function uploadFileToDrive(file, token = null) {
 
             const payload = {
                 action: "uploadImage",
-                secret: APPS_SCRIPT_SECRET,
+                secret: getAppsScriptSecret(),
                 filename: file.name,
                 mimeType: file.type || 'image/jpeg',
                 base64: base64Data
@@ -284,7 +293,6 @@ export async function uploadFileToDrive(file, token = null) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
         try {
-            console.log("DEBUG: Final Google Upload URL:", uploadUrlStr);
             const res = await window.fetch(uploadUrlStr, {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + token },
@@ -387,7 +395,6 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
                             const latestContent = JSON.parse(decodeBase64ToUtf8(fileData.content.replace(/\n/g, '')));
                             const newBase64 = transformFn(latestContent);
                             currentPayload.content = newBase64;
-                            console.log("Transformation re-applied to latest content.");
                         }
 
                         continue;
@@ -420,7 +427,7 @@ export async function makeFilePublic(fileId, token = null) {
                 body: JSON.stringify({ role: "reader", type: "anyone" })
             });
         } catch (e) {
-            console.error("DEBUG: makeFilePublic error:", e);
+            console.error("makeFilePublic error:", e);
         }
     }
     return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
@@ -437,7 +444,7 @@ export async function getFileWebViewLink(fileId, token) {
             return data.webViewLink;
         }
     } catch (e) {
-        console.error("DEBUG: getFileWebViewLink error:", e);
+        console.error("getFileWebViewLink error:", e);
     }
     return null;
 }
@@ -565,7 +572,7 @@ export async function sendPushNotification(title, message, isUpdate = false) {
         try {
             const scriptPayload = {
                 action: "sendPush",
-                secret: APPS_SCRIPT_SECRET,
+                secret: getAppsScriptSecret(),
                 appId: appIdStr,
                 restKey: restKey,
                 title: title,
