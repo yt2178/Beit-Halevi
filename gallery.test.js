@@ -160,4 +160,44 @@ describe('openGridOverlay', () => {
         expect(mockUtils.focusLock).toHaveBeenCalledWith(mockLightbox, mockLightboxCloseBtn);
         jest.useRealTimers();
     });
+
+    describe('albumDownloadBtn click handler fallback', () => {
+        it('should trigger sequential fallback downloads reusing anchor element when JSZip fails', async () => {
+            const albumData = {
+                title: 'Download Test Album',
+                slug: 'download-test-album',
+                images: ['img1.jpg', 'img2.jpg']
+            };
+
+            galleryModule.openGridOverlay(albumData);
+
+            const createdElements = [];
+            const originalCreateElement = document.createElement.bind(document);
+            jest.spyOn(document, 'createElement').mockImplementation((tagName) => {
+                const el = originalCreateElement(tagName);
+                if (tagName.toLowerCase() === 'a') {
+                    createdElements.push(el);
+                }
+                return el;
+            });
+
+            jest.spyOn(document.head, 'appendChild').mockImplementation((el) => {
+                if (el.tagName && el.tagName.toLowerCase() === 'script') {
+                    setTimeout(() => el.onerror && el.onerror(new Error("Script load error")), 0);
+                }
+                return el;
+            });
+
+            const mainModule = await import('./main.js');
+            global.showNotificationToast = jest.fn();
+
+            await mainModule.albumDownloadBtn.onclick();
+
+            const downloadAnchors = createdElements.filter(el => el.target === '_blank');
+            expect(downloadAnchors.length).toBe(1);
+
+            document.head.appendChild.mockRestore();
+            document.createElement.mockRestore();
+        });
+    });
 });

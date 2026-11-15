@@ -80,13 +80,21 @@ export function updateAppBadge(count) {
 }
 // כפתור חזרה למעלה
 if (backToTopButton) {
-    window.onscroll = () => {
-        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-            backToTopButton.classList.add('visible');
-        } else {
-            backToTopButton.classList.remove('visible');
+    let topTicking = false;
+    window.addEventListener('scroll', () => {
+        if (!topTicking) {
+            window.requestAnimationFrame(() => {
+                const scrolled = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200 || window.scrollY > 200);
+                if (scrolled) {
+                    backToTopButton.classList.add('visible');
+                } else {
+                    backToTopButton.classList.remove('visible');
+                }
+                topTicking = false;
+            });
+            topTicking = true;
         }
-    };
+    }, { passive: true });
     backToTopButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 // [שינוי] טיפול במצב כהה/בהיר עם שמירת העדפה ב-LocalStorage
@@ -411,12 +419,10 @@ if (hebrewYearDisplay) {
                 script.async = true;
                 script.defer = true;
                 script.onload = () => {
-                    console.log('OneSignal SDK loaded successfully');
                     window.OneSignalDeferred = window.OneSignalDeferred || [];
                     window.OneSignalDeferred.push(function (OneSignal) {
                         try {
                             window.OneSignal = OneSignal;
-                            console.log('Starting OneSignal.init...');
                             const isSubfolder = typeof window !== 'undefined' && window.location.pathname.startsWith('/Beit-Halevi');
                             const swScope = isSubfolder ? '/Beit-Halevi/' : '/';
                             const swPath = isSubfolder ? '/Beit-Halevi/OneSignalSDKWorker.js' : '/OneSignalSDKWorker.js';
@@ -424,7 +430,6 @@ if (hebrewYearDisplay) {
                             // מאזין לשינוי במצב ההרשמה של OneSignal
                             if (OneSignal.User && OneSignal.User.PushSubscription) {
                                 OneSignal.User.PushSubscription.addEventListener("change", (event) => {
-                                    console.log("OneSignal push subscription changed:", event);
                                     updateSubscribeUI();
                                     if (event && event.current && event.current.optedIn) {
                                         showToast("🎉 נרשמת בהצלחה לקבלת התראות מהישיבה!");
@@ -461,7 +466,6 @@ if (hebrewYearDisplay) {
                                 serviceWorkerParam: { scope: swScope },
                                 serviceWorkerPath: swPath,
                             }).then(() => {
-                                console.log('OneSignal initialized successfully');
                                 window.oneSignalInitialized = true;
                                 updateSubscribeUI();
                             }).catch(e => console.error("OneSignal init error:", e));
@@ -713,7 +717,7 @@ if (hebrewYearDisplay) {
                 });
                 ticking = true;
             }
-        });
+        }, { passive: true });
     }
 
 })();

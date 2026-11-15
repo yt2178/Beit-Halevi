@@ -41,4 +41,3 @@ sitemap += `  </url>
 </urlset>\n`;
 
 fs.writeFileSync('sitemap.xml', sitemap, 'utf8');
-console.log('sitemap.xml regenerated successfully with', news.length, 'news and', gallery.length, 'gallery items.');
