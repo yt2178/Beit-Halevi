@@ -13,6 +13,11 @@ body {
     min-height: 100%;
 }
 
+/* מניעת השהיית מגע (Touch latency) במובייל */
+button, a, input, select, textarea, .album-cover, .fab-subscribe, .close-btn, .modal-close {
+    touch-action: manipulation;
+}
+
 /* --- כותרת האתר --- */
 header h1 {
     font-size: clamp(1.2rem, 5vw, 2.8em);

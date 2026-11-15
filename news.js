@@ -61,15 +61,15 @@ export function openNewsModal(newsItem) {
                 try {
                     await navigator.share(shareData);
                 } catch (error) {
-                    console.log('Error sharing news:', error);
+                    // Ignore share cancellation or error
                 }
             } else {
                 // גיבוי: העתקה ללוח
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     alert('הקישור הועתק ללוח!');
-                } catch (error) {
-                    console.log('Error copying to clipboard:', error);
+                } catch {
+                    // silent fallback handling
                 }
             }
         };

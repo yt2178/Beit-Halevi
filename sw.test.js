@@ -139,3 +139,94 @@ describe('Service Worker Push Notifications', () => {
         expect(mockSelf.registration.showNotification).not.toHaveBeenCalled();
     });
 });
+
+describe('Service Worker - Asset Caching Error Paths', () => {
+    let listeners;
+    let mockSelf;
+    let cacheAddMock;
+    let consoleWarnSpy;
+
+    beforeEach(() => {
+        listeners = {};
+        cacheAddMock = jest.fn().mockImplementation((url) => {
+            if (url === './index.html') {
+                return Promise.reject(new Error('Mock internal cache error'));
+            }
+            if (url.includes('font-awesome')) {
+                return Promise.reject(new Error('Mock external cache error'));
+            }
+            return Promise.resolve();
+        });
+
+        mockSelf = {
+            addEventListener: jest.fn((event, handler) => {
+                listeners[event] = handler;
+            }),
+            skipWaiting: jest.fn(),
+            clients: {
+                claim: jest.fn(),
+                matchAll: jest.fn().mockResolvedValue([]),
+                openWindow: jest.fn()
+            },
+            registration: {
+                showNotification: jest.fn().mockResolvedValue()
+            }
+        };
+
+        consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const swCode = fs.readFileSync('./sw.js', 'utf8');
+        const context = vm.createContext({
+            self: mockSelf,
+            caches: {
+                open: jest.fn().mockResolvedValue({
+                    add: cacheAddMock,
+                    put: jest.fn().mockResolvedValue()
+                }),
+                keys: jest.fn().mockResolvedValue([]),
+                delete: jest.fn().mockResolvedValue(),
+                match: jest.fn().mockResolvedValue()
+            },
+            fetch: jest.fn(),
+            console: { ...console, error: jest.fn(), log: jest.fn(), warn: consoleWarnSpy },
+            Promise: Promise,
+            Date: Date,
+            URL: URL
+        });
+        vm.runInContext(swCode, context);
+    });
+
+    afterEach(() => {
+        consoleWarnSpy.mockRestore();
+    });
+
+    it('should handle asset caching errors during install without failing the overall installation', async () => {
+        const installHandler = listeners['install'];
+        expect(installHandler).toBeDefined();
+
+        let waitPromise;
+        const mockEvent = {
+            waitUntil: jest.fn((p) => { waitPromise = p; })
+        };
+
+        installHandler(mockEvent);
+        expect(mockEvent.waitUntil).toHaveBeenCalled();
+
+        await waitPromise;
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+            "Failed to cache internal asset:",
+            "./index.html",
+            expect.any(Error)
+        );
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+            "Failed to cache external asset:",
+            "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css",
+            expect.any(Error)
+        );
+
+        expect(cacheAddMock).toHaveBeenCalledWith('./style.css');
+        expect(cacheAddMock).toHaveBeenCalledWith('./admin.html');
+    });
+});

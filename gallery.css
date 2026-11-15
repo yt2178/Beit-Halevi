@@ -76,6 +76,7 @@ body.dark-mode #album-download-btn {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
+    background-color: #2c3e50;
 }
 
 .album-cover:hover {
@@ -155,6 +156,7 @@ body.dark-mode #album-download-btn {
     border-radius: 5px;
     cursor: pointer;
     transition: opacity 0.3s;
+    background-color: #34495e;
 }
 
 .thumbnail-grid img:hover {

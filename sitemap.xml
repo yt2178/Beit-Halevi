@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://yt2178.github.io/</loc>
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -78,6 +78,14 @@
     <image:image>
       <image:loc>https://lh3.googleusercontent.com/d/1DMjevTnPvSSLnU5yG1JtQDMt6-D5_ZwE=w1000</image:loc>
       <image:title>הקפות שניות תשפז</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1TGAhpDVQk7biap-mB4slpqIPd4QgN3yX=w1000</image:loc>
+      <image:title>שיחת חיזוק מהגאון רבי יעקב סיני שליטא - מוצש פרשת נח</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/15Ft9i9C_57e3-QR_7q2_4tv2o5Vgt_wI=w1000</image:loc>
+      <image:title>שיחת חיזוק מהגאונים רבי קחצי קולדצקי ורבי אליעזר יוטקובסקי שליטא - מוצש פרשת נח</image:title>
     </image:image>
   </url>
 </urlset>

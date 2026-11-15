@@ -120,10 +120,12 @@ export function openGridOverlay(albumData) {
                         if (m) thumb.src = `https://lh3.googleusercontent.com/d/${m[1]}=w1000`;
                     } else {
                         const orig = cleanPath(imgData.src);
-                        if (thumb.src.includes('/Beit-Halevi/')) {
-                            thumb.src = orig;
-                        } else {
-                            thumb.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+                        if (!orig.startsWith('http')) {
+                            if (thumb.src.includes('/Beit-Halevi/')) {
+                                thumb.src = orig;
+                            } else {
+                                thumb.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+                            }
                         }
                     }
                 };
@@ -362,10 +364,12 @@ export function showLightboxImage(isFirstLoad = false) {
             if (m) lightboxImg.src = `https://lh3.googleusercontent.com/d/${m[1]}=s0`;
         } else {
             const orig = cleanPath(currentImage.src);
-            if (lightboxImg.src.includes('/Beit-Halevi/')) {
-                lightboxImg.src = orig;
-            } else {
-                lightboxImg.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+            if (!orig.startsWith('http')) {
+                if (lightboxImg.src.includes('/Beit-Halevi/')) {
+                    lightboxImg.src = orig;
+                } else {
+                    lightboxImg.src = `${window.location.origin}/Beit-Halevi/${orig}`;
+                }
             }
         }
     };

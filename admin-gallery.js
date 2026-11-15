@@ -413,6 +413,23 @@ function createPreviewItem(src, isExisting = false, existingIndex = null) {
     const img = document.createElement('img');
     img.src = src;
     img.style.cursor = 'pointer';
+
+    // [עמידות לסינון]: גיבוי אוטומטי אם תמונה בדרייב נחסמת בתצוגה המקדימה
+    img.onerror = () => {
+        if (img.dataset.retried) {
+            wrapper.classList.add('preview-load-error');
+            return;
+        }
+        img.dataset.retried = '1';
+        if (img.src.includes('googleusercontent.com/d/')) {
+            const m = img.src.match(/\/d\/([^=]+)/);
+            if (m) img.src = `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1000`;
+        } else if (img.src.includes('drive.google.com')) {
+            const m = img.src.match(/[?&]id=([^&]+)/);
+            if (m) img.src = `https://lh3.googleusercontent.com/d/${m[1]}=w1000`;
+        }
+    };
+
     wrapper.appendChild(img);
 
     // כפתורים: הגדר כתמונת שער + מחק
@@ -610,15 +627,15 @@ async function handleGallerySubmit(e) {
                 if (fileObj) {
                     uploadTasks.push(async () => {
                         let fileToUpload = fileObj.file;
-                        const originalSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                        console.log(`DEBUG: Original file size: ${originalSize}MB`);
+                        const origKB = Math.round(fileToUpload.size / 1024);
+                        let compInfo = `${origKB}KB`;
 
                         try {
                             // דחיסת תמונה לחיסכון בנפח (רק אם זו תמונה)
                             if (fileToUpload.type.startsWith('image/')) {
                                 fileToUpload = await compressImage(fileToUpload);
-                                const compressedSize = (fileToUpload.size / 1024 / 1024).toFixed(2);
-                                console.log(`DEBUG: Compressed file size: ${compressedSize}MB`);
+                                const compKB = Math.round(fileToUpload.size / 1024);
+                                compInfo = `${origKB}KB ➔ ${compKB}KB`;
                             }
                         } catch (compressErr) {
                             console.warn("Compression failed, uploading original:", compressErr);
@@ -628,7 +645,7 @@ async function handleGallerySubmit(e) {
                         const publicUrl = await makeFilePublic(fileId, googleAccessToken);
 
                         processedCount++;
-                        showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems})...`, 40 + (processedCount / totalItems * 40));
+                        showStatus(`מעלה תמונות לדרייב (${processedCount}/${totalItems}) [${compInfo}]...`, 40 + (processedCount / totalItems * 40));
 
                         results[i] = publicUrl;
                     });
@@ -651,7 +668,6 @@ async function handleGallerySubmit(e) {
 
         // 3. בניית האובייקט החדש
         let thumbnailUrl = "";
-        // const previewItemsArray = Array.from(previewItems); // already defined above
         const thumbnailIndex = previewItemsArray.findIndex(item => item.classList.contains('is-thumbnail'));
         
         if (thumbnailIndex !== -1 && results[thumbnailIndex]) {

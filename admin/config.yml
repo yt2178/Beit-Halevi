@@ -1,0 +1,32 @@
+backend:
+  name: git-gateway
+  branch: main
+  repo: yt2178/beit-halevi.github.io # <-- השורה החשובה שנוספה!
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "news"
+    label: "חדשות ועדכונים"
+    folder: "_posts/news"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "כותרת", name: "title", widget: "string"}
+      - {label: "תאריך", name: "date", widget: "datetime"}
+      - {label: "תוכן העדכון", name: "body", widget: "markdown"}
+
+  - name: "gallery"
+    label: "גלריית תמונות"
+    folder: "_posts/gallery"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "שם האלבום", name: "title", widget: "string"}
+      - {label: "תמונת שער (Cover)", name: "thumbnail", widget: "image"}
+      - label: "תמונות האלבום"
+        name: "images"
+        widget: "list"
+        summary: "{{fields.image}}"
+        field: {label: Image, name: image, widget: image}
