@@ -15,7 +15,7 @@ export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
 export const GALLERY_JSON_PATH = 'data/gallery.json';
 export const TASKS_JSON_PATH = 'data/admin-tasks.json';
-export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwb3KCUkzLCyofjUwUFxUh_Fx7zgbxG1EEKUFXLnB9uziKlXHJMbKKZV7GHO_jb8CqkUA/exec";
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNpESaR8P4_0TObf4xTNLuY8HZ6Ss57B-8MUDTMYUkSopOCRyNnDyQoSeWFcik21zNbQ/exec";
 export function getAppsScriptSecret() {
     if (typeof process !== 'undefined' && process.env && process.env.APPS_SCRIPT_SECRET) {
         return process.env.APPS_SCRIPT_SECRET;

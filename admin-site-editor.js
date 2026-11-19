@@ -75,6 +75,23 @@ export async function loadSiteConfig() {
             if (document.getElementById('site-onesignal-rest')) {
                 document.getElementById('site-onesignal-rest').value = sessionStorage.getItem('onesignal_rest_key') || localStorage.getItem('onesignal_rest_key') || '';
             }
+            const appsScriptSecretInput = document.getElementById('apps-script-secret');
+            if (appsScriptSecretInput) {
+                appsScriptSecretInput.value = sessionStorage.getItem('apps_script_secret') || '';
+            }
+            const saveAppsScriptSecretBtn = document.getElementById('save-apps-script-secret-btn');
+            if (saveAppsScriptSecretBtn && appsScriptSecretInput) {
+                saveAppsScriptSecretBtn.onclick = () => {
+                    const secret = appsScriptSecretInput.value.trim();
+                    if (!secret) {
+                        sessionStorage.removeItem('apps_script_secret');
+                        delete window.APPS_SCRIPT_SECRET;
+                        return;
+                    }
+                    sessionStorage.setItem('apps_script_secret', secret);
+                    window.APPS_SCRIPT_SECRET = secret;
+                };
+            }
 
             const testSubBtn = document.getElementById('admin-test-sub-status-btn');
             const subStatusText = document.getElementById('admin-sub-status-text');
