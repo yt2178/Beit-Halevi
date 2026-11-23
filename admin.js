@@ -4,7 +4,7 @@
 
 import {
     REPO_OWNER, REPO_NAME, JSON_FILE_PATH, HISTORY_JSON_PATH,
-    MESSAGES_SHEET_URL, APPS_SCRIPT_URL, APPS_SCRIPT_SECRET, getAppsScriptSecret,
+    MESSAGES_SHEET_URL, APPS_SCRIPT_URL, getAppsScriptSecret,
     GITHUB_TOKEN, updateGithubAuth,
     showStatus, hideStatus, encodeToBase64, decodeBase64ToUtf8,
     initGoogleLogin, logEvent,
