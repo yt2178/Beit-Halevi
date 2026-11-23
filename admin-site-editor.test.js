@@ -16,6 +16,8 @@ describe('admin-site-editor', () => {
             <input id="site-primary-color" value="#1a4b84" />
             <input id="site-onesignal-id" value="" />
             <input id="site-onesignal-rest" value="" />
+            <input id="apps-script-secret" value="" />
+            <button id="save-apps-script-secret-btn"></button>
             <button id="save-onesignal-btn"></button>
             <div id="editable-texts-list"></div>
             <div id="site-preview-container"></div>
@@ -175,6 +177,24 @@ describe('admin-site-editor', () => {
             await onesignalBtn.onclick(event);
 
             expect(sessionStorage.getItem('onesignal_rest_key')).toBe('rest-key-new');
+        });
+
+        it('should store the Apps Script secret only for the current browser session', async () => {
+            jest.spyOn(window, 'fetch').mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({
+                    content: encodeToBase64(JSON.stringify({ texts: {}, theme: 'light', primaryColor: '#1a4b84' })),
+                    sha: 'sha-123'
+                })
+            });
+            await loadSiteConfig();
+
+            document.getElementById('apps-script-secret').value = 'temporary-admin-secret';
+            document.getElementById('save-apps-script-secret-btn').click();
+
+            expect(sessionStorage.getItem('apps_script_secret')).toBe('temporary-admin-secret');
+            expect(window.APPS_SCRIPT_SECRET).toBe('temporary-admin-secret');
+            expect(localStorage.getItem('apps_script_secret')).toBeNull();
         });
     });
 
