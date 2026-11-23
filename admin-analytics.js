@@ -6,7 +6,7 @@
  * 3. Bing Webmaster Tools API (באמצעות Apps Script / מפתח API מקומי)
  */
 
-import { APPS_SCRIPT_URL, APPS_SCRIPT_SECRET, googleLogin, showStatus, hideStatus } from './admin-core.js';
+import { APPS_SCRIPT_URL, getAppsScriptSecret, googleLogin, showStatus, hideStatus } from './admin-core.js';
 
 // Cache נתונים
 let oneSignalDataCache = null;
@@ -38,7 +38,7 @@ export async function loadOneSignalStats(forceRefresh = false) {
             method: 'POST',
             body: JSON.stringify({
                 action: 'getOneSignalStats',
-                secret: APPS_SCRIPT_SECRET
+                secret: getAppsScriptSecret()
             })
         });
 
@@ -312,7 +312,7 @@ export async function loadBingStats(forceRefresh = false) {
                 method: 'POST',
                 body: JSON.stringify({
                     action: 'getBingStats',
-                    secret: APPS_SCRIPT_SECRET,
+                    secret: getAppsScriptSecret(),
                     bingApiKey: localApiKey,
                     siteUrl: siteUrl
                 })
