@@ -360,7 +360,13 @@
                                 <input type="password" id="site-onesignal-rest" placeholder="מוגדר ישירות בשרת האוטומטי (Apps Script)" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr" autocomplete="current-password">
                                 <small style="color: #7f8c8d;">שליחת התראות מתבצעת אוטומטית דרך Google Apps Script ללא צורך בהזנת מפתח כאן.</small>
                             </div>
+                            <div class="input-group">
+                                <label><strong>סוד Apps Script למנהל:</strong></label>
+                                <input type="password" id="apps-script-secret" placeholder="הזן את אותו הסוד שהוגדר בפרויקט Apps Script" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; font-family: monospace;" dir="ltr" autocomplete="new-password">
+                                <small style="color: #7f8c8d;">נשמר רק בכרטיסייה זו ואינו נכתב בקובצי האתר.</small>
+                            </div>
                             <div class="form-actions" style="margin-top:5px;">
+                                <button id="save-apps-script-secret-btn" type="button" class="premium-btn small secondary"><i class="fas fa-key"></i> שמירת סוד למפגש זה</button>
                                 <button id="save-onesignal-btn" class="premium-btn small secondary" style="background: #e67e22; border-color: #e67e22; color: #fff;"><i class="fas fa-plug"></i> שמירת מפתחות</button>
                             </div>
                         </div>
@@ -554,15 +560,15 @@
             </div>
         </section>
         <div style="text-align: center; padding: 20px; font-size: 0.75rem; color: #7f8c8d; margin-top: 20px; opacity: 0.7;">
-            Beit Halevi v1.0.33 | SW v65
+            Beit Halevi v1.0.35 | SW v67
         </div>
     </main>
 
 
-    <script type="module" src="admin-gallery.js?v=8"></script>
-    <script type="module" src="admin-tasks.js?v=8"></script>
-    <script type="module" src="admin-analytics.js?v=8"></script>
-    <script type="module" src="admin.js?v=8"></script>
+    <script type="module" src="admin-gallery.js?v=9"></script>
+    <script type="module" src="admin-tasks.js?v=9"></script>
+    <script type="module" src="admin-analytics.js?v=9"></script>
+    <script type="module" src="admin.js?v=9"></script>
 
     <!-- [חדש] תפריט תחתון קבוע למובייל -->
     <nav class="admin-bottom-nav" id="admin-bottom-nav" aria-label="ניווט תחתון" style="display:none;">
