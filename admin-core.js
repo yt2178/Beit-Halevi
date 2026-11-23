@@ -21,9 +21,9 @@ export function getAppsScriptSecret() {
         return process.env.APPS_SCRIPT_SECRET;
     }
     if (typeof window !== 'undefined') {
-        return window.APPS_SCRIPT_SECRET || sessionStorage.getItem('apps_script_secret') || '';
+        return window.APPS_SCRIPT_SECRET || sessionStorage.getItem('apps_script_secret') || "beit_halevi_secret_2026";
     }
-    return '';
+    return "beit_halevi_secret_2026";
 }
 export const APPS_SCRIPT_SECRET = getAppsScriptSecret();
 export const MESSAGES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpxzvw-KY5zHaayaA6eaDMJ4OG8DxvrPHfBpC7_yI0TBlnMyGZm378VJiv3vJOmdSqtjon7SaPWVno/pub?output=csv";
@@ -224,6 +224,8 @@ export async function getFolderId(token) {
 }
 
 export async function uploadFileToDrive(file, token = null) {
+    let lastErr = null;
+
     // 1. נסה תחילה להעלות ישירות דרך שרת ה-Apps Script (ללא חלונות קופצים או פקיעת טוקן)
     if (APPS_SCRIPT_URL) {
         try {
@@ -245,7 +247,6 @@ export async function uploadFileToDrive(file, token = null) {
                 base64: base64Data
             };
 
-            let lastErr = null;
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
                     const res = await window.fetch(APPS_SCRIPT_URL, {
@@ -258,7 +259,12 @@ export async function uploadFileToDrive(file, token = null) {
                         if (data.success && data.fileId) {
                             return data.fileId;
                         }
+                        if (data.error) {
+                            lastErr = new Error(`Apps Script upload error: ${data.error}`);
+                            console.warn(`Apps Script upload attempt ${attempt} returned error:`, data.error);
+                        }
                     } else {
+                        lastErr = new Error(`Apps Script upload attempt ${attempt} returned HTTP status ${res.status}`);
                         console.warn(`Apps Script upload attempt ${attempt} returned status ${res.status}`);
                     }
                 } catch (fetchErr) {
@@ -269,14 +275,22 @@ export async function uploadFileToDrive(file, token = null) {
                     await new Promise(r => setTimeout(r, 1500));
                 }
             }
-            if (lastErr && !token) throw lastErr;
         } catch (scriptErr) {
             console.warn("Apps Script direct upload failed, checking token fallback:", scriptErr);
-            if (!token) throw scriptErr;
+            if (!lastErr) lastErr = scriptErr;
+        }
+    }
+
+    if (!token && typeof googleLogin === 'function') {
+        try {
+            token = await googleLogin();
+        } catch (loginErr) {
+            console.warn("Fallback Google login failed:", loginErr);
         }
     }
 
     if (!token) {
+        if (lastErr) throw lastErr;
         throw new Error("לא ניתן להעלות תמונה: שרת Google אינו זמין ואין טוקן התחברות.");
     }
 
