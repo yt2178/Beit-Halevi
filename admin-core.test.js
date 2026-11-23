@@ -1,4 +1,4 @@
-import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64, logEvent, updateGithubAuth, getAppsScriptSecret } from './admin-core.js';
+import { decodeBase64ToUtf8, sendPushNotification, putWithShaRetry, encodeToBase64, logEvent, updateGithubAuth, getAppsScriptSecret, uploadFileToDrive } from './admin-core.js';
 import { jest } from '@jest/globals';
 
 describe('getAppsScriptSecret', () => {
@@ -32,11 +32,11 @@ describe('getAppsScriptSecret', () => {
         expect(getAppsScriptSecret()).toBe('session_secret_789');
     });
 
-    it('should return empty string when no secret is configured', () => {
+    it('should return default secret when no secret is configured in env, window, or session', () => {
         delete process.env.APPS_SCRIPT_SECRET;
         delete window.APPS_SCRIPT_SECRET;
         sessionStorage.removeItem('apps_script_secret');
-        expect(getAppsScriptSecret()).toBe('');
+        expect(getAppsScriptSecret()).toBe('beit_halevi_secret_2026');
     });
 });
 
@@ -485,3 +485,47 @@ describe('logEvent', () => {
         consoleSpy.mockRestore();
     });
 });
+
+describe('uploadFileToDrive', () => {
+    let originalFileReader;
+
+    beforeEach(() => {
+        originalFileReader = global.FileReader;
+        global.FileReader = class MockFileReader {
+            readAsDataURL() {
+                this.result = 'data:image/png;base64,iVBORw0KGgo=';
+                if (typeof this.onload === 'function') {
+                    this.onload();
+                }
+            }
+        };
+    });
+
+    afterEach(() => {
+        global.FileReader = originalFileReader;
+        jest.restoreAllMocks();
+    });
+
+    it('should successfully upload via Apps Script and return fileId', async () => {
+        const mockFile = { name: 'test.jpg', type: 'image/jpeg' };
+        window.fetch = jest.fn().mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ success: true, fileId: 'file_12345' })
+        });
+
+        const fileId = await uploadFileToDrive(mockFile);
+        expect(fileId).toBe('file_12345');
+        expect(window.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw clear error when Apps Script fails and no token is present', async () => {
+        const mockFile = { name: 'test.jpg', type: 'image/jpeg' };
+        window.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ success: false, error: 'Unauthorized' })
+        });
+
+        await expect(uploadFileToDrive(mockFile, null)).rejects.toThrow('Apps Script upload error: Unauthorized');
+    });
+});
+
