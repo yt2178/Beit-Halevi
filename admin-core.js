@@ -7,9 +7,7 @@
 // 1. Constants
 // ============================================================
 export const REPO_OWNER = 'yt2178';
-export const REPO_NAME = (typeof window !== 'undefined' && window.location.hostname === 'yt2178.github.io' && !window.location.pathname.startsWith('/Beit-Halevi'))
-    ? 'yt2178.github.io'
-    : 'Beit-Halevi';
+export const REPO_NAME = 'yt2178.github.io';
 export const JSON_FILE_PATH = 'data/news.json';
 export const HISTORY_JSON_PATH = 'data/history.json';
 export const SITE_CONFIG_PATH = 'data/site-config.json';
@@ -363,32 +361,6 @@ export async function putWithShaRetry(API_URL, payloadObj, token, initialSha = n
             });
 
             if (res.ok) {
-                // Background Sync: If updating one repository in live environment, mirror update to the companion repository
-                if (typeof window !== 'undefined' && API_URL.includes('api.github.com/repos/') && typeof process === 'undefined') {
-                    try {
-                        const companionRepo = REPO_NAME === 'yt2178.github.io' ? 'Beit-Halevi' : 'yt2178.github.io';
-                        const companionUrl = `https://api.github.com/repos/${REPO_OWNER}/${companionRepo}/contents/${API_URL.split('/contents/')[1]}`;
-                        window.fetch(companionUrl, {
-                            headers: { 'Authorization': "token " + token },
-                            cache: 'no-store'
-                        }).then(async compRes => {
-                            if (compRes.ok) {
-                                const compData = await compRes.json();
-                                const compBody = Object.assign({}, currentPayload, { sha: compData.sha });
-                                window.fetch(companionUrl, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Authorization': "token " + token,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(compBody)
-                                }).catch(() => {});
-                            }
-                        }).catch(() => {});
-                    } catch (syncErr) {
-                        // Non-blocking sync attempt
-                    }
-                }
                 return res;
             }
 

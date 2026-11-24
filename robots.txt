@@ -5,4 +5,4 @@ Disallow: /admin/
 Disallow: /admin.html
 Disallow: /data/
 
-Sitemap: https://yt2178.github.io/Beit-Halevi/sitemap.xml
+Sitemap: https://yt2178.github.io/sitemap.xml
