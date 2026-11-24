@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>מעביר לעמוד המבוקש...</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      if (path.startsWith('/Beit-Halevi')) {
+        var cleanPath = path.replace(/^\/Beit-Halevi\/?/, '/');
+        if (cleanPath === '/admin' || cleanPath === '/admin/') {
+          cleanPath = '/admin.html';
+        }
+        window.location.replace('https://yt2178.github.io' + cleanPath + window.location.search + window.location.hash);
+      } else if (path === '/admin' || path === '/admin/') {
+        window.location.replace('https://yt2178.github.io/admin.html' + window.location.search + window.location.hash);
+      } else {
+        window.location.replace('https://yt2178.github.io/');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>מעביר... <a href="https://yt2178.github.io/">לחץ כאן אם אינך מועבר אוטומטית</a></p>
+</body>
+</html>
